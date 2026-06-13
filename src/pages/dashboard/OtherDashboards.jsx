@@ -7,6 +7,7 @@ import api from '../../services/api'
 import { KnowledgeBase, RAGChat } from '../../components/common/RAGComponents'
 import CustomerMedicalPage from '../../components/customer/CustomerMedicalPage'
 import CustomerDocumentsPage from '../../components/customer/CustomerDocumentsPage'
+import CustomerQueries from '../../pages/customer/CustomerQueries'
 
 // Strip HTML tags and decode basic HTML entities to plain text
 function stripHtml(html) {
@@ -1311,6 +1312,7 @@ export function CustomerDashboard() {
       <Route path="consent" element={<OTPConsentPage />} />
       <Route path="medical" element={<CustomerMedicalPage />} />
       <Route path="documents" element={<CustomerDocumentsPage />} />
+      <Route path="queries" element={<CustomerQueries />} />
       <Route path="policies" element={<CustomerPolicies />} />
       <Route path="notifications" element={<CustomerNotifications />} />
       <Route path="rag-chat" element={<RAGChat title="Customer RAG Helpdesk" placeholder="Ask questions about your coverages, rules, or claims..." />} />
