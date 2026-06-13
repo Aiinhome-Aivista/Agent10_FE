@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Alert, Spinner } from '../../components/common'
+import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Alert, Spinner, Modal } from '../../components/common'
 import { Home, FileText, ShieldCheck, Clock, ClipboardList, Stethoscope, Bell, UserRound, BarChart3, CalendarClock } from 'lucide-react'
 import api from '../../services/api'
 import { KnowledgeBase, RAGChat } from '../../components/common/RAGComponents'
+import CustomerMedicalPage from '../../components/customer/CustomerMedicalPage'
+import CustomerDocumentsPage from '../../components/customer/CustomerDocumentsPage'
 
 // Strip HTML tags and decode basic HTML entities to plain text
 function stripHtml(html) {
@@ -52,28 +54,32 @@ function findBestTradeOffText(quote) {
 
 function StageTimeline({ stage }) {
   const idx = STAGES.indexOf(stage)
+  const isFinalCompleted = stage === 'COMPLETED'
   return (
     <div className="flex overflow-x-auto gap-0 py-3 pb-1">
-      {STAGES.map((s, i) => (
-        <div key={s} className="flex items-center">
-          <div className="flex flex-col items-center gap-1 min-w-[80px]">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-              style={{
-                background: i < idx ? '#22c55e' : i === idx ? '#6366f1' : 'transparent',
-                border: `2px solid ${i < idx ? '#22c55e' : i === idx ? '#6366f1' : '#2a2f45'}`,
-                color: i <= idx ? '#fff' : '#6b7280',
-              }}>
-              {i < idx ? '✓' : i + 1}
+      {STAGES.map((s, i) => {
+        const completed = isFinalCompleted ? i <= idx : i < idx
+        return (
+          <div key={s} className="flex items-center">
+            <div className="flex flex-col items-center gap-1 min-w-[80px]">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                style={{
+                  background: completed ? '#22c55e' : 'transparent',
+                  border: `2px solid ${completed ? '#22c55e' : '#2a2f45'}`,
+                  color: completed ? '#fff' : '#6b7280',
+                }}>
+                {completed ? '✓' : i + 1}
+              </div>
+              <span className="text-[9px] text-center leading-tight" style={{ color: completed ? '#e8eaf0' : '#6b7280' }}>
+                {s.replace(/_/g, ' ')}
+              </span>
             </div>
-            <span className="text-[9px] text-center leading-tight" style={{ color: i <= idx ? '#e8eaf0' : '#6b7280' }}>
-              {s.replace(/_/g, ' ')}
-            </span>
+            {i < STAGES.length - 1 && (
+              <div className="h-0.5 w-5 mb-5 flex-shrink-0" style={{ background: i < idx ? '#22c55e' : '#2a2f45' }} />
+            )}
           </div>
-          {i < STAGES.length - 1 && (
-            <div className="h-0.5 w-5 mb-5 flex-shrink-0" style={{ background: i < idx ? '#22c55e' : '#2a2f45' }} />
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -108,7 +114,7 @@ function CustomerMyCases() {
               </div>
               <p className="text-sm font-bold text-[#22c55e]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ''}</p>
             </div>
-            <StageTimeline stage={c.current_stage} />
+            <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} />
           </Card>
         ))
       }
@@ -602,6 +608,126 @@ function CustomerQuotes() {
   )
 }
 
+function CustomerRecommendation() {
+  const navigate = useNavigate()
+  const { user } = useSelector(s => s.auth)
+  const [cases, setCases] = useState([])
+  const [selectedCaseId, setSelectedCaseId] = useState('')
+  const [quotes, setQuotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [quoteLoading, setQuoteLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    api.get('/cases/').then(r => {
+      const ownCases = (r.data.cases || []).filter(c => c.customer_id === user?.id)
+      setCases(ownCases)
+      if (ownCases.length > 0) setSelectedCaseId(ownCases[0].id)
+    }).finally(() => setLoading(false))
+  }, [user])
+
+  const loadQuotes = async (caseId) => {
+    if (!caseId) return
+    setQuoteLoading(true)
+    setError(null)
+    try {
+      const { data } = await api.get(`/quotes/case/${caseId}`)
+      setQuotes(data.quotes || [])
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to load recommendation')
+    } finally {
+      setQuoteLoading(false)
+    }
+  }
+
+  useEffect(() => { if (selectedCaseId) loadQuotes(selectedCaseId) }, [selectedCaseId])
+
+  const recommendedQuote = quotes.slice().sort((a, b) => (a.ai_rank ?? 999) - (b.ai_rank ?? 999) || ((b.ai_score || 0) - (a.ai_score || 0)))[0]
+  const alternatives = quotes.slice().sort((a, b) => (a.ai_rank ?? 999) - (b.ai_rank ?? 999) || ((b.ai_score || 0) - (a.ai_score || 0))).filter(q => q.id !== recommendedQuote?.id)
+
+  const acceptRecommendation = () => {
+    if (!selectedCaseId || !recommendedQuote) return
+    navigate(`/dashboard/customer/consent?case_id=${selectedCaseId}&selected_quote_id=${recommendedQuote.id}`)
+  }
+
+  return (
+    <div>
+      <SectionHeader title="My Recommendation" subtitle="Review and accept the recommended product before OTP consent" />
+      {error && <Alert type="error" message={error} />}
+      <Card className="mb-5">
+        <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
+        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+          <option value="">Choose a case…</option>
+          {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>)}
+        </select>
+      </Card>
+
+      {quoteLoading ? <Spinner /> : !selectedCaseId ? (
+        <Card className="text-center py-12 text-[#6b7280]">Choose a case to view your recommendation.</Card>
+      ) : !recommendedQuote ? (
+        <Card className="text-center py-12 text-[#6b7280]">No recommended quote available yet. Please ask your banker to complete recommendation generation.</Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-5">
+          <Card className="space-y-5">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6b7280]">Recommended Product</p>
+              <h2 className="text-2xl font-bold text-[#e8eaf0]">{recommendedQuote.product_name}</h2>
+              <p className="text-sm text-[#6b7280]">{recommendedQuote.insurer_name}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-2xl bg-[#0f1117] border border-[#2a2f45] p-4">
+                <p className="text-[11px] text-[#6b7280]">Premium</p>
+                <p className="font-semibold text-[#22c55e]">₹{recommendedQuote.annual_premium?.toLocaleString()}</p>
+              </div>
+              <div className="rounded-2xl bg-[#0f1117] border border-[#2a2f45] p-4">
+                <p className="text-[11px] text-[#6b7280]">Sum Assured</p>
+                <p className="font-semibold text-[#e8eaf0]">₹{recommendedQuote.sum_assured?.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="rounded-3xl border border-[#2a2f45] bg-[#101423] p-5">
+              <p className="text-sm font-semibold text-[#e8eaf0] mb-3">Why this recommendation?</p>
+              <p className="text-sm text-[#d1d5db] whitespace-pre-wrap">{recommendedQuote.ai_recommendation_text || 'No recommendation details available.'}</p>
+            </div>
+          </Card>
+
+          <Card className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#6b7280]">Next Step</p>
+            <p className="text-sm text-[#e8eaf0]">Accept this recommendation to confirm the selected quote before moving to OTP consent.</p>
+            <Btn onClick={acceptRecommendation} className="w-full">
+              Accept Recommendation
+            </Btn>
+            <div className="rounded-2xl border border-[#2a2f45] bg-[#0f1117] p-4 text-sm text-[#9ca3af]">
+              After acceptance, you will be taken to OTP consent where the selected quote is pre-chosen for policy issuance.
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {alternatives.length > 0 && (
+        <Card className="mt-5">
+          <p className="text-sm font-semibold text-[#e8eaf0] mb-4">Alternative Products</p>
+          <div className="space-y-4">
+            {alternatives.slice(0, 3).map((quote) => (
+              <div key={quote.id} className="rounded-2xl border border-[#2a2f45] bg-[#101423] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-[#e8eaf0]">{quote.insurer_name}</p>
+                    <p className="text-xs text-[#6b7280]">{quote.product_name}</p>
+                  </div>
+                  <span className="rounded-full bg-[#fbbf24]/10 px-3 py-1 text-xs font-semibold text-[#fbbf24]">
+                    {quote.ai_score != null ? `${Math.round(quote.ai_score * 100)}%` : 'N/A'}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-[#9ca3af] whitespace-pre-wrap">{quote.ai_recommendation_text || 'No recommendation reason available.'}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 function CustomerMedical() {
   const { user } = useSelector(s => s.auth)
   const [requests, setRequests] = useState([])
@@ -645,6 +771,7 @@ function CustomerMedical() {
 }
 
 function OTPConsentPage() {
+  const location = useLocation()
   const [otp, setOtp] = useState(Array(6).fill(''))
   const [caseId, setCaseId] = useState('')
   const [cases, setCases] = useState([])
@@ -654,7 +781,7 @@ function OTPConsentPage() {
   const [selectedQuoteId, setSelectedQuoteId] = useState('')
   const [loadingQuotes, setLoadingQuotes] = useState(false)
 
-  const loadQuotes = async (cId) => {
+  const loadQuotes = async (cId, preferredQuoteId) => {
     if (!cId) {
       setQuotes([])
       setSelectedQuoteId('')
@@ -666,7 +793,8 @@ function OTPConsentPage() {
       const retrievedQuotes = data.quotes || []
       setQuotes(retrievedQuotes)
       if (retrievedQuotes.length > 0) {
-        setSelectedQuoteId(retrievedQuotes[0].id)
+        const match = retrievedQuotes.find(q => q.id === preferredQuoteId)
+        setSelectedQuoteId(match ? match.id : retrievedQuotes[0].id)
       } else {
         setSelectedQuoteId('')
       }
@@ -679,15 +807,22 @@ function OTPConsentPage() {
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const preferredCaseId = params.get('case_id') || ''
+    const preferredQuoteId = params.get('selected_quote_id') || ''
+
     api.get('/cases/').then(r => {
       const otpCases = r.data.cases.filter(c => c.current_stage === 'OTP_CONSENT')
       setCases(otpCases)
-      if (otpCases.length > 0) {
+      if (preferredCaseId && otpCases.some(c => c.id === preferredCaseId)) {
+        setCaseId(preferredCaseId)
+        loadQuotes(preferredCaseId, preferredQuoteId)
+      } else if (otpCases.length > 0) {
         setCaseId(otpCases[0].id)
-        loadQuotes(otpCases[0].id)
+        loadQuotes(otpCases[0].id, preferredQuoteId)
       }
     })
-  }, [])
+  }, [location.search])
 
   const handleDigit = (i, val) => {
     if (!/^\d?$/.test(val)) return
@@ -1172,7 +1307,10 @@ export function CustomerDashboard() {
       <Route index element={<CustomerMyCases />} />
       <Route path="profile" element={<CustomerProfileNeeds />} />
       <Route path="quotes" element={<CustomerQuotes />} />
+      <Route path="recommendation" element={<CustomerRecommendation />} />
       <Route path="consent" element={<OTPConsentPage />} />
+      <Route path="medical" element={<CustomerMedicalPage />} />
+      <Route path="documents" element={<CustomerDocumentsPage />} />
       <Route path="policies" element={<CustomerPolicies />} />
       <Route path="notifications" element={<CustomerNotifications />} />
       <Route path="rag-chat" element={<RAGChat title="Customer RAG Helpdesk" placeholder="Ask questions about your coverages, rules, or claims..." />} />
@@ -1459,6 +1597,9 @@ export function UnderwriterDashboard() {
     <Routes>
       <Route index element={<UWQueue />} />
       <Route path="decisions" element={<UWQueue />} />
+      <Route path="review/:caseId" element={<UWCaseReview />} />
+      <Route path="policies" element={<PolicyIssuanceQueue />} />
+      <Route path="policies/view/:caseId" element={<PolicyIssuanceDetails />} />
       <Route path="kyc" element={<UWKYCDocs />} />
       <Route path="medical" element={<UWMedical />} />
       <Route path="kb" element={<KnowledgeBase />} />
@@ -1480,6 +1621,7 @@ function UWQueue() {
   useEffect(() => {
     api.get('/underwriting/queue').then(r => setQueue(r.data.queue)).finally(() => setL(false))
   }, [])
+  const navigate = useNavigate()
 
   const submit = async policyId => {
     setSaving(true); setErr(null)
@@ -1497,7 +1639,7 @@ function UWQueue() {
     { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage} /> },
     { key: 'sum_assured', label: 'Sum Assured', render: r => r.sum_assured ? `₹${r.sum_assured.toLocaleString()}` : '—' },
     { key: 'created_at', label: 'Created', render: r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '—' },
-    { key: 'actions', label: '', render: r => <Btn size="sm" onClick={() => setModal(r)}>Review</Btn> },
+    { key: 'actions', label: '', render: r => <Btn size="sm" onClick={() => navigate(`/dashboard/underwriter/review/${r.id}`)}>Review</Btn> },
   ]
 
   return (
@@ -1521,14 +1663,15 @@ function UWQueue() {
                   className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
                   <option value="APPROVED">Approve</option>
                   <option value="REJECTED">Reject</option>
+                  <option value="QUERY">Raise Query</option>
                   <option value="DEFERRED">Defer</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Remarks</label>
+                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Remarks / Query</label>
                 <textarea value={remarks} onChange={e => setR(e.target.value)} rows={3}
                   className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none"
-                  placeholder="UW remarks…" />
+                  placeholder={decision === 'QUERY' ? 'e.g. Need Income Proof or Need Medical Report' : 'UW remarks…'} />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
@@ -1543,10 +1686,495 @@ function UWQueue() {
 }
 
 
+function UWCaseReview() {
+  const { caseId } = useParams()
+  const navigate = useNavigate()
+  const [data, setData] = useState(null)
+  const [quotes, setQuotes] = useState([])
+  const [docs, setDocs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const [decisionNotes, setDecisionNotes] = useState('')
+  const [queryText, setQueryText] = useState('Need Income Proof')
+  const accessToken = localStorage.getItem('access_token')
+
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      setLoading(true); setError(null)
+      try {
+        const [{ data: caseRes }, { data: quotesRes }, { data: docsRes }] = await Promise.all([
+          api.get(`/cases/${caseId}`),
+          api.get(`/quotes/case/${caseId}`),
+          api.get(`/documents/case/${caseId}`),
+        ])
+        if (!mounted) return
+        setData(caseRes)
+        setQuotes(quotesRes.quotes || [])
+        setDocs(docsRes.documents || [])
+      } catch (e) {
+        setError(e.response?.data?.detail || 'Failed to load case review data')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [caseId])
+
+  const openDoc = (id) => {
+    const token = accessToken || ''
+    const url = `/api/v1/documents/${id}/view${token ? `?token=${token}` : ''}`
+    window.open(url, '_blank')
+  }
+
+  const submitDecision = async (decision) => {
+    setSaving(true); setError(null)
+    try {
+      const remarks = decision === 'QUERY' ? (queryText || decisionNotes) : decisionNotes
+      await api.post('/underwriting/decision', { case_id: caseId, decision, remarks })
+      navigate('/dashboard/underwriter')
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to submit decision')
+    } finally { setSaving(false) }
+  }
+
+  if (loading) return <Card><Spinner /></Card>
+
+  return (
+    <div>
+      <SectionHeader title={`Underwriter Review — ${data?.case_number || caseId}`} subtitle="Review case, docs, medical and make a decision" />
+      {error && <Alert type="error" message={error} />}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.6fr] gap-5">
+        <div className="space-y-4">
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Summary</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-[#6b7280]">Name</p>
+                <p>{data?.customer_profile?.name || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280]">Age</p>
+                <p>{data?.customer_profile?.age || data?.customer_profile?.dob || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280]">Occupation</p>
+                <p>{data?.customer_profile?.occupation || 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280]">Annual Income</p>
+                <p>{data?.customer_profile?.annual_income ? `₹${Number(data.customer_profile.annual_income).toLocaleString()}` : 'Unknown'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280]">Risk Profile</p>
+                <p>{data?.customer_profile?.risk_appetite || 'Unknown'}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Recommendation Summary</p>
+            {quotes && quotes.length > 0 ? (
+              (() => {
+                const best = quotes[0]
+                return (
+                  <div className="text-sm">
+                    <p className="text-xs text-[#6b7280]">Recommended Plan</p>
+                    <p className="font-semibold">{best.product_name || best.insurer_name}</p>
+                    <p className="text-xs text-[#6b7280] mt-2">Coverage</p>
+                    <p>{best.sum_assured ? `₹${best.sum_assured.toLocaleString()}` : '—'}</p>
+                    <p className="text-xs text-[#6b7280] mt-2">Premium</p>
+                    <p>{best.annual_premium ? `₹${best.annual_premium.toLocaleString()}` : '—'}</p>
+                    <p className="text-xs text-[#6b7280] mt-2">Recommendation Score</p>
+                    <p>{best.ai_score ?? best.ai_rank ?? '—'}</p>
+                  </div>
+                )
+              })()
+            ) : <p className="text-sm text-[#9ca3af]">No recommendation available.</p>}
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Uploaded Documents</p>
+            <div className="space-y-2">
+              {docs.length === 0 && <p className="text-sm text-[#9ca3af]">No documents uploaded for this case.</p>}
+              {docs.map(d => (
+                <div key={d.id} className="flex items-center justify-between">
+                  <div className="text-sm">
+                    <p className="font-medium">{d.file_name}</p>
+                    <p className="text-xs text-[#6b7280]">{d.document_type}</p>
+                  </div>
+                  <div>
+                    <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View</Btn>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">KYC Status</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-[#6b7280]">PAN Verified</p>
+                <p>{data?.kyc_status === 'PAN_VERIFIED' || data?.customer_profile?.pan_verified ? 'Verified' : 'Pending'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280]">Aadhaar Verified</p>
+                <p>{data?.kyc_status === 'AADHAAR_VERIFIED' || data?.customer_profile?.aadhaar_verified ? 'Verified' : 'Pending'}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Medical</p>
+            <div className="text-sm">
+              <p>Medical Required: {quotes?.some(q => q.medical_requirements) ? 'Yes' : 'No'}</p>
+              <p>Medical Completed: {data?.medical_requests?.length ? 'Yes' : 'No'}</p>
+              {docs.filter(x => /medical/i.test(x.document_type)).map(d => (
+                <div key={d.id} className="mt-2 flex items-center justify-between">
+                  <div className="text-sm">{d.file_name}</div>
+                  <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View Medical Report</Btn>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Responses</p>
+            <div className="space-y-2 text-sm">
+              {docs.map(d => (
+                <div key={d.id} className="flex items-center justify-between">
+                  <div>{d.file_name}</div>
+                  <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View</Btn>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+        </div>
+
+        <div className="space-y-4">
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Raise Query</p>
+            <div className="space-y-3">
+              <div>
+                <select value={queryText} onChange={e => setQueryText(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+                  <option>Need Income Proof</option>
+                  <option>Need Medical Report</option>
+                  <option>Need Bank Statement</option>
+                  <option>Need Address Proof</option>
+                  <option value={queryText}>Custom...</option>
+                </select>
+              </div>
+              <div>
+                <textarea rows={4} value={queryText} onChange={e => setQueryText(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none" placeholder="Write Query..." />
+              </div>
+              <div>
+                <Btn onClick={() => submitDecision('QUERY')} disabled={saving} className="w-full">{saving ? 'Raising…' : 'Raise Query'}</Btn>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Decision Notes</p>
+            <textarea rows={6} value={decisionNotes} onChange={e => setDecisionNotes(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none" placeholder="e.g. Income verified, medical acceptable" />
+          </Card>
+
+          <Card>
+            <div className="flex flex-col gap-3">
+              <Btn variant="success" onClick={() => submitDecision('APPROVED')} disabled={saving}>{saving ? 'Submitting…' : 'Approve'}</Btn>
+              <Btn variant="danger" onClick={() => submitDecision('REJECTED')} disabled={saving}>{saving ? 'Submitting…' : 'Reject'}</Btn>
+              <Btn variant="secondary" onClick={() => submitDecision('QUERY')} disabled={saving}>{saving ? 'Submitting…' : 'Raise Query'}</Btn>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 
 // ════════════════════════════════════════════════════════════════════
 // COMPLIANCE DASHBOARD
 // ════════════════════════════════════════════════════════════════════
+
+function PolicyIssuanceQueue() {
+  const [queue, setQueue] = useState([])
+  const [loading, setL] = useState(true)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
+  const navigate = useNavigate()
+
+  const load = () => {
+    setL(true)
+    setError(null)
+    api.get('/cases/').then(r => {
+      const policyCases = (r.data.cases || []).filter(c => c.current_stage === 'POLICY_ISSUANCE')
+      setQueue(policyCases)
+    }).catch(e => {
+      setError(e.response?.data?.detail || 'Failed to load policy queue')
+    }).finally(() => setL(false))
+  }
+
+  useEffect(load, [])
+
+  const cols = [
+    { key: 'case_number', label: 'Case #' },
+    { key: 'customer_id', label: 'Customer', render: r => r.customer_id.slice(0, 8) + '…' },
+    { key: 'sum_assured', label: 'Sum Assured', render: r => `₹${r.sum_assured?.toLocaleString() || '—'}` },
+    { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage} /> },
+    { key: 'created_at', label: 'Created', render: r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '—' },
+    { key: 'actions', label: '', render: r => (
+      <Btn size="sm" variant="primary" onClick={() => navigate(`view/${r.id}`)}>
+        View
+      </Btn>
+    )},
+  ]
+
+  return (
+    <div>
+      <SectionHeader title="Policy Issuance Queue" subtitle="Review and issue policies ready for finalization" />
+      {error && <Alert type="error" message={error} />}
+      {success && <Alert type="success" message={success} />}
+      <div className="mb-5">
+        <StatCard title="Pending Policy Issuance" value={queue.length} icon={FileText} color="#22c55e" />
+      </div>
+      <Card>{loading ? <Spinner /> : <DataTable columns={cols} rows={queue} emptyText="No policies awaiting issuance." />}</Card>
+    </div>
+  )
+}
+
+function PolicyIssuanceDetails() {
+  const { caseId } = useParams()
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [caseItem, setCaseItem] = useState(null)
+  const [policy, setPolicy] = useState(null)
+  const [quotes, setQuotes] = useState([])
+  const [docs, setDocs] = useState([])
+  const [viewOpen, setViewOpen] = useState(false)
+  const [selectedDocId, setSelectedDocId] = useState(null)
+  const [selectedDocTitle, setSelectedDocTitle] = useState('')
+  const [issuing, setIssuing] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
+
+  const load = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [caseResp, policiesResp, docsResp, quotesResp] = await Promise.all([
+        api.get(`/cases/${caseId}`),
+        api.get('/policies/'),
+        api.get(`/documents/case/${caseId}`),
+        api.get(`/quotes/case/${caseId}`),
+      ])
+      setCaseItem(caseResp.data)
+      const policyItem = (policiesResp.data.policies || []).find((p) => p.case_id === caseId)
+      setPolicy(policyItem || null)
+      setDocs(docsResp.data.documents || [])
+      setQuotes(quotesResp.data.quotes || [])
+    } catch (e) {
+      setError(e.response?.data?.detail || e.message || 'Failed to load case details')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (caseId) load()
+  }, [caseId])
+
+  const issuePolicy = async () => {
+    if (!policy) {
+      setError('No draft policy exists yet for this case.')
+      return
+    }
+    setIssuing(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const resp = await api.post(`/policies/${policy.id}/issue`)
+      setSuccess(`Policy issued successfully for ${caseItem.case_number}`)
+
+      // Optimistically update UI so both POLICY_ISSUANCE and COMPLETED
+      // appear done immediately even if backend updates are async.
+      try {
+        setPolicy((p) => (p ? { ...p, status: resp.data?.status || 'ISSUED' } : { ...policy, status: resp.data?.status || 'ISSUED' }))
+      } catch (e) {}
+      try {
+        setCaseItem((c) => (c ? { ...c, current_stage: 'COMPLETED', status: 'COMPLETED' } : { ...caseItem, current_stage: 'COMPLETED', status: 'COMPLETED' }))
+      } catch (e) {}
+
+      await load()
+    } catch (e) {
+      setError(e.response?.data?.detail || e.message || 'Failed to issue policy')
+    } finally {
+      setIssuing(false)
+    }
+  }
+
+  if (loading) {
+    return <Spinner />
+  }
+
+  if (!caseItem) {
+    return (
+      <div>
+        <SectionHeader title="Policy Issuance Details" subtitle="Case not found" action={<Btn variant="secondary" onClick={() => navigate('/dashboard/underwriter/policies')}>Back</Btn>} />
+        {error && <Alert type="error" message={error} />}
+      </div>
+    )
+  }
+
+  const profileEntries = caseItem.customer_profile ? Object.entries(caseItem.customer_profile) : []
+
+  return (
+    <div>
+      <SectionHeader
+        title={`Policy Issuance — ${caseItem.case_number}`}
+        subtitle="Review customer profile, medical uploads, and selected insurer before issuing"
+        action={<Btn variant="secondary" onClick={() => navigate('/dashboard/underwriter/policies')}>Back to list</Btn>}
+      />
+
+      {error && <Alert type="error" message={error} />}
+      {success && <Alert type="success" message={success} />}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+        <StatCard title="Case Stage" value={caseItem.current_stage} icon={FileText} />
+        <StatCard title="Sum Assured" value={caseItem.sum_assured ? `₹${caseItem.sum_assured.toLocaleString()}` : '—'} icon={ShieldCheck} />
+        <StatCard title="Policy Tenure" value={`${caseItem.policy_tenure || '—'} yrs`} icon={Clock} />
+      </div>
+
+      <Card className="mb-5">
+        <h3 className="text-lg font-semibold mb-4">Customer & Case Details</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <div className="text-sm text-[#6b7280] mb-2">Customer ID</div>
+            <div>{caseItem.customer_id}</div>
+            <div className="text-sm text-[#6b7280] mt-4 mb-2">Banker ID</div>
+            <div>{caseItem.banker_id || '—'}</div>
+            <div className="text-sm text-[#6b7280] mt-4 mb-2">Premium Budget</div>
+            <div>{caseItem.premium_budget ? `₹${caseItem.premium_budget.toLocaleString()}` : '—'}</div>
+          </div>
+          <div>
+            <div className="text-sm text-[#6b7280] mb-2">Customer Profile</div>
+            {profileEntries.length > 0 ? (
+              <div className="space-y-2">
+                {profileEntries.map(([key, value]) => (
+                  <div key={key}>
+                    <span className="font-semibold">{key.replace(/_/g, ' ')}:</span> {typeof value === 'object' ? JSON.stringify(value) : value?.toString() || '—'}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div>Profile details not available.</div>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      <Card className="mb-5">
+        <h3 className="text-lg font-semibold mb-4">Selected Policy</h3>
+        {policy ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div>
+              <div className="text-sm text-[#6b7280] mb-2">Insurer</div>
+              <div>{policy.insurer_name}</div>
+            </div>
+            <div>
+              <div className="text-sm text-[#6b7280] mb-2">Product</div>
+              <div>{policy.product_name || '—'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-[#6b7280] mb-2">Policy Number</div>
+              <div>{policy.policy_number || 'Draft'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-[#6b7280] mb-2">Status</div>
+              <div>{policy.status || 'DRAFT'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-[#6b7280] mb-2">Annual Premium</div>
+              <div>{policy.annual_premium ? `₹${policy.annual_premium.toLocaleString()}` : '—'}</div>
+            </div>
+          </div>
+        ) : (
+          <div>No policy draft found for this case.</div>
+        )}
+      </Card>
+
+      <Card className="mb-5">
+        <h3 className="text-lg font-semibold mb-4">Medical Documents</h3>
+        {docs.length > 0 ? (
+          <div className="space-y-3">
+            {docs.map((doc) => (
+              <div
+                key={doc.id}
+                className="border border-[#2a2f45] rounded-lg p-3 hover:bg-[#1e2235] cursor-pointer"
+                onClick={() => {
+                  setSelectedDocId(doc.id)
+                  setSelectedDocTitle(doc.file_name)
+                  setViewOpen(true)
+                }}
+              >
+                <div className="text-sm text-[#6b7280]">{doc.document_type}</div>
+                <div className="font-medium text-sm">{doc.file_name}</div>
+                <div className="text-xs text-[#6b7280] mt-1">Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}</div>
+                <div className="text-xs text-[#6b7280]">Verified: {doc.verified ? 'Yes' : 'No'}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>No medical uploads found for this case.</div>
+        )}
+      </Card>
+      <Modal open={viewOpen} onClose={() => setViewOpen(false)} title={selectedDocTitle} className="max-w-5xl">
+        <div className="w-full h-[75vh] bg-[#0f1117] rounded-lg overflow-hidden border border-[#2a2f45] relative">
+          {selectedDocId ? (
+            <iframe
+              src={`/api/v1/documents/${selectedDocId}/view?token=${encodeURIComponent(localStorage.getItem('access_token'))}`}
+              className="w-full h-full border-none"
+              title={selectedDocTitle}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-sm text-[#6b7280]">Select a document to preview</div>
+          )}
+        </div>
+      </Modal>
+
+      <Card className="mb-5">
+        <h3 className="text-lg font-semibold mb-4">Quote Options</h3>
+        {quotes.length > 0 ? (
+          <div className="space-y-3">
+            {quotes.map((quote) => (
+              <div key={quote.id} className="border border-[#2a2f45] rounded-lg p-3">
+                <div className="font-semibold">{quote.insurer_name}</div>
+                <div>{quote.product_name}</div>
+                <div className="text-sm text-[#6b7280]">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
+                <div className="text-sm text-[#6b7280]">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>No quotes found for this case.</div>
+        )}
+      </Card>
+
+      <div className="flex flex-wrap gap-3">
+        <Btn variant="success" onClick={issuePolicy} disabled={issuing || !policy}>
+          {issuing ? 'Issuing...' : 'Issue Policy'}
+        </Btn>
+        <Btn variant="secondary" onClick={() => navigate('/dashboard/underwriter/policies')}>
+          Back to list
+        </Btn>
+      </div>
+    </div>
+  )
+}
 
 function ComplianceOverview() {
   const [stats, setStats] = useState(null)

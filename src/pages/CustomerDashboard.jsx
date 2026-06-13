@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Alert, Spinner } from "../components/common";
 import { FileText, ShieldCheck, Clock } from "lucide-react";
 import api from "../services/api";
+import CustomerQueries from './customer/CustomerQueries'
 
 const STAGES = [
   "CUSTOMER_INTAKE","NEEDS_ANALYSIS","SUITABILITY_VALIDATION",
@@ -21,11 +22,11 @@ function CaseTimeline({ stage }) {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 90 }}>
             <div style={{
               width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-              background: i < idx ? "#22c55e" : i === idx ? "var(--accent)" : "var(--surface)",
-              border: `2px solid ${i <= idx ? (i < idx ? "#22c55e" : "var(--accent)") : "var(--border)"}`,
-              fontSize: 11, fontWeight: 700, color: i <= idx ? "#fff" : "var(--text-muted)",
+              background: i <= idx ? "#22c55e" : "var(--surface)",
+              border: `2px solid ${i <= idx ? "#22c55e" : "var(--border)"}`,
+              fontSize: 16, lineHeight: '20px', fontWeight: 900, color: i <= idx ? "#fff" : "var(--text-muted)",
             }}>
-              {i < idx ? "✓" : i + 1}
+              {i <= idx ? "✔" : i + 1}
             </div>
             <span style={{ fontSize: 9, color: i <= idx ? "var(--text)" : "var(--text-muted)", textAlign: "center", lineHeight: 1.2 }}>
               {s.replace(/_/g, " ")}
@@ -68,7 +69,7 @@ function MyCases() {
               {c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ""}
             </div>
           </div>
-          <CaseTimeline stage={c.current_stage} />
+          <CaseTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} />
         </Card>
       ))}
       {!loading && cases.length === 0 && (
@@ -82,6 +83,9 @@ function OTPConsent() {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [status, setStatus] = useState("idle"); // idle | loading | success | error
   const [error, setError] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [caseId] = useState(() => new URLSearchParams(window.location.search).get('case_id') || '');
 
   const handleDigit = (i, val) => {
     if (!/^\d?$/.test(val)) return;
@@ -91,14 +95,36 @@ function OTPConsent() {
     if (val && i < 5) document.getElementById(`otp-${i + 1}`)?.focus();
   };
 
+  const sendOtp = async () => {
+    if (!caseId) {
+      setError('No case selected. Open this page from the Documents section.');
+      return;
+    }
+    setSendingOtp(true);
+    setError(null);
+    try {
+      await api.post('/otp/send', { case_id: caseId });
+      setOtpSent(true);
+      setStatus('idle');
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to send OTP.');
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
   const verify = async () => {
+    if (!caseId) {
+      setError('No case selected. Open this page from the Documents section.');
+      return;
+    }
     setStatus("loading"); setError(null);
     try {
       const code = otp.join("");
-      await api.post("/otp/verify", { otp_code: code });
+      await api.post("/otp/verify", { case_id: caseId, otp_code: code });
       setStatus("success");
     } catch (e) {
-      setError("Invalid OTP. Please try again.");
+      setError(e.response?.data?.detail || 'Invalid OTP. Please try again.');
       setStatus("error");
     }
   };
@@ -136,8 +162,16 @@ function OTPConsent() {
             <Btn onClick={verify} disabled={status === "loading" || otp.join("").length < 6} style={{ width: "100%" }}>
               {status === "loading" ? "Verifying…" : "Verify & Give Consent"}
             </Btn>
+            <Btn
+              onClick={sendOtp}
+              disabled={sendingOtp}
+              variant="secondary"
+              style={{ width: "100%", marginTop: 10 }}
+            >
+              {sendingOtp ? 'Sending OTP…' : otpSent ? 'Resend OTP' : 'Send OTP'}
+            </Btn>
             <p style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)", marginTop: 16 }}>
-              Didn't receive OTP? <span style={{ color: "var(--accent)", cursor: "pointer" }}>Resend</span>
+              Use default OTP <strong>123456</strong> if email delivery is unavailable.
             </p>
           </>
         )}
@@ -180,6 +214,7 @@ export default function CustomerDashboard() {
       <Route index element={<MyCases />} />
       <Route path="documents" element={<div style={{ color: "var(--text-muted)" }}>Document upload portal — coming in next milestone.</div>} />
       <Route path="consent" element={<OTPConsent />} />
+      <Route path="queries" element={<CustomerQueries />} />
       <Route path="policies" element={<MyPolicies />} />
     </Routes>
   );

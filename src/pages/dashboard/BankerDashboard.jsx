@@ -124,7 +124,8 @@ function CaseList() {
     { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage} /> },
     { key: 'status', label: 'Status', render: r => <Badge label={r.status} /> },
     { key: 'sum_assured', label: 'Sum Assured', render: r => r.sum_assured ? `₹${r.sum_assured.toLocaleString()}` : '—' },
-    { key: 'banker_approved', label: 'Approved', render: r => r.banker_approved ? '✅' : '⏳' },
+    { key: 'banker_approved', label: 'Recommendation Accepted?', render: r => r.banker_approved ? 'Yes' : 'No' },
+    { key: 'consent_given', label: 'OTP Verified?', render: r => r.consent_given ? 'Yes' : 'Pending' },
     { key: 'created_at', label: 'Created', render: r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '—' },
     {
       key: 'actions', label: '',
@@ -670,6 +671,125 @@ function QuoteComparison() {
 }
 
 // ── Banker Approvals ──────────────────────────────────────────────────
+function BankerRecommendations() {
+  const { list: cases } = useSelector(s => s.cases)
+  const [caseId, setCaseId] = useState('')
+  const [quotes, setQuotes] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const load = async (id) => {
+    if (!id) return
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await api.get(`/quotes/case/${id}`)
+      setQuotes(data.quotes || [])
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to load recommendation data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const recommendedQuote = quotes
+    .slice()
+    .sort((a, b) => (a.ai_rank ?? 999) - (b.ai_rank ?? 999) || ((b.ai_score || 0) - (a.ai_score || 0)))[0]
+
+  const alternatives = quotes
+    .slice()
+    .sort((a, b) => (a.ai_rank ?? 999) - (b.ai_rank ?? 999) || ((b.ai_score || 0) - (a.ai_score || 0)))
+    .filter(q => q.id !== recommendedQuote?.id)
+
+  const formatScore = (score) => {
+    if (score == null) return 'N/A'
+    return `${Math.round((Number(score) || 0) * 100)}%`
+  }
+
+  return (
+    <div>
+      <SectionHeader title="Recommendation" subtitle="Review the AI-recommended product and alternative options" />
+
+      <div className="grid gap-4 lg:grid-cols-[320px_1fr] mb-5">
+        <Card>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-[#6b7280] uppercase tracking-[0.2em]">Select Case</label>
+              <select
+                value={caseId}
+                onChange={e => { setCaseId(e.target.value); setQuotes([]); }}
+                className="mt-2 w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0]"
+              >
+                <option value="">Choose a case…</option>
+                {cases.map(c => (
+                  <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>
+                ))}
+              </select>
+            </div>
+            <Btn onClick={() => load(caseId)} disabled={!caseId || loading} className="w-full">
+              {loading ? 'Loading…' : 'Load Recommendation'}
+            </Btn>
+            <div className="rounded-2xl border border-[#2a2f45] bg-[#101423] p-4 text-sm text-[#9ca3af]">
+              Choose a case and load quotes to see the recommended plan, score, and alternative products.
+            </div>
+            {error && <Alert type="error" message={error} />}
+          </div>
+        </Card>
+
+        <div className="space-y-4">
+          <Card className="p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#6b7280] mb-3">Recommended Product</p>
+            {!loading && !recommendedQuote && (
+              <div className="text-sm text-[#6b7280]">Select a case and load quotes to view the recommendation.</div>
+            )}
+            {recommendedQuote && (
+              <div className="space-y-4">
+                <div className="rounded-3xl border border-[#2a2f45] bg-[#0f1117] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-[#6b7280]">{recommendedQuote.insurer_name}</p>
+                      <h2 className="text-2xl font-bold text-[#e8eaf0]">{recommendedQuote.product_name}</h2>
+                    </div>
+                    <div className="rounded-2xl bg-[#111827] px-4 py-2 text-sm font-semibold text-[#22c55e]">
+                      Score: {formatScore(recommendedQuote.ai_score)}
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm leading-7 text-[#d1d5db] whitespace-pre-wrap">
+                    {recommendedQuote.ai_recommendation_text || 'No detailed reason was generated for this quote.'}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-[#2a2f45] bg-[#0f1117] p-5">
+                  <p className="text-sm font-semibold text-[#e8eaf0] mb-3">Alternative Products</p>
+                  {alternatives.length === 0 && <p className="text-sm text-[#6b7280]">No alternative products available.</p>}
+                  <div className="space-y-3">
+                    {alternatives.slice(0, 3).map((quote) => (
+                      <div key={quote.id} className="rounded-2xl border border-[#2a2f45] bg-[#111827] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-[#e8eaf0]">{quote.insurer_name}</p>
+                            <p className="text-xs text-[#6b7280]">{quote.product_name}</p>
+                          </div>
+                          <span className="rounded-full bg-[#fbbf24]/10 px-3 py-1 text-xs font-semibold text-[#fbbf24]">
+                            {formatScore(quote.ai_score)}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm text-[#9ca3af] leading-6 whitespace-pre-wrap">
+                          {quote.ai_recommendation_text || 'Reason not available for this product.'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BankerApprovals() {
   const dispatch = useDispatch()
   const { list: cases, loading } = useSelector(s => s.cases)
@@ -710,8 +830,6 @@ function BankerApprovals() {
     </div>
   )
 }
-
-
 
 function CustomerIntake() {
   const [customers, setCustomers] = useState([])
@@ -884,6 +1002,247 @@ function CustomerIntake() {
   )
 }
 
+function ProposalReview() {
+  const [cases, setCases] = useState([])
+  const [selectedCaseId, setSelectedCaseId] = useState('')
+  const [quotes, setQuotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [quoteLoading, setQuoteLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
+
+  const loadCases = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { data } = await api.get('/cases/')
+      const reviewCases = (data.cases || []).filter(c => c.banker_approved)
+      setCases(reviewCases)
+      if (reviewCases.length > 0) {
+        setSelectedCaseId(prev => prev || reviewCases[0].id)
+      }
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to load cases for proposal review')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadQuotes = async (caseId) => {
+    if (!caseId) {
+      setQuotes([])
+      return
+    }
+    setQuoteLoading(true)
+    try {
+      const { data } = await api.get(`/quotes/case/${caseId}`)
+      setQuotes(data.quotes || [])
+    } catch (e) {
+      setQuotes([])
+      setError(e.response?.data?.detail || 'Failed to load quote data')
+    } finally {
+      setQuoteLoading(false)
+    }
+  }
+
+  useEffect(() => { loadCases() }, [])
+
+  useEffect(() => {
+    if (selectedCaseId) loadQuotes(selectedCaseId)
+    else setQuotes([])
+  }, [selectedCaseId])
+
+  const selectedCase = cases.find(c => c.id === selectedCaseId)
+  const sortedQuotes = quotes.slice().sort((a, b) => (a.ai_rank ?? 999) - (b.ai_rank ?? 999) || ((b.ai_score || 0) - (a.ai_score || 0)))
+  const selectedQuote = sortedQuotes[0] || quotes[0] || null
+  const customerProfile = selectedCase?.customer_profile || {}
+  const nomineeName = customerProfile.nominee_name || customerProfile.nominee?.name || customerProfile.nominee?.full_name || 'Not provided'
+  const nomineeRelation = customerProfile.nominee_relationship || customerProfile.nominee?.relationship || ''
+  const coverageDetails = selectedQuote?.coverage_details || selectedQuote?.coverage || selectedQuote?.benefits || {}
+
+  const submitToUnderwriter = async () => {
+    if (!selectedCase) return
+    setSubmitting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      await api.post(`/workflow/case/${selectedCase.id}/run`)
+      setSuccess('Proposal submitted to underwriter workflow.')
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to submit proposal to underwriter')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div>
+      <SectionHeader title="Proposal Review" subtitle="Review customer details, coverage, premium and KYC before submitting to underwriting." />
+      {error && <Alert type="error" message={error} />}
+      {success && <Alert type="success" message={success} />}
+
+      <Card className="mb-5">
+        <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case for Proposal Review</label>
+        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)}
+          className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+          <option value="">Choose a case…</option>
+          {cases.map(c => (
+            <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>
+          ))}
+        </select>
+      </Card>
+
+      {loading ? <Spinner /> : !selectedCase ? (
+        <Card className="text-center py-12 text-[#6b7280]">No banker-approved cases available for proposal review.</Card>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_0.6fr] gap-5">
+          <div className="space-y-5">
+            <Card>
+              <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Details</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#d1d5db]">
+                <div>
+                  <p className="text-xs text-[#6b7280]">Name</p>
+                  <p>{customerProfile.name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Email</p>
+                  <p>{customerProfile.email || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Phone</p>
+                  <p>{customerProfile.phone || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Date of Birth</p>
+                  <p>{customerProfile.dob || customerProfile.date_of_birth || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Annual Income</p>
+                  <p>{customerProfile.annual_income ? `₹${Number(customerProfile.annual_income).toLocaleString()}` : 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Case Stage</p>
+                  <p>{selectedCase.current_stage}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <p className="text-sm font-semibold text-[#6b7280] mb-3">Nominee</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#d1d5db]">
+                <div>
+                  <p className="text-xs text-[#6b7280]">Name</p>
+                  <p>{nomineeName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Relationship</p>
+                  <p>{nomineeRelation || 'Not provided'}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <p className="text-sm font-semibold text-[#6b7280] mb-3">Coverage</p>
+              {selectedQuote ? (
+                <div className="space-y-3 text-sm text-[#d1d5db]">
+                  <div>
+                    <p className="text-xs text-[#6b7280]">Plan</p>
+                    <p>{selectedQuote.product_name || selectedQuote.insurer_name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#6b7280]">Coverage Details</p>
+                    {coverageDetails && typeof coverageDetails === 'object' ? (
+                      <div className="space-y-2">
+                        {Object.entries(coverageDetails).map(([key, value]) => (
+                          <div key={key} className="rounded-xl border border-[#2a2f45] bg-[#0f1117] p-3">
+                            <p className="text-[10px] text-[#6b7280] uppercase tracking-[0.18em] mb-1">{key.replace(/_/g, ' ')}</p>
+                            <p className="text-sm text-[#e8eaf0]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-[#9ca3af]">Coverage details are not available for this quote.</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-[#9ca3af]">No quote loaded yet for coverage review.</p>
+              )}
+            </Card>
+
+            <Card>
+              <p className="text-sm font-semibold text-[#6b7280] mb-3">KYC</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#d1d5db]">
+                <div>
+                  <p className="text-xs text-[#6b7280]">KYC Status</p>
+                  <p>{selectedCase.kyc_status || 'PENDING'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">eSign Status</p>
+                  <p>{selectedCase.esign_status || 'NOT_STARTED'}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="space-y-5">
+            <Card className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-[#6b7280] mb-2">Selected Quote</p>
+                <p className="text-lg font-bold text-[#e8eaf0]">{selectedQuote?.product_name || 'No quote selected'}</p>
+                <p className="text-sm text-[#6b7280]">{selectedQuote?.insurer_name || ''}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm text-[#d1d5db]">
+                <div className="rounded-2xl border border-[#2a2f45] bg-[#0f1117] p-4">
+                  <p className="text-[11px] text-[#6b7280]">Premium</p>
+                  <p className="font-semibold text-[#22c55e]">{selectedQuote?.annual_premium ? `₹${selectedQuote.annual_premium.toLocaleString()}` : '—'}</p>
+                </div>
+                <div className="rounded-2xl border border-[#2a2f45] bg-[#0f1117] p-4">
+                  <p className="text-[11px] text-[#6b7280]">Sum Assured</p>
+                  <p className="font-semibold text-[#e8eaf0]">{selectedQuote?.sum_assured ? `₹${selectedQuote.sum_assured.toLocaleString()}` : '—'}</p>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-[#2a2f45] bg-[#101423] p-5">
+                <p className="text-sm text-[#6b7280] mb-3">Review Notes</p>
+                <p className="text-sm text-[#d1d5db]">Submit the reviewed proposal to underwriting once customer details and KYC status are correct. This does not replace insurer underwriting review.</p>
+              </div>
+
+              <Btn onClick={submitToUnderwriter} disabled={submitting || !selectedCase} className="w-full">
+                {submitting ? 'Submitting…' : 'Submit To Underwriter'}
+              </Btn>
+            </Card>
+
+            <Card>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6b7280] mb-3">Proposal Summary</p>
+              <div className="space-y-3 text-sm text-[#d1d5db]">
+                <div>
+                  <p className="text-[#6b7280]">Case Number</p>
+                  <p>{selectedCase.case_number}</p>
+                </div>
+                <div>
+                  <p className="text-[#6b7280]">Banker Approved</p>
+                  <p>{selectedCase.banker_approved ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <p className="text-[#6b7280]">Current Stage</p>
+                  <p>{selectedCase.current_stage}</p>
+                </div>
+                <div>
+                  <p className="text-[#6b7280]">OTP Verified</p>
+                  <p>{selectedCase.consent_given ? 'Yes' : 'Pending'}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NotificationFeed() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -914,6 +1273,8 @@ export default function BankerDashboard() {
       <Route path="new" element={<NewCaseForm />} />
       <Route path="customers" element={<CustomerIntake />} />
       <Route path="quotes" element={<QuoteComparison />} />
+      <Route path="recommendation" element={<BankerRecommendations />} />
+      <Route path="proposal-review" element={<ProposalReview />} />
       <Route path="approvals" element={<BankerApprovals />} />
       <Route path="kb" element={<KnowledgeBase />} />
       <Route path="rag-chat" element={<RAGChat title="Insurance Knowledge Chat" placeholder="What is the difference between HDFC and LIC term plans?" />} />
