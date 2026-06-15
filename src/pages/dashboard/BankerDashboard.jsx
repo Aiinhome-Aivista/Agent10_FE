@@ -662,7 +662,7 @@ function QuoteComparison() {
             <QuoteCard key={q.id} q={q} isTop={i === 0} />
           ))}
           {!loading && quotes.length === 0 && caseId && (
-            <p className="text-[#6b7280] text-sm col-span-3 text-center py-10">No quotes yet. Click "Fetch New" to retrieve.</p>
+            <p className="text-[#6b7280] text-sm col-span-3 text-center py-10">Currently no quotes available.</p>
           )}
         </div>
       )}

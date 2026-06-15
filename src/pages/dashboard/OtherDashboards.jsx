@@ -597,7 +597,7 @@ function CustomerQuotes() {
         </select>
       </Card>
       {quoteLoading ? <Spinner /> : quotes.length === 0 ? (
-        <Card className="text-center py-12 text-[#6b7280]">No quotes available yet. Ask your banker to fetch them.</Card>
+        <Card className="text-center py-12 text-[#6b7280]">Currently no quotes available.</Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {quotes.map((quote, index) => (
@@ -1336,10 +1336,59 @@ function UWKYCDocs() {
   const [ok, setOk] = useState(null)
   const [err, setErr] = useState(null)
   const [verifying, setVerifying] = useState({})
+  const [initiating, setInitiating] = useState(false)
 
-  const loadCases = () => {
+  const loadCases = async () => {
     setL(true)
-    api.get('/medical/cases-for-uw').then(r => setCases(r.data.cases || [])).finally(() => setL(false))
+    try {
+      const res = await api.get('/medical/cases-for-uw')
+      const caseList = res.data.cases || []
+      setCases(caseList)
+      if (selectedCase) {
+        const updated = caseList.find(c => c.id === selectedCase.id)
+        if (updated) {
+          setSelectedCase(updated)
+          if (updated.medical_requests?.length > 0) {
+            setDL(true)
+            try {
+              const docRes = await api.get(`/documents/medical-request/${updated.medical_requests[0].id}`)
+              setDocs(docRes.data.documents || [])
+            } catch { setDocs([]) } finally { setDL(false) }
+          }
+        }
+      }
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Failed to load cases')
+    } finally {
+      setL(false)
+    }
+  }
+
+  const initiateKycRequest = async () => {
+    if (!selectedCase) return
+    setInitiating(true); setErr(null); setOk(null)
+    try {
+      await api.post('/medical/', {
+        case_id: selectedCase.id,
+        customer_id: selectedCase.customer_id,
+        requirements: ['PAN_CARD', 'ADDRESS_PROOF', 'SELFIE', 'SIGNATURE'],
+      })
+      setOk('KYC Document Request initiated successfully!')
+      // Save ID so we can retrieve the updated case list and re-select it
+      const currentId = selectedCase.id
+      const res = await api.get('/medical/cases-for-uw')
+      const caseList = res.data.cases || []
+      setCases(caseList)
+      const updated = caseList.find(c => c.id === currentId)
+      if (updated) {
+        setSelectedCase(updated)
+        setDocs([])
+      }
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Failed to initiate KYC request')
+    } finally {
+      setInitiating(false)
+    }
   }
 
   useEffect(() => { loadCases() }, [])
@@ -1426,6 +1475,20 @@ function UWKYCDocs() {
             <Card className="text-center py-16 text-[#6b7280]">Select a case to review documents</Card>
           ) : (
             <>
+              {(!selectedCase.medical_requests || selectedCase.medical_requests.length === 0) && (
+                <Card className="border-[#f59e0b]/40 bg-[#f59e0b]/5">
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm font-semibold text-[#f59e0b]">KYC Document Request Not Initiated</p>
+                    <p className="text-xs text-[#9ca3af]">
+                      The KYC document checklist has not been requested for this case yet. Click below to initiate it for the customer.
+                    </p>
+                    <Btn onClick={initiateKycRequest} disabled={initiating} className="w-full">
+                      {initiating ? 'Initiating KYC Request…' : '+ Initiate KYC Document Request'}
+                    </Btn>
+                  </div>
+                </Card>
+              )}
+
               <Card>
                 <p className="font-semibold mb-3 text-sm">Documents — {selectedCase.case_number}</p>
                 {docsLoading ? <Spinner /> : docs.length === 0 ? (
@@ -1798,11 +1861,12 @@ function UWCaseReview() {
             <p className="text-sm font-semibold text-[#6b7280] mb-3">Recommendation Summary</p>
             {quotes && quotes.length > 0 ? (
               (() => {
-                const best = quotes[0]
+                const selected = quotes.find(q => q.status === 'SELECTED')
+                const best = selected || quotes[0]
                 return (
                   <div className="text-sm">
-                    <p className="text-xs text-[#6b7280]">Recommended Plan</p>
-                    <p className="font-semibold">{best.product_name || best.insurer_name}</p>
+                    <p className="text-xs text-[#6b7280]">{selected ? 'Customer Selected Plan' : 'Recommended Plan'}</p>
+                    <p className="font-semibold">{best.product_name || best.insurer_name} {selected && '✅'}</p>
                     <p className="text-xs text-[#6b7280] mt-2">Coverage</p>
                     <p>{best.sum_assured ? `₹${best.sum_assured.toLocaleString()}` : '—'}</p>
                     <p className="text-xs text-[#6b7280] mt-2">Premium</p>
@@ -2263,14 +2327,31 @@ function PolicyIssuanceDetails() {
         <h3 className="text-lg font-semibold mb-4">Quote Options</h3>
         {quotes.length > 0 ? (
           <div className="space-y-3">
-            {quotes.map((quote) => (
-              <div key={quote.id} className="border border-[#2a2f45] rounded-lg p-3">
-                <div className="font-semibold">{quote.insurer_name}</div>
-                <div>{quote.product_name}</div>
-                <div className="text-sm text-[#6b7280]">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
-                <div className="text-sm text-[#6b7280]">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
-              </div>
-            ))}
+            {quotes.map((quote) => {
+              const isSelected = quote.id === policy?.quote_id || quote.status === 'SELECTED'
+              return (
+                <div
+                  key={quote.id}
+                  className={`border rounded-lg p-3 transition-all ${
+                    isSelected
+                      ? 'border-[#22c55e] bg-[#22c55e]/5'
+                      : 'border-[#2a2f45]'
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="font-semibold text-sm">{quote.insurer_name}</div>
+                    {isSelected && (
+                      <span className="bg-[#22c55e]/20 text-[#22c55e] text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                        SELECTED BY CUSTOMER
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-[#9ca3af]">{quote.product_name}</div>
+                  <div className="text-xs text-[#6b7280] mt-1.5">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
+                  <div className="text-xs text-[#6b7280]">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div>No quotes found for this case.</div>

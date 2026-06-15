@@ -116,33 +116,11 @@ export default function CustomerDocumentsPage() {
     if (activeRequest) dispatch(fetchUploadedDocuments(activeRequest.id))
   }
 
-  const handleCreateRequest = () => {
-    if (!selectedCaseId) return
-    dispatch(createDocumentRequest({
-      case_id: selectedCaseId,
-      requirements: KYC_DOC_TYPES.map(d => d.key),
-    })).unwrap()
-      .then(() => dispatch(fetchDocumentRequests()))
-      .catch(() => {})
-  }
-
   const handleUpload = (document_type, file) => {
-    if (!file || !selectedCaseId) return
+    if (!file || !selectedCaseId || !activeRequest) return
     ;(async () => {
       try {
-        let reqId = activeRequest?.id
-        if (!reqId) {
-          const payload = await dispatch(createDocumentRequest({
-            case_id: selectedCaseId,
-            requirements: KYC_DOC_TYPES.map(d => d.key),
-          })).unwrap()
-          reqId = payload.id || payload?.data?.id
-          // set active request locally so UI enables uploads immediately
-          dispatch(setActiveRequest({ id: reqId, case_id: selectedCaseId, requirements: KYC_DOC_TYPES.map(d => d.key), status: 'PENDING' }))
-          // refresh requests list in background
-          dispatch(fetchDocumentRequests())
-        }
-        if (!reqId) return
+        const reqId = activeRequest.id
         await dispatch(uploadDocument({ medical_request_id: reqId, document_type, file })).unwrap()
         dispatch(fetchUploadedDocuments(reqId))
       } catch (e) {
@@ -329,9 +307,6 @@ export default function CustomerDocumentsPage() {
           )}
 
           <div className="flex gap-2 flex-shrink-0">
-            <Btn onClick={handleCreateRequest} disabled={!selectedCaseId || creating}>
-              {creating ? 'Creating…' : '+ Create Doc Request'}
-            </Btn>
             <Btn variant="secondary" onClick={refreshAll} disabled={loading}>
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               {loading ? '' : 'Refresh'}
@@ -339,7 +314,7 @@ export default function CustomerDocumentsPage() {
           </div>
         </div>
         <p className="text-xs text-[#6b7280] mt-3">
-          Create a document request once per case, then upload all required KYC documents below.
+          Upload all required KYC documents below once the underwriter has initiated the request for this case.
         </p>
       </Card>
 
@@ -354,62 +329,62 @@ export default function CustomerDocumentsPage() {
               Document Checklist
             </p>
 
-            {!activeRequest && (
+            {!activeRequest ? (
               <div className="rounded-lg border border-[#2a2f45] bg-[#0b0d14] p-4 text-center text-sm text-[#6b7280]">
-                No document request exists for this case yet. Click "Create Doc Request" above.
+                No KYC document request has been initiated for this case yet. Please wait for the underwriter to request your KYC documents.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {KYC_DOC_TYPES.map(({ key, label, icon, hint }) => {
+                  const uploaded    = uploadedDocuments.find(d => d.document_type === key)
+                  const upStatus    = uploadStatus[key] || 'idle'
+                  const isUploading = upStatus === 'uploading'
+                  const isDone      = !!uploaded
+                  const isError     = upStatus === 'error'
+
+                  return (
+                    <div
+                      key={key}
+                      className={`rounded-xl border p-4 transition-all duration-200 ${
+                        isDone  ? 'border-[#22c55e]/40 bg-[#22c55e]/5' :
+                        isError ? 'border-[#ef4444]/40 bg-[#ef4444]/5' :
+                                  'border-[#2a2f45] bg-[#0f1117]'
+                      }`}
+                    >
+                      {/* Header row */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{icon}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-[#e8eaf0]">{label}</p>
+                            <p className="text-[10px] text-[#6b7280]">{hint}</p>
+                            {uploaded && (
+                              <p className="text-[10px] text-[#22c55e] mt-0.5 font-medium truncate max-w-[200px]">
+                                ✓ {uploaded.file_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Badge label={isDone ? 'Uploaded' : isError ? 'Failed' : isUploading ? 'Uploading…' : 'Pending'} />
+                      </div>
+
+                      {/* File input */}
+                      <input
+                        ref={el => fileRefs.current[key] = el}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        disabled={isUploading}
+                        onChange={e => handleUpload(key, e.target.files?.[0])}
+                        className="block w-full text-xs text-[#6b7280]
+                          file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0
+                          file:bg-[#6366f1] file:text-white file:text-xs file:font-semibold
+                          file:cursor-pointer cursor-pointer disabled:opacity-40"
+                      />
+                    </div>
+                  )
+                })}
               </div>
             )}
-
-            <div className="space-y-3">
-              {KYC_DOC_TYPES.map(({ key, label, icon, hint }) => {
-                const uploaded    = uploadedDocuments.find(d => d.document_type === key)
-                const upStatus    = uploadStatus[key] || 'idle'
-                const isUploading = upStatus === 'uploading'
-                const isDone      = !!uploaded
-                const isError     = upStatus === 'error'
-
-                return (
-                  <div
-                    key={key}
-                    className={`rounded-xl border p-4 transition-all duration-200 ${
-                      isDone  ? 'border-[#22c55e]/40 bg-[#22c55e]/5' :
-                      isError ? 'border-[#ef4444]/40 bg-[#ef4444]/5' :
-                                'border-[#2a2f45] bg-[#0f1117]'
-                    }`}
-                  >
-                    {/* Header row */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{icon}</span>
-                        <div>
-                          <p className="text-sm font-semibold text-[#e8eaf0]">{label}</p>
-                          <p className="text-[10px] text-[#6b7280]">{hint}</p>
-                          {uploaded && (
-                            <p className="text-[10px] text-[#22c55e] mt-0.5 font-medium truncate max-w-[200px]">
-                              ✓ {uploaded.file_name}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Badge label={isDone ? 'Uploaded' : isError ? 'Failed' : isUploading ? 'Uploading…' : 'Pending'} />
-                    </div>
-
-                    {/* File input */}
-                    <input
-                      ref={el => fileRefs.current[key] = el}
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      disabled={isUploading}
-                      onChange={e => handleUpload(key, e.target.files?.[0])}
-                      className="block w-full text-xs text-[#6b7280]
-                        file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0
-                        file:bg-[#6366f1] file:text-white file:text-xs file:font-semibold
-                        file:cursor-pointer cursor-pointer disabled:opacity-40"
-                    />
-                  </div>
-                )
-              })}
-            </div>
           </Card>
 
           {/* Uploaded Documents List */}
