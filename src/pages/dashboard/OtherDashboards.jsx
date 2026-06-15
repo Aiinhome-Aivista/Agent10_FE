@@ -81,10 +81,48 @@ function StageTimeline({ stage }) {
 function CustomerMyCases() {
   const { user } = useSelector(s => s.auth)
   const [cases, setCases] = useState([])
+  const [queries, setQueries] = useState([])
   const [loading, setL] = useState(true)
+  const [replyText, setReplyText] = useState({})
+  const [submittingReply, setSubmittingReply] = useState({})
+
+  const loadData = async () => {
+    try {
+      const [cRes, qRes] = await Promise.all([
+        api.get('/cases/'),
+        api.get('/queries/mine')
+      ])
+      setCases(cRes.data.cases || [])
+      setQueries(qRes.data.queries || [])
+    } catch (e) {
+      console.error('Failed to load customer cases/queries', e)
+    } finally {
+      setL(false)
+    }
+  }
+
   useEffect(() => {
-    api.get('/cases/').then(r => setCases(r.data.cases)).finally(() => setL(false))
+    loadData()
   }, [])
+
+  const handleSendReply = async (caseId) => {
+    const text = replyText[caseId] || ''
+    if (!text.trim()) return
+    
+    setSubmittingReply(prev => ({ ...prev, [caseId]: true }))
+    try {
+      await api.post(`/underwriting/cases/${caseId}/respond-query`, { message: text })
+      // Clear input
+      setReplyText(prev => ({ ...prev, [caseId]: '' }))
+      // Reload
+      await loadData()
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to submit query response')
+    } finally {
+      setSubmittingReply(prev => ({ ...prev, [caseId]: false }))
+    }
+  }
+
   return (
     <div>
       <SectionHeader title="My Insurance Cases" />
@@ -95,22 +133,55 @@ function CustomerMyCases() {
       </div>
       {loading ? <Spinner /> : cases.length === 0
         ? <Card className="text-center py-12 text-[#6b7280]">No cases yet. Contact your banker.</Card>
-        : cases.map(c => (
-          <Card key={c.id} className="mb-4">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="font-bold">{c.case_number}</p>
-                <Badge label={c.status} />
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <Badge label={c.kyc_status || 'PENDING_KYC'} />
-                  <Badge label={c.esign_status || 'NOT_STARTED'} />
+        : cases.map(c => {
+            const pendingQuery = queries.find(q => q.case_id === c.id && !q.resolved)
+            return (
+              <Card key={c.id} className="mb-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="font-bold">{c.case_number}</p>
+                    <Badge label={c.status} />
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <Badge label={c.kyc_status || 'PENDING_KYC'} />
+                      <Badge label={c.esign_status || 'NOT_STARTED'} />
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-[#22c55e]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ''}</p>
                 </div>
-              </div>
-              <p className="text-sm font-bold text-[#22c55e]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ''}</p>
-            </div>
-            <StageTimeline stage={c.current_stage} />
-          </Card>
-        ))
+                <StageTimeline stage={c.current_stage} />
+                
+                {pendingQuery && (
+                  <div className="mt-4 p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/5 backdrop-blur-md">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-yellow-500">⚠️</span>
+                      <p className="text-sm font-semibold text-yellow-500">Underwriter Query Received</p>
+                    </div>
+                    <p className="text-xs text-[#9ca3af] mb-3 bg-[#0c0e16] p-3 rounded-lg border border-[#2a2f45]">
+                      {pendingQuery.reason}
+                    </p>
+                    
+                    <textarea
+                      value={replyText[c.id] || ''}
+                      onChange={e => setReplyText(prev => ({ ...prev, [c.id]: e.target.value }))}
+                      className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-xs text-[#e8eaf0] outline-none resize-none mb-3"
+                      rows={3}
+                      placeholder="Enter your detailed response here..."
+                    />
+                    
+                    <div className="flex justify-end">
+                      <Btn 
+                        size="sm" 
+                        onClick={() => handleSendReply(c.id)}
+                        disabled={submittingReply[c.id] || !(replyText[c.id] || '').trim()}
+                      >
+                        {submittingReply[c.id] ? 'Submitting...' : 'Submit Response'}
+                      </Btn>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )
+          })
       }
     </div>
   )
@@ -589,6 +660,27 @@ function CustomerQuotes() {
           {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>)}
         </select>
       </Card>
+      {selectedCaseId && quotes.length > 0 && (
+        <div className="mb-4">
+          <Btn onClick={async () => {
+            try {
+              const res = await api.get(`/cases/${selectedCaseId}/recommendation/download`, { responseType: 'blob' })
+              const blob = new Blob([res.data], { type: 'application/pdf' })
+              const url = window.URL.createObjectURL(blob)
+              const link = document.createElement('a')
+              link.href = url
+              link.setAttribute('download', `Recommendation_${selectedCaseId.slice(0, 8)}.pdf`)
+              document.body.appendChild(link)
+              link.click()
+              link.parentNode.removeChild(link)
+            } catch (err) {
+              alert('Failed to download recommendation PDF')
+            }
+          }}>
+            Download AI Recommendation Summary (PDF)
+          </Btn>
+        </div>
+      )}
       {quoteLoading ? <Spinner /> : quotes.length === 0 ? (
         <Card className="text-center py-12 text-[#6b7280]">No quotes available yet. Ask your banker to fetch them.</Card>
       ) : (
@@ -1082,6 +1174,25 @@ function CustomerDocuments() {
               <Btn onClick={completeEsign} disabled={!allUploaded || !termsAccepted}>
                 Mock eSign
               </Btn>
+              {selectedCase && ['PROPOSAL_GENERATION', 'MEDICAL_COORDINATION', 'UNDERWRITING', 'POLICY_ISSUANCE', 'COMPLETED'].includes(selectedCase.current_stage) && (
+                <Btn onClick={async () => {
+                  try {
+                    const res = await api.get(`/policies/${selectedCaseId}/proposal/download`, { responseType: 'blob' })
+                    const blob = new Blob([res.data], { type: 'application/pdf' })
+                    const url = window.URL.createObjectURL(blob)
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.setAttribute('download', `Proposal_${selectedCase.case_number}.pdf`)
+                    document.body.appendChild(link)
+                    link.click()
+                    link.parentNode.removeChild(link)
+                  } catch (err) {
+                    alert('Failed to download proposal PDF')
+                  }
+                }}>
+                  Download Pre-filled Proposal Form (PDF)
+                </Btn>
+              )}
               <Btn variant="secondary" onClick={() => window.location.assign('/dashboard/customer/policies')}>
                 View Policies
               </Btn>
@@ -1522,6 +1633,7 @@ function UWQueue() {
                   <option value="APPROVED">Approve</option>
                   <option value="REJECTED">Reject</option>
                   <option value="DEFERRED">Defer</option>
+                  <option value="QUERY">Raise Underwriter Query</option>
                 </select>
               </div>
               <div>

@@ -244,7 +244,27 @@ function CaseList() {
               <Btn size="sm" onClick={() => triggerWorkflow(activeCase.id)}>▶ Run AI Workflow</Btn>
               <Btn size="sm" variant="secondary" onClick={() => triggerFetch(activeCase.id)}>📊 Fetch Quotes</Btn>
               {!activeCase.banker_approved && <Btn size="sm" variant="success" onClick={() => approve(activeCase.id)}>✅ Approve</Btn>}
+              {quotes.length > 0 && (
+                <Btn size="sm" variant="secondary" onClick={async () => {
+                  try {
+                    const res = await api.get(`/cases/${activeCase.id}/recommendation/download`, { responseType: 'blob' })
+                    const blob = new Blob([res.data], { type: 'application/pdf' })
+                    const url = window.URL.createObjectURL(blob)
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.setAttribute('download', `Recommendation_${activeCase.case_number}.pdf`)
+                    document.body.appendChild(link)
+                    link.click()
+                    link.parentNode.removeChild(link)
+                  } catch (err) {
+                    alert('Failed to download recommendation PDF')
+                  }
+                }}>
+                  📥 Download Recommendation PDF
+                </Btn>
+              )}
             </div>
+
 
             {/* Quotes */}
             {qLoading ? <Spinner /> : quotes.length > 0 && (
