@@ -51,15 +51,39 @@ export const fetchDocumentsByCase = createAsyncThunk(
   }
 )
 
+export const fetchKycDocumentsByCase = createAsyncThunk(
+  'documents/fetchKycDocuments',
+  async (case_id, { rejectWithValue }) => {
+    try {
+      const res = await api.get(`/kyc/documents/${case_id}`)
+      return res.data.documents || []
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.detail || 'Failed to load KYC documents')
+    }
+  }
+)
+
+export const fetchKycStatus = createAsyncThunk(
+  'documents/fetchKycStatus',
+  async (case_id, { rejectWithValue }) => {
+    try {
+      const res = await api.get(`/kyc/status/${case_id}`)
+      return res.data || {}
+    } catch (e) {
+      return rejectWithValue(e.response?.data?.detail || 'Failed to load KYC status')
+    }
+  }
+)
+
 export const uploadDocument = createAsyncThunk(
   'documents/upload',
-  async ({ medical_request_id, document_type, file }, { rejectWithValue }) => {
+  async ({ case_id, document_type, file }, { rejectWithValue }) => {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('medical_request_id', medical_request_id)
+      fd.append('case_id', case_id)
       fd.append('document_type', document_type)
-      const res = await api.post('/medical/upload', fd)
+      const res = await api.post('/kyc/upload', fd)
       return { document_type, data: res.data }
     } catch (e) {
       return rejectWithValue(e.response?.data?.detail || `Failed to upload ${document_type}`)
@@ -102,6 +126,8 @@ const documentsSlice = createSlice({
     requests: [],          // all medical/doc requests for this customer
     activeRequest: null,   // currently selected request for the chosen case
     uploadedDocuments: [], // docs under activeRequest
+    kycDocuments: [],      // KYC document uploads for selected case
+    kycStatus: null,
     uploadStatus: {},      // { [document_type]: 'idle'|'uploading'|'done'|'error' }
     loading: false,
     creating: false,
@@ -163,6 +189,30 @@ const documentsSlice = createSlice({
         state.uploadedDocuments = action.payload
       })
       .addCase(fetchDocumentsByCase.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+
+    // fetchKycDocumentsByCase
+    builder
+      .addCase(fetchKycDocumentsByCase.pending, (state) => { state.loading = true })
+      .addCase(fetchKycDocumentsByCase.fulfilled, (state, action) => {
+        state.loading = false
+        state.kycDocuments = action.payload
+      })
+      .addCase(fetchKycDocumentsByCase.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+
+    // fetchKycStatus
+    builder
+      .addCase(fetchKycStatus.pending, (state) => { state.loading = true })
+      .addCase(fetchKycStatus.fulfilled, (state, action) => {
+        state.loading = false
+        state.kycStatus = action.payload.overall_status || null
+      })
+      .addCase(fetchKycStatus.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })

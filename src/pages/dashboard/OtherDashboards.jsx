@@ -109,7 +109,7 @@ function CustomerMyCases() {
                 <p className="font-bold">{c.case_number}</p>
                 <Badge label={c.status} />
                 <div className="flex gap-2 mt-2 flex-wrap">
-                  <Badge label={c.kyc_status || 'PENDING_KYC'} />
+                  <Badge label={c.kyc_status || 'PENDING'} />
                   <Badge label={c.esign_status || 'NOT_STARTED'} />
                 </div>
               </div>
@@ -265,7 +265,7 @@ function CustomerProfileNeeds() {
             {selectedCase && (
               <div className="flex gap-2 items-center pt-4">
                 <Badge label={selectedCase.current_stage} />
-                <Badge label={selectedCase.kyc_status || 'PENDING_KYC'} />
+                <Badge label={selectedCase.kyc_status || 'PENDING'} />
               </div>
             )}
           </div>
@@ -1236,6 +1236,17 @@ function CustomerPolicies() {
   useEffect(() => {
     api.get(`/policies/customer/${user?.id}`).then(r => setP(r.data.policies)).finally(() => setL(false))
   }, [user])
+  const downloadPolicy = (policyId, policyNumber) => {
+    const token = localStorage.getItem('access_token')
+    const url = `/api/v1/policies/${policyId}/download?token=${encodeURIComponent(token)}`
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `Policy_${policyNumber || policyId}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const cols = [
     { key: 'policy_number', label: 'Policy #' },
     { key: 'insurer_name', label: 'Insurer' },
@@ -1243,6 +1254,9 @@ function CustomerPolicies() {
     { key: 'sum_assured', label: 'Sum Assured', render: r => `₹${r.sum_assured?.toLocaleString()}` },
     { key: 'annual_premium', label: 'Premium', render: r => `₹${r.annual_premium?.toLocaleString()}` },
     { key: 'status', label: 'Status', render: r => <Badge label={r.status} /> },
+    { key: 'id', label: 'Action', render: r => r.status === 'ISSUED' ? 
+      <Btn size="sm" variant="secondary" onClick={() => downloadPolicy(r.id, r.policy_number)}>Download</Btn> : 
+      <span className="text-xs text-[#6b7280]">—</span> },
   ]
   return (
     <div>
@@ -1297,8 +1311,9 @@ function CustomerNotifications() {
             </Card>
           ))}
         </div>
-      )}
-    </div>
+      )
+    }
+  </div>
   )
 }
 
@@ -1326,7 +1341,7 @@ function UWKYCDocs() {
   const [cases, setCases] = useState([])
   const [loading, setL] = useState(true)
   const [selectedCase, setSelectedCase] = useState(null)
-  const [docs, setDocs] = useState([])
+  const [kycDocs, setKycDocs] = useState([])
   const [docsLoading, setDL] = useState(false)
   const [notifCaseId, setNotifCaseId] = useState('')
   const [notifCustomerId, setNotifCustomerId] = useState('')
@@ -1335,7 +1350,7 @@ function UWKYCDocs() {
   const [sending, setSending] = useState(false)
   const [ok, setOk] = useState(null)
   const [err, setErr] = useState(null)
-  const [verifying, setVerifying] = useState({})
+  const [actioning, setActioning] = useState({})
 
   const loadCases = () => {
     setL(true)
@@ -1349,28 +1364,42 @@ function UWKYCDocs() {
     setNotifCaseId(c.id)
     setNotifCustomerId(c.customer_id)
     setErr(null); setOk(null)
-    if (c.medical_requests?.length > 0) {
-      setDL(true)
-      try {
-        const res = await api.get(`/documents/medical-request/${c.medical_requests[0].id}`)
-        setDocs(res.data.documents || [])
-      } catch { setDocs([]) } finally { setDL(false) }
-    } else {
-      setDocs([])
-    }
+    setDL(true)
+    try {
+      const res = await api.get(`/underwriting/case/${c.id}/documents`)
+      setKycDocs(res.data.documents || [])
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Failed to load KYC documents')
+      setKycDocs([])
+    } finally { setDL(false) }
   }
 
-  const verifyDoc = async (docId) => {
-    setVerifying(p => ({ ...p, [docId]: true }))
+  const approveDoc = async (docId) => {
+    setActioning(p => ({ ...p, [docId]: true }))
+    setErr(null); setOk(null)
     try {
-      await api.patch(`/documents/${docId}/verify`)
-      setOk('Document verified!')
-      if (selectedCase?.medical_requests?.[0]) {
-        const res = await api.get(`/documents/medical-request/${selectedCase.medical_requests[0].id}`)
-        setDocs(res.data.documents || [])
+      await api.post('/underwriting/document/approve', { document_id: docId })
+      setOk('Document approved!')
+      if (selectedCase) {
+        const res = await api.get(`/underwriting/case/${selectedCase.id}/documents`)
+        setKycDocs(res.data.documents || [])
       }
-    } catch (e) { setErr(e.response?.data?.detail || 'Failed') }
-    finally { setVerifying(p => ({ ...p, [docId]: false })) }
+    } catch (e) { setErr(e.response?.data?.detail || 'Failed to approve document') }
+    finally { setActioning(p => ({ ...p, [docId]: false })) }
+  }
+
+  const rejectDoc = async (docId) => {
+    setActioning(p => ({ ...p, [docId]: true }))
+    setErr(null); setOk(null)
+    try {
+      await api.post('/underwriting/document/reject', { document_id: docId })
+      setOk('Document rejected')
+      if (selectedCase) {
+        const res = await api.get(`/underwriting/case/${selectedCase.id}/documents`)
+        setKycDocs(res.data.documents || [])
+      }
+    } catch (e) { setErr(e.response?.data?.detail || 'Failed to reject document') }
+    finally { setActioning(p => ({ ...p, [docId]: false })) }
   }
 
   const sendNotif = async () => {
@@ -1413,7 +1442,7 @@ function UWKYCDocs() {
                 <p className="text-xs font-bold">{c.case_number}</p>
                 <p className="text-xs text-[#6b7280] mt-0.5">{c.current_stage}</p>
                 <div className="flex gap-2 mt-1 flex-wrap">
-                  <Badge label={c.kyc_status || 'PENDING_KYC'} />
+                  <Badge label={c.kyc_status || 'PENDING'} />
                 </div>
               </div>
             ))}
@@ -1427,24 +1456,31 @@ function UWKYCDocs() {
           ) : (
             <>
               <Card>
-                <p className="font-semibold mb-3 text-sm">Documents — {selectedCase.case_number}</p>
-                {docsLoading ? <Spinner /> : docs.length === 0 ? (
-                  <p className="text-xs text-[#6b7280]">No documents uploaded yet by the customer.</p>
+                <p className="font-semibold mb-3 text-sm">KYC Documents — {selectedCase.case_number}</p>
+                {docsLoading ? <Spinner /> : kycDocs.length === 0 ? (
+                  <p className="text-xs text-[#6b7280]">No KYC documents uploaded yet by the customer.</p>
                 ) : (
                   <div className="space-y-2">
-                    {docs.map(d => (
-                      <div key={d.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#2a2f45] bg-[#0f1117] px-3 py-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold truncate">{d.document_type}</p>
-                          <p className="text-xs text-[#6b7280] truncate">{d.file_name}</p>
+                    {kycDocs.map(d => (
+                      <div key={d.id} className="flex flex-col gap-3 rounded-lg border border-[#2a2f45] bg-[#0f1117] px-3 py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold truncate">{d.document_type}</p>
+                            <p className="text-xs text-[#6b7280] truncate">{d.file_name}</p>
+                            {d.verifier_remarks && <p className="text-xs text-[#9ca3af] mt-1">Notes: {d.verifier_remarks}</p>}
+                          </div>
+                          <Badge label={d.status || 'PENDING'} />
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge label={d.verified ? 'Verified' : 'Pending'} />
-                          {!d.verified && (
-                            <Btn size="sm" onClick={() => verifyDoc(d.id)} disabled={verifying[d.id]}>
-                              {verifying[d.id] ? '…' : 'Verify'}
-                            </Btn>
-                          )}
+                        <div className="flex flex-wrap gap-2">
+                          <Btn size="sm" variant="secondary" onClick={() => window.open(`/api/v1/kyc/${d.id}/view?token=${encodeURIComponent(localStorage.getItem('access_token'))}`, '_blank')}>
+                            View
+                          </Btn>
+                          <Btn size="sm" onClick={() => approveDoc(d.id)} disabled={actioning[d.id]}>
+                            {actioning[d.id] ? '…' : 'Approve'}
+                          </Btn>
+                          <Btn size="sm" variant="danger" onClick={() => rejectDoc(d.id)} disabled={actioning[d.id]}>
+                            {actioning[d.id] ? '…' : 'Reject'}
+                          </Btn>
                         </div>
                       </div>
                     ))}

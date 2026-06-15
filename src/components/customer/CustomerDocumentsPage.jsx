@@ -20,6 +20,8 @@ import {
   createDocumentRequest,
   fetchUploadedDocuments,
   fetchDocumentsByCase,
+  fetchKycDocumentsByCase,
+  fetchKycStatus,
   uploadDocument,
   submitProfileUpdateRequest,
   submitESign,
@@ -56,7 +58,7 @@ export default function CustomerDocumentsPage() {
   const navigate   = useNavigate()
   const { user }   = useSelector(s => s.auth)
   const {
-    requests, activeRequest, uploadedDocuments,
+    requests, activeRequest, uploadedDocuments, kycDocuments, kycStatus,
     uploadStatus, loading, creating, signingIn,
     error, successMessage,
   } = useSelector(s => s.documents)
@@ -90,16 +92,17 @@ export default function CustomerDocumentsPage() {
   // Load all doc requests
   useEffect(() => { dispatch(fetchDocumentRequests()) }, [dispatch])
 
-  // When selected case changes → update activeRequest
+  // When selected case changes → update activeRequest and KYC status/docs
   useEffect(() => {
     const req = requests.find(r => r.case_id === selectedCaseId) || null
     dispatch(setActiveRequest(req))
     if (req) {
       dispatch(fetchUploadedDocuments(req.id))
-    } else if (selectedCaseId) {
-      // No medical request found for this case in the requests list —
-      // fetch any documents attached to this case so the Documents panel still shows uploaded files.
+    }
+    if (selectedCaseId) {
       dispatch(fetchDocumentsByCase(selectedCaseId))
+      dispatch(fetchKycDocumentsByCase(selectedCaseId))
+      dispatch(fetchKycStatus(selectedCaseId))
     }
   }, [selectedCaseId, requests, dispatch])
 
@@ -114,6 +117,10 @@ export default function CustomerDocumentsPage() {
   const refreshAll = () => {
     dispatch(fetchDocumentRequests())
     if (activeRequest) dispatch(fetchUploadedDocuments(activeRequest.id))
+    if (selectedCaseId) {
+      dispatch(fetchKycDocumentsByCase(selectedCaseId))
+      dispatch(fetchKycStatus(selectedCaseId))
+    }
   }
 
   const handleCreateRequest = () => {
@@ -130,21 +137,9 @@ export default function CustomerDocumentsPage() {
     if (!file || !selectedCaseId) return
     ;(async () => {
       try {
-        let reqId = activeRequest?.id
-        if (!reqId) {
-          const payload = await dispatch(createDocumentRequest({
-            case_id: selectedCaseId,
-            requirements: KYC_DOC_TYPES.map(d => d.key),
-          })).unwrap()
-          reqId = payload.id || payload?.data?.id
-          // set active request locally so UI enables uploads immediately
-          dispatch(setActiveRequest({ id: reqId, case_id: selectedCaseId, requirements: KYC_DOC_TYPES.map(d => d.key), status: 'PENDING' }))
-          // refresh requests list in background
-          dispatch(fetchDocumentRequests())
-        }
-        if (!reqId) return
-        await dispatch(uploadDocument({ medical_request_id: reqId, document_type, file })).unwrap()
-        dispatch(fetchUploadedDocuments(reqId))
+        await dispatch(uploadDocument({ case_id: selectedCaseId, document_type, file })).unwrap()
+        dispatch(fetchKycDocumentsByCase(selectedCaseId))
+        dispatch(fetchKycStatus(selectedCaseId))
       } catch (e) {
         // swallow — errors handled in slice
       }
@@ -274,9 +269,9 @@ export default function CustomerDocumentsPage() {
   }, [otpCountdown])
 
   // ── Derived ──────────────────────────────────────────────────────
-  const uploadedCount = uploadedDocuments.length
+  const uploadedCount = kycDocuments.length
   const allUploaded   = KYC_DOC_TYPES.every(d =>
-    uploadedDocuments.some(doc => doc.document_type === d.key))
+    kycDocuments.some(doc => doc.document_type === d.key))
   const selectedCase  = cases.find(c => c.id === selectedCaseId) || null
 
   if (casesLoading) return <Spinner />
@@ -324,7 +319,7 @@ export default function CustomerDocumentsPage() {
           {selectedCase && (
             <div className="flex gap-2 items-center pb-0.5">
               <Badge label={selectedCase.current_stage} />
-              <Badge label={selectedCase.kyc_status || 'PENDING_KYC'} />
+              <Badge label={selectedCase.kyc_status || 'PENDING'} />
             </div>
           )}
 
@@ -362,7 +357,7 @@ export default function CustomerDocumentsPage() {
 
             <div className="space-y-3">
               {KYC_DOC_TYPES.map(({ key, label, icon, hint }) => {
-                const uploaded    = uploadedDocuments.find(d => d.document_type === key)
+                const uploaded    = kycDocuments.find(d => d.document_type === key)
                 const upStatus    = uploadStatus[key] || 'idle'
                 const isUploading = upStatus === 'uploading'
                 const isDone      = !!uploaded
@@ -413,11 +408,11 @@ export default function CustomerDocumentsPage() {
           </Card>
 
           {/* Uploaded Documents List */}
-          {uploadedDocuments.length > 0 && (
+          {kycDocuments.length > 0 && (
             <Card>
               <p className="font-semibold mb-3 text-sm">Uploaded Documents</p>
               <div className="space-y-2">
-                {uploadedDocuments.map(doc => (
+                {kycDocuments.map(doc => (
                   <div key={doc.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#2a2f45] bg-[#0b0d14] px-3 py-2.5">
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-[#e8eaf0] truncate">{doc.document_type}</p>

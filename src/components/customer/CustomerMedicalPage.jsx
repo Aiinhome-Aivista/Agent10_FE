@@ -193,7 +193,7 @@ export default function CustomerMedicalPage() {
               { label: 'Case ID',          value: selectedCase.case_number },
               { label: 'Case Stage',       value: selectedCase.current_stage, badge: true },
               { label: 'Medical Status',   value: activeRequest?.status || 'NOT STARTED', badge: true },
-              { label: 'KYC Status',       value: selectedCase.kyc_status || 'PENDING_KYC', badge: true },
+              { label: 'KYC Status',       value: selectedCase.kyc_status || 'PENDING', badge: true },
             ].map(({ label, value, badge }) => (
               <div key={label} className="bg-[#0b0d14] border border-[#1f2436] rounded-lg p-3">
                 <p className="text-[10px] text-[#6b7280] uppercase tracking-wide mb-1">{label}</p>
