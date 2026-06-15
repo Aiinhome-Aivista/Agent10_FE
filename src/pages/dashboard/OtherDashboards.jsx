@@ -1694,6 +1694,8 @@ function UWCaseReview() {
   const [data, setData] = useState(null)
   const [quotes, setQuotes] = useState([])
   const [docs, setDocs] = useState([])
+  const [medicalRequests, setMedicalRequests] = useState([])
+  const [medicalDocs, setMedicalDocs] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -1706,15 +1708,31 @@ function UWCaseReview() {
     const load = async () => {
       setLoading(true); setError(null)
       try {
-        const [{ data: caseRes }, { data: quotesRes }, { data: docsRes }] = await Promise.all([
+        const [{ data: caseRes }, { data: quotesRes }, { data: docsRes }, { data: uwCasesRes }] = await Promise.all([
           api.get(`/cases/${caseId}`),
           api.get(`/quotes/case/${caseId}`),
           api.get(`/documents/case/${caseId}`),
+          api.get(`/medical/cases-for-uw`),
         ])
         if (!mounted) return
         setData(caseRes)
         setQuotes(quotesRes.quotes || [])
         setDocs(docsRes.documents || [])
+        
+        // Find medical requests for this case
+        const caseInUw = (uwCasesRes.cases || []).find(c => c.id === caseId)
+        const medReqs = caseInUw?.medical_requests || []
+        setMedicalRequests(medReqs)
+        
+        // Fetch documents for each medical request
+        const docsMap = {}
+        for (const mr of medReqs) {
+          try {
+            const { data: mrDocs } = await api.get(`/documents/medical-request/${mr.id}`)
+            docsMap[mr.id] = mrDocs.documents || []
+          } catch { docsMap[mr.id] = [] }
+        }
+        setMedicalDocs(docsMap)
       } catch (e) {
         setError(e.response?.data?.detail || 'Failed to load case review data')
       } finally {
@@ -1890,6 +1908,99 @@ function UWCaseReview() {
               <Btn variant="danger" onClick={() => submitDecision('REJECTED')} disabled={saving}>{saving ? 'Submitting…' : 'Reject'}</Btn>
               <Btn variant="secondary" onClick={() => submitDecision('QUERY')} disabled={saving}>{saving ? 'Submitting…' : 'Raise Query'}</Btn>
             </div>
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Response</p>
+            {medicalRequests.length === 0 ? (
+              <p className="text-sm text-[#9ca3af]">No queries raised yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {medicalRequests.map((mr, idx) => {
+                  const reqDocs = medicalDocs[mr.id] || []
+                  const requirements = mr.requirements || []
+                  
+                  return (
+                    <div key={mr.id}>
+                      <div className="mb-3">
+                        <p className="text-xs font-semibold text-[#6b7280] mb-2">Requested Documents</p>
+                        <div className="space-y-2">
+                          {requirements.map((req, i) => {
+                            const isUploaded = reqDocs.some(d => d.document_type === req || d.document_type.includes(req))
+                            return (
+                              <div key={i} className="text-xs text-[#e8eaf0]">
+                                <div className="font-medium">{i + 1}. {req}</div>
+                                <div className={isUploaded ? 'text-[#22c55e] mt-0.5' : 'text-[#f59e0b] mt-0.5'}>
+                                  Status: {isUploaded ? '✅ Submitted' : '⏳ Pending'}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="border-t border-[#2a2f45] my-3"></div>
+
+                      {reqDocs.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-[#6b7280] mb-2">Submitted Documents</p>
+                          <div className="space-y-3">
+                            {reqDocs.map((d, docIdx) => (
+                              <div key={d.id} className="text-xs text-[#e8eaf0]">
+                                <div className="font-medium">{docIdx + 1}. {d.document_type}</div>
+                                <div className="text-[#22c55e] mt-0.5">Status: ✅ Submitted</div>
+                                <div className="text-[#9ca3af] mt-1">Submitted On: {d.created_at ? new Date(d.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '') : '—'}</div>
+                                <div className="mt-2">
+                                  <div className="text-[#6b7280] mb-1">File:</div>
+                                  <div className="flex items-center justify-between bg-[#161b2e] px-2 py-1.5 rounded">
+                                    <span className="text-[#e8eaf0] truncate flex-1">{d.file_name}</span>
+                                    <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)} className="flex-shrink-0 text-xs px-2 py-0.5 ml-1">[View]</Btn>
+                                  </div>
+                                </div>
+                                {docIdx < reqDocs.length - 1 && <div className="border-t border-[#2a2f45] my-2"></div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Pending Queries</p>
+            {medicalRequests.length === 0 ? (
+              <p className="text-sm text-[#9ca3af]">No pending queries.</p>
+            ) : (
+              <div className="space-y-2">
+                {medicalRequests.map((mr, idx) => {
+                  const reqDocs = medicalDocs[mr.id] || []
+                  const requirements = mr.requirements || []
+                  const hasPending = requirements.length > reqDocs.length
+                  
+                  if (!hasPending) return null
+                  
+                  return (
+                    <div key={mr.id} className="border border-[#2a2f45] rounded-lg p-2 bg-[#0f1117]">
+                      <div className="space-y-1">
+                        {requirements.map((req, i) => {
+                          const isUploaded = reqDocs.some(d => d.document_type === req || d.document_type.includes(req))
+                          return !isUploaded && (
+                            <div key={i} className="flex items-center justify-between text-xs bg-[#161b2e] px-2 py-1.5 rounded">
+                              <span className="text-[#e8eaf0]">{req}</span>
+                              <span className="text-[#f59e0b] font-semibold">⊙ Pending</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </Card>
         </div>
       </div>
