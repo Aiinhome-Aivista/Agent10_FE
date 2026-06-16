@@ -13,30 +13,57 @@ const STAGES = [
   "MEDICAL_COORDINATION","UNDERWRITING","POLICY_ISSUANCE","COMPLETED",
 ];
 
-function CaseTimeline({ stage }) {
-  const idx = STAGES.indexOf(stage);
+function CaseTimeline({ stage, caseItem }) {
+  const activeStage = caseItem ? (caseItem.status === 'COMPLETED' ? 'COMPLETED' : caseItem.current_stage) : stage;
+  const idx = STAGES.indexOf(activeStage);
+  const hasMedical = caseItem?.has_medical_requests ?? false;
+
+  const stageCompleted = STAGES.map((s, i) => {
+    if (s === 'PROPOSAL_GENERATION') {
+      return idx >= STAGES.indexOf('PROPOSAL_GENERATION')
+    }
+    if (s === 'MEDICAL_COORDINATION') {
+      if (hasMedical) {
+        return idx >= STAGES.indexOf('UNDERWRITING')
+      } else {
+        return idx >= STAGES.indexOf('POLICY_ISSUANCE')
+      }
+    }
+    if (s === 'UNDERWRITING') {
+      return idx >= STAGES.indexOf('POLICY_ISSUANCE')
+    }
+    if (s === 'POLICY_ISSUANCE') {
+      return idx >= STAGES.indexOf('COMPLETED')
+    }
+    return i <= idx
+  });
+
   return (
     <div style={{ display: "flex", overflowX: "auto", gap: 0, padding: "12px 0" }}>
-      {STAGES.map((s, i) => (
-        <div key={s} style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 90 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-              background: i <= idx ? "#22c55e" : "var(--surface)",
-              border: `2px solid ${i <= idx ? "#22c55e" : "var(--border)"}`,
-              fontSize: 16, lineHeight: '20px', fontWeight: 900, color: i <= idx ? "#fff" : "var(--text-muted)",
-            }}>
-              {i <= idx ? "✔" : i + 1}
+      {STAGES.map((s, i) => {
+        const completed = stageCompleted[i];
+        const lineCompleted = i < STAGES.length - 1 && stageCompleted[i] && stageCompleted[i + 1];
+        return (
+          <div key={s} style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, minWidth: 90 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                background: completed ? "#22c55e" : "var(--surface)",
+                border: `2px solid ${completed ? "#22c55e" : "var(--border)"}`,
+                fontSize: 16, lineHeight: '20px', fontWeight: 900, color: completed ? "#fff" : "var(--text-muted)",
+              }}>
+                {completed ? "✔" : i + 1}
+              </div>
+              <span style={{ fontSize: 9, color: completed ? "var(--text)" : "var(--text-muted)", textAlign: "center", lineHeight: 1.2 }}>
+                {s.replace(/_/g, " ")}
+              </span>
             </div>
-            <span style={{ fontSize: 9, color: i <= idx ? "var(--text)" : "var(--text-muted)", textAlign: "center", lineHeight: 1.2 }}>
-              {s.replace(/_/g, " ")}
-            </span>
+            {i < STAGES.length - 1 && (
+              <div style={{ height: 2, width: 20, background: lineCompleted ? "#22c55e" : "var(--border)", marginBottom: 20 }} />
+            )}
           </div>
-          {i < STAGES.length - 1 && (
-            <div style={{ height: 2, width: 20, background: i < idx ? "#22c55e" : "var(--border)", marginBottom: 20 }} />
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -69,7 +96,7 @@ function MyCases() {
               {c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ""}
             </div>
           </div>
-          <CaseTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} />
+          <CaseTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
         </Card>
       ))}
       {!loading && cases.length === 0 && (

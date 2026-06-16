@@ -794,13 +794,19 @@ function BankerApprovals() {
   const dispatch = useDispatch()
   const { list: cases, loading } = useSelector(s => s.cases)
   const [loading2, setL2] = useState({})
-  const pending = cases.filter(c => c.current_stage === 'BANKER_APPROVAL' && !c.banker_approved)
+  const pending = cases.filter(c => (c.current_stage === 'RECOMMENDATION' || c.current_stage === 'BANKER_APPROVAL') && !c.banker_approved && c.status === 'ACTIVE')
 
   useEffect(() => { dispatch(fetchCases()) }, [dispatch])
 
   const approve = async id => {
     setL2(l => ({ ...l, [id]: true }))
     try { await api.post(`/cases/${id}/banker-approve`, { remarks: 'Approved' }); dispatch(fetchCases()) }
+    finally { setL2(l => ({ ...l, [id]: false })) }
+  }
+
+  const reject = async id => {
+    setL2(l => ({ ...l, [id]: true }))
+    try { await api.post(`/cases/${id}/banker-reject`, { remarks: 'Rejected by banker' }); dispatch(fetchCases()) }
     finally { setL2(l => ({ ...l, [id]: false })) }
   }
 
@@ -822,7 +828,9 @@ function BankerApprovals() {
               <Btn onClick={() => approve(c.id)} disabled={loading2[c.id]} variant="success" size="sm">
                 {loading2[c.id] ? 'Approving…' : '✅ Approve'}
               </Btn>
-              <Btn variant="danger" size="sm">❌ Reject</Btn>
+              <Btn onClick={() => reject(c.id)} disabled={loading2[c.id]} variant="danger" size="sm">
+                {loading2[c.id] ? 'Rejecting…' : '❌ Reject'}
+              </Btn>
             </div>
           </Card>
         ))
@@ -1017,7 +1025,7 @@ function ProposalReview() {
     setError(null)
     try {
       const { data } = await api.get('/cases/')
-      const reviewCases = (data.cases || []).filter(c => c.banker_approved)
+      const reviewCases = (data.cases || []).filter(c => c.current_stage === 'OTP_CONSENT')
       setCases(reviewCases)
       if (reviewCases.length > 0) {
         setSelectedCaseId(prev => prev || reviewCases[0].id)
@@ -1067,8 +1075,10 @@ function ProposalReview() {
     setError(null)
     setSuccess(null)
     try {
+      await api.put(`/cases/${selectedCase.id}/stage`, { stage: 'PROPOSAL_GENERATION' })
       await api.post(`/workflow/case/${selectedCase.id}/run`)
       setSuccess('Proposal submitted to underwriter workflow.')
+      loadCases()
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to submit proposal to underwriter')
     } finally {
