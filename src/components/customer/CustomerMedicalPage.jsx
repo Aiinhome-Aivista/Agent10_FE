@@ -92,6 +92,8 @@ export default function CustomerMedicalPage() {
   const [cases, setCases]               = useState([])
   const [selectedCaseId, setSelectedCaseId] = useState('')
   const [casesLoading, setCasesLoading] = useState(true)
+  const [uploadedDocs, setUploadedDocs] = useState([])
+  const [docsLoading, setDocsLoading] = useState(false)
   const fileInputRefs = useRef({})
 
   // Load cases
@@ -119,28 +121,22 @@ export default function CustomerMedicalPage() {
   const activeRequest = requests.find(r => r.case_id === selectedCaseId) || null
   const selectedCase  = cases.find(c => c.id === selectedCaseId) || null
 
+  // Fetch uploaded medical documents
+  const fetchUploadedDocs = () => {
+    if (!activeRequest) return
+    setDocsLoading(true)
+    api.get(`/documents/medical-request/${activeRequest.id}`)
+      .then(res => setUploadedDocs(res.data.documents || []))
+      .catch(() => setUploadedDocs([]))
+      .finally(() => setDocsLoading(false))
+  }
+
+  useEffect(() => {
+    fetchUploadedDocs()
+  }, [activeRequest])
+
   // Update questionnaire field
   const setField = (key, val) => dispatch(setMedicalData({ [key]: val }))
-
-  // Create medical request for case
-  const handleCreateRequest = () => {
-    if (!selectedCaseId) return
-    const requirements = MEDICAL_REPORT_TYPES.map(t => t.key)
-    dispatch(createMedicalRequest({ case_id: selectedCaseId, requirements }))
-      .unwrap()
-      .then(() => dispatch(fetchMedicalRequests()))
-      .catch(() => {})
-  }
-
-  // Upload a medical document
-  const handleUpload = async (document_type, file) => {
-    if (!activeRequest || !file) return
-    dispatch(uploadMedicalDocument({
-      medical_request_id: activeRequest.id,
-      document_type,
-      file,
-    }))
-  }
 
   if (casesLoading) return <Spinner />
 
@@ -209,13 +205,11 @@ export default function CustomerMedicalPage() {
         )}
 
         {selectedCase && !activeRequest && (
-          <div className="mt-4 flex items-center gap-3">
-            <Btn onClick={handleCreateRequest} disabled={creating}>
-              {creating ? 'Creating…' : '+ Create Medical Request'}
-            </Btn>
-            <p className="text-xs text-[#6b7280]">
-              Creates a medical request for this case and enables document uploads.
-            </p>
+          <div className="mt-4">
+            <Alert
+              type="warning"
+              message="No medical document request has been initiated for this case yet. Please wait for the underwriter to request your medical documents."
+            />
           </div>
         )}
       </Card>
@@ -275,71 +269,75 @@ export default function CustomerMedicalPage() {
         </p>
       </Card>
 
-      {/* ── Medical Report Upload ─────────────────────────────── */}
+      {/* ── Medical Report Status ─────────────────────────────── */}
       <Card>
         <p className="font-bold text-base mb-1 flex items-center gap-2">
-          <Upload size={18} className="text-[#f59e0b]" />
-          Medical Report Upload
+          <Stethoscope size={18} className="text-[#f59e0b]" />
+          Medical Reports Status
         </p>
         <p className="text-xs text-[#6b7280] mb-5">
           {activeRequest
-            ? `Uploading for request: ${activeRequest.id.slice(0, 8)}… — Status: ${activeRequest.status}`
-            : 'Create a medical request above to enable uploads.'}
+            ? `Status for request: ${activeRequest.id.slice(0, 8)}… — Status: ${activeRequest.status}`
+            : 'Please wait for the underwriter to initiate a medical document request.'}
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {MEDICAL_REPORT_TYPES.map(({ key, label, icon }) => {
-            const status = uploadStatus[key] || 'idle'
-            const isDone = status === 'done'
-            const isUploading = status === 'uploading'
-            const isError = status === 'error'
+        {docsLoading ? (
+          <Spinner />
+        ) : activeRequest ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {MEDICAL_REPORT_TYPES.map(({ key, label, icon }) => {
+              const uploaded = uploadedDocs.find(d => d.document_type === key || d.document_type.includes(key))
 
-            return (
-              <div
-                key={key}
-                className={`rounded-xl border p-4 transition-all duration-200 ${
-                  isDone   ? 'border-[#22c55e]/40 bg-[#22c55e]/5' :
-                  isError  ? 'border-[#ef4444]/40 bg-[#ef4444]/5' :
-                  'border-[#2a2f45] bg-[#0f1117]'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{icon}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-[#e8eaf0]">{label}</p>
-                      <p className="text-[10px] text-[#6b7280]">PDF, JPG, PNG (max 10MB)</p>
+              return (
+                <div
+                  key={key}
+                  className={`rounded-xl border p-4 transition-all duration-200 ${
+                    uploaded ? 'border-[#22c55e]/40 bg-[#22c55e]/5' : 'border-[#2a2f45] bg-[#0f1117]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{icon}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-[#e8eaf0]">{label}</p>
+                      </div>
                     </div>
+                    {uploaded ? (
+                      <Badge label="Uploaded" />
+                    ) : (
+                      <span className="text-[10px] text-[#f59e0b] font-bold">Pending Underwriter Upload</span>
+                    )}
                   </div>
-                  {isDone   && <Badge label="Uploaded" />}
-                  {isError  && <Badge label="Failed" />}
-                  {isUploading && <Badge label="Uploading…" />}
+                  {uploaded ? (
+                    <div className="text-[11px] text-[#22c55e] mt-1 font-medium truncate">
+                      ✓ {uploaded.file_name}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-[#6b7280] mt-1">
+                      No report file uploaded yet.
+                    </div>
+                  )}
                 </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-[#2a2f45] bg-[#0b0d14] p-4 text-center text-sm text-[#6b7280]">
+            No medical document request has been initiated for this case yet. Please wait for the underwriter to request your medical documents.
+          </div>
+        )}
 
-                <input
-                  ref={el => fileInputRefs.current[key] = el}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  disabled={!activeRequest || isUploading}
-                  onChange={e => handleUpload(key, e.target.files?.[0])}
-                  className="block w-full text-xs text-[#6b7280]
-                    file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
-                    file:bg-[#6366f1] file:text-white file:text-xs file:font-semibold
-                    file:cursor-pointer cursor-pointer disabled:opacity-40"
-                />
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Submit / Refresh button row */}
+        {/* Refresh button row */}
         <div className="flex gap-3 mt-6 flex-wrap">
           <Btn
-            onClick={() => dispatch(fetchMedicalRequests())}
+            onClick={() => {
+              dispatch(fetchMedicalRequests())
+              fetchUploadedDocs()
+            }}
             variant="secondary"
-            disabled={loading}
+            disabled={loading || docsLoading}
           >
-            {loading ? 'Refreshing…' : 'Refresh Status'}
+            {loading || docsLoading ? 'Refreshing…' : 'Refresh Status'}
           </Btn>
           {activeRequest && (
             <div className="text-xs text-[#6b7280] flex items-center">

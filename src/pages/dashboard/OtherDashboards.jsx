@@ -1348,13 +1348,11 @@ function UWKYCDocs() {
         const updated = caseList.find(c => c.id === selectedCase.id)
         if (updated) {
           setSelectedCase(updated)
-          if (updated.medical_requests?.length > 0) {
-            setDL(true)
-            try {
-              const docRes = await api.get(`/documents/medical-request/${updated.medical_requests[0].id}`)
-              setDocs(docRes.data.documents || [])
-            } catch { setDocs([]) } finally { setDL(false) }
-          }
+          setDL(true)
+          try {
+            const docRes = await api.get(`/documents/case/${updated.id}`)
+            setDocs(docRes.data.documents || [])
+          } catch { setDocs([]) } finally { setDL(false) }
         }
       }
     } catch (e) {
@@ -1374,7 +1372,6 @@ function UWKYCDocs() {
         requirements: ['PAN_CARD', 'ADDRESS_PROOF', 'SELFIE', 'SIGNATURE'],
       })
       setOk('KYC Document Request initiated successfully!')
-      // Save ID so we can retrieve the updated case list and re-select it
       const currentId = selectedCase.id
       const res = await api.get('/medical/cases-for-uw')
       const caseList = res.data.cases || []
@@ -1382,10 +1379,44 @@ function UWKYCDocs() {
       const updated = caseList.find(c => c.id === currentId)
       if (updated) {
         setSelectedCase(updated)
-        setDocs([])
+        setDL(true)
+        try {
+          const docRes = await api.get(`/documents/case/${updated.id}`)
+          setDocs(docRes.data.documents || [])
+        } catch { setDocs([]) } finally { setDL(false) }
       }
     } catch (e) {
       setErr(e.response?.data?.detail || 'Failed to initiate KYC request')
+    } finally {
+      setInitiating(false)
+    }
+  }
+
+  const initiateMedicalRequest = async () => {
+    if (!selectedCase) return
+    setInitiating(true); setErr(null); setOk(null)
+    try {
+      await api.post('/medical/', {
+        case_id: selectedCase.id,
+        customer_id: selectedCase.customer_id,
+        requirements: ['BLOOD_TEST', 'ECG', 'DOCTOR_PRESCRIPTION', 'OTHER_REPORTS'],
+      })
+      setOk('Medical Document Request initiated successfully!')
+      const currentId = selectedCase.id
+      const res = await api.get('/medical/cases-for-uw')
+      const caseList = res.data.cases || []
+      setCases(caseList)
+      const updated = caseList.find(c => c.id === currentId)
+      if (updated) {
+        setSelectedCase(updated)
+        setDL(true)
+        try {
+          const docRes = await api.get(`/documents/case/${updated.id}`)
+          setDocs(docRes.data.documents || [])
+        } catch { setDocs([]) } finally { setDL(false) }
+      }
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Failed to initiate Medical request')
     } finally {
       setInitiating(false)
     }
@@ -1398,15 +1429,11 @@ function UWKYCDocs() {
     setNotifCaseId(c.id)
     setNotifCustomerId(c.customer_id)
     setErr(null); setOk(null)
-    if (c.medical_requests?.length > 0) {
-      setDL(true)
-      try {
-        const res = await api.get(`/documents/medical-request/${c.medical_requests[0].id}`)
-        setDocs(res.data.documents || [])
-      } catch { setDocs([]) } finally { setDL(false) }
-    } else {
-      setDocs([])
-    }
+    setDL(true)
+    try {
+      const res = await api.get(`/documents/case/${c.id}`)
+      setDocs(res.data.documents || [])
+    } catch { setDocs([]) } finally { setDL(false) }
   }
 
   const verifyDoc = async (docId) => {
@@ -1521,18 +1548,25 @@ function UWKYCDocs() {
                 <div className="flex flex-col gap-3">
                   <div>
                     <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Subject</label>
-                    <input value={notifSubject} onChange={e => setNotifSubject(e.target.value)}
+                    <input
+                      value={notifSubject}
+                      onChange={(e) => setNotifSubject(e.target.value)}
                       className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
-                      placeholder="e.g. Additional documents required" />
+                      placeholder="Notification subject..."
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Message</label>
-                    <textarea value={notifMsg} onChange={e => setNotifMsg(e.target.value)} rows={3}
+                    <textarea
+                      value={notifMsg}
+                      onChange={(e) => setNotifMsg(e.target.value)}
+                      rows={3}
                       className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none"
-                      placeholder="Write your message here…" />
+                      placeholder="Type a message to the customer..."
+                    />
                   </div>
                   <Btn onClick={sendNotif} disabled={sending}>
-                    {sending ? 'Sending…' : 'Send Notification'}
+                    {sending ? 'Sending...' : 'Send Notification'}
                   </Btn>
                 </div>
               </Card>
@@ -1543,8 +1577,6 @@ function UWKYCDocs() {
     </div>
   )
 }
-
-// ─── UW: Medical Queue page ────────────────────────────────────────
 function UWMedical() {
   const [cases, setCases] = useState([])
   const [loading, setL] = useState(true)
@@ -1554,6 +1586,11 @@ function UWMedical() {
   const [completing, setCompleting] = useState({})
   const [ok, setOk] = useState(null)
   const [err, setErr] = useState(null)
+
+  const [expandedReq, setExpandedReq] = useState(null)
+  const [expandedDocs, setExpandedDocs] = useState([])
+  const [expandedLoading, setExpandedLoading] = useState(false)
+  const [uploadingMed, setUploadingMed] = useState(false)
 
   const load = () => {
     setL(true)
@@ -1569,7 +1606,7 @@ function UWMedical() {
       await api.post('/medical/', {
         case_id: selectedCase.id,
         customer_id: selectedCase.customer_id,
-        requirements: reqs.length > 0 ? reqs : ['General Medical Check-up'],
+        requirements: reqs.length > 0 ? reqs : ['BLOOD_TEST', 'ECG', 'DOCTOR_PRESCRIPTION', 'OTHER_REPORTS'],
       })
       setOk('Medical request created — case moved to MEDICAL_COORDINATION')
       setReq('')
@@ -1586,6 +1623,46 @@ function UWMedical() {
       load()
     } catch (e) { setErr(e.response?.data?.detail || 'Failed') }
     finally { setCompleting(p => ({ ...p, [reqId]: false })) }
+  }
+
+  const toggleExpand = async (mrId) => {
+    if (expandedReq === mrId) {
+      setExpandedReq(null)
+      setExpandedDocs([])
+      return
+    }
+    setExpandedReq(mrId)
+    setExpandedLoading(true)
+    try {
+      const res = await api.get(`/documents/medical-request/${mrId}`)
+      setExpandedDocs(res.data.documents || [])
+    } catch {
+      setExpandedDocs([])
+    } finally {
+      setExpandedLoading(false)
+    }
+  }
+
+  const handleUploadMedical = async (mrId, docType, file) => {
+    if (!file) return
+    setUploadingMed(true)
+    setErr(null)
+    setOk(null)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('medical_request_id', mrId)
+    fd.append('document_type', docType)
+    try {
+      await api.post('/medical/upload', fd)
+      setOk(`Document uploaded for ${docType.replace(/_/g, ' ')}`)
+      // Refresh documents
+      const res = await api.get(`/documents/medical-request/${mrId}`)
+      setExpandedDocs(res.data.documents || [])
+    } catch (e) {
+      setErr(e.response?.data?.detail || 'Failed to upload document')
+    } finally {
+      setUploadingMed(false)
+    }
   }
 
   return (
@@ -1614,7 +1691,7 @@ function UWMedical() {
               <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Requirements (comma separated)</label>
               <input value={requirements} onChange={e => setReq(e.target.value)}
                 className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
-                placeholder="e.g. Blood test, ECG, Chest X-Ray" />
+                placeholder="e.g. BLOOD_TEST, ECG, DOCTOR_PRESCRIPTION, OTHER_REPORTS" />
             </div>
             <Btn onClick={createReq} disabled={!selectedCase || creating}>
               {creating ? 'Creating…' : 'Create Medical Request'}
@@ -1630,20 +1707,71 @@ function UWMedical() {
           </div>
           {loading ? <Spinner /> : (
             <div className="space-y-3">
-              {cases.flatMap(c => (c.medical_requests || []).filter(mr => mr.status === 'PENDING').map(mr => (
-                <div key={mr.id} className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold">{c.case_number}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5">{(mr.requirements || []).join(', ')}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5">{mr.created_at ? new Date(mr.created_at).toLocaleDateString() : ''}</p>
+              {cases.map(c => (c.medical_requests || []).filter(mr => mr.status === 'PENDING').map(mr => (
+                <div key={mr.id} className="border border-[#2a2f45] rounded-lg p-3 bg-[#0f1117]">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="text-xs font-bold text-[#e8eaf0]">{c.case_number}</p>
+                      <p className="text-[10px] text-[#6b7280]">Customer ID: {c.customer_id?.slice(0, 8)}...</p>
                     </div>
-                    <div className="flex-shrink-0">
-                      <Btn size="sm" onClick={() => completeReq(mr.id)} disabled={completing[mr.id]}>
-                        {completing[mr.id] ? '…' : 'Mark Done'}
-                      </Btn>
-                    </div>
+                    <Badge label={mr.status} />
                   </div>
+                  
+                  <div className="text-xs text-[#9ca3af] mb-3">
+                    <span className="font-semibold text-[#6b7280]">Requirements: </span>
+                    {(mr.requirements || []).join(', ')}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Btn size="sm" variant="secondary" onClick={() => toggleExpand(mr.id)}>
+                      {expandedReq === mr.id ? 'Hide Uploads' : 'View / Upload Docs'}
+                    </Btn>
+                    <Btn size="sm" variant="primary" onClick={() => completeReq(mr.id)} disabled={completing[mr.id]}>
+                      {completing[mr.id] ? 'Completing...' : 'Mark Done'}
+                    </Btn>
+                  </div>
+
+                  {expandedReq === mr.id && (
+                    <div className="mt-3 pt-3 border-t border-[#2a2f45] space-y-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#6b7280]">Medical Documents</p>
+                      {expandedLoading ? <Spinner /> : (
+                        <>
+                          {expandedDocs.length === 0 ? (
+                            <p className="text-xs text-[#6b7280]">No documents uploaded yet.</p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {expandedDocs.map(doc => (
+                                <div key={doc.id} className="flex justify-between items-center text-xs bg-[#111827] px-2.5 py-1.5 rounded border border-[#2a2f45]/40">
+                                  <div>
+                                    <p className="font-semibold text-[#e8eaf0]">{doc.document_type?.replace(/_/g, ' ')}</p>
+                                    <p className="text-[10px] text-[#6b7280]">{doc.file_name}</p>
+                                  </div>
+                                  <Badge label={doc.verified ? 'Verified' : 'Pending'} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="bg-[#111827]/50 rounded-lg p-3 border border-[#2a2f45]/50 space-y-2 mt-2">
+                            <p className="text-xs font-semibold text-[#e8eaf0]">Upload Medical Document</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {mr.requirements?.map(reqType => (
+                                <div key={reqType} className="flex flex-col gap-1 bg-[#0f1117] p-2 rounded border border-[#2a2f45]/40">
+                                  <span className="text-[10px] font-semibold text-[#6b7280]">{reqType.replace(/_/g, ' ')}</span>
+                                  <input 
+                                    type="file" 
+                                    onChange={e => handleUploadMedical(mr.id, reqType, e.target.files?.[0])}
+                                    disabled={uploadingMed}
+                                    className="text-[10px] text-[#9ca3af] file:bg-[#1f2937] file:border-0 file:text-[#e8eaf0] file:px-2 file:py-1 file:rounded file:mr-2 file:cursor-pointer w-full"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )))}
               {cases.flatMap(c => (c.medical_requests || []).filter(mr => mr.status === 'PENDING')).length === 0 && (
@@ -1766,45 +1894,81 @@ function UWCaseReview() {
   const [queryText, setQueryText] = useState('Need Income Proof')
   const accessToken = localStorage.getItem('access_token')
 
-  useEffect(() => {
-    let mounted = true
-    const load = async () => {
-      setLoading(true); setError(null)
-      try {
-        const [{ data: caseRes }, { data: quotesRes }, { data: docsRes }, { data: uwCasesRes }] = await Promise.all([
-          api.get(`/cases/${caseId}`),
-          api.get(`/quotes/case/${caseId}`),
-          api.get(`/documents/case/${caseId}`),
-          api.get(`/medical/cases-for-uw`),
-        ])
-        if (!mounted) return
-        setData(caseRes)
-        setQuotes(quotesRes.quotes || [])
-        setDocs(docsRes.documents || [])
-        
-        // Find medical requests for this case
-        const caseInUw = (uwCasesRes.cases || []).find(c => c.id === caseId)
-        const medReqs = caseInUw?.medical_requests || []
-        setMedicalRequests(medReqs)
-        
-        // Fetch documents for each medical request
-        const docsMap = {}
-        for (const mr of medReqs) {
-          try {
-            const { data: mrDocs } = await api.get(`/documents/medical-request/${mr.id}`)
-            docsMap[mr.id] = mrDocs.documents || []
-          } catch { docsMap[mr.id] = [] }
-        }
-        setMedicalDocs(docsMap)
-      } catch (e) {
-        setError(e.response?.data?.detail || 'Failed to load case review data')
-      } finally {
-        setLoading(false)
+  const [initiatingMedical, setInitiatingMedical] = useState(false)
+
+  const load = async () => {
+    setLoading(true); setError(null)
+    try {
+      const [{ data: caseRes }, { data: quotesRes }, { data: docsRes }, { data: uwCasesRes }] = await Promise.all([
+        api.get(`/cases/${caseId}`),
+        api.get(`/quotes/case/${caseId}`),
+        api.get(`/documents/case/${caseId}`),
+        api.get(`/medical/cases-for-uw`),
+      ])
+      setData(caseRes)
+      setQuotes(quotesRes.quotes || [])
+      setDocs(docsRes.documents || [])
+      
+      // Find medical requests for this case
+      const caseInUw = (uwCasesRes.cases || []).find(c => c.id === caseId)
+      const medReqs = caseInUw?.medical_requests || []
+      setMedicalRequests(medReqs)
+      
+      // Fetch documents for each medical request
+      const docsMap = {}
+      for (const mr of medReqs) {
+        try {
+          const { data: mrDocs } = await api.get(`/documents/medical-request/${mr.id}`)
+          docsMap[mr.id] = mrDocs.documents || []
+        } catch { docsMap[mr.id] = [] }
       }
+      setMedicalDocs(docsMap)
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to load case review data')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     load()
-    return () => { mounted = false }
   }, [caseId])
+
+  const initiateMedicalRequest = async () => {
+    if (!data) return
+    setInitiatingMedical(true)
+    setError(null)
+    try {
+      await api.post('/medical/', {
+        case_id: caseId,
+        customer_id: data.customer_id,
+        requirements: ['BLOOD_TEST', 'ECG', 'DOCTOR_PRESCRIPTION', 'OTHER_REPORTS'],
+      })
+      await load()
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to initiate medical request')
+    } finally {
+      setInitiatingMedical(false)
+    }
+  }
+
+  const handleUploadDoc = async (medicalRequestId, docType, file) => {
+    if (!file) return
+    setSaving(true)
+    setError(null)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('medical_request_id', medicalRequestId)
+    fd.append('document_type', docType)
+    try {
+      await api.post('/medical/upload', fd)
+      await load()
+    } catch (e) {
+      setError(e.response?.data?.detail || 'Failed to upload medical document')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const openDoc = (id) => {
     const token = accessToken || ''
@@ -1912,16 +2076,63 @@ function UWCaseReview() {
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Medical</p>
-            <div className="text-sm">
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Medical Documents</p>
+            <div className="text-sm space-y-3">
               <p>Medical Required: {quotes?.some(q => q.medical_requirements) ? 'Yes' : 'No'}</p>
-              <p>Medical Completed: {data?.medical_requests?.length ? 'Yes' : 'No'}</p>
-              {docs.filter(x => /medical/i.test(x.document_type)).map(d => (
-                <div key={d.id} className="mt-2 flex items-center justify-between">
-                  <div className="text-sm">{d.file_name}</div>
-                  <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View Medical Report</Btn>
+              <p>Medical Requested: {medicalRequests.some(mr => !mr.requirements.includes('PAN_CARD')) ? 'Yes' : 'No'}</p>
+              
+              {!medicalRequests.some(mr => !mr.requirements.includes('PAN_CARD')) && (
+                <div className="mt-3">
+                  <Btn onClick={initiateMedicalRequest} disabled={initiatingMedical} size="sm" className="w-full">
+                    {initiatingMedical ? 'Initiating…' : '+ Initiate Medical Document Request'}
+                  </Btn>
                 </div>
-              ))}
+              )}
+
+              {/* Render uploads case-wise for medical requests */}
+              {medicalRequests.filter(mr => !mr.requirements.includes('PAN_CARD')).map(mr => {
+                const reqDocs = medicalDocs[mr.id] || []
+                const requirements = mr.requirements || []
+                
+                return (
+                  <div key={mr.id} className="mt-4 border-t border-[#2a2f45] pt-3 space-y-3">
+                    <p className="text-xs font-semibold text-[#e8eaf0]">Upload Medical Documents:</p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {requirements.map((req, i) => {
+                        const uploaded = reqDocs.find(d => d.document_type === req || d.document_type.includes(req))
+                        return (
+                          <div key={i} className="flex flex-col gap-1.5 p-2 rounded bg-[#0f1117] border border-[#2a2f45]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-[#e8eaf0]">{req.replace(/_/g, ' ')}</span>
+                              {uploaded ? (
+                                <span className="text-[10px] text-[#22c55e] font-semibold">✓ Uploaded</span>
+                              ) : (
+                                <span className="text-[10px] text-[#f59e0b] font-semibold">⏳ Pending</span>
+                              )}
+                            </div>
+                            {uploaded && (
+                              <div className="flex items-center justify-between bg-[#161b2e] px-2 py-1 rounded text-[11px]">
+                                <span className="text-[#9ca3af] truncate max-w-[150px]">{uploaded.file_name}</span>
+                                <button type="button" onClick={() => openDoc(uploaded.id)} className="text-[#6366f1] hover:underline font-semibold text-xs ml-1">View</button>
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              disabled={saving}
+                              onChange={e => handleUploadDoc(mr.id, req, e.target.files?.[0])}
+                              className="block w-full text-[10px] text-[#6b7280]
+                                file:mr-2 file:py-1 file:px-2 file:rounded file:border-0
+                                file:bg-[#6366f1]/25 file:text-[#a5b4fc] file:text-[10px] file:font-semibold
+                                cursor-pointer"
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </Card>
 
@@ -2226,29 +2437,85 @@ function PolicyIssuanceDetails() {
         <StatCard title="Policy Tenure" value={`${caseItem.policy_tenure || '—'} yrs`} icon={Clock} />
       </div>
 
-      <Card className="mb-5">
-        <h3 className="text-lg font-semibold mb-4">Customer & Case Details</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <div className="text-sm text-[#6b7280] mb-2">Customer ID</div>
-            <div>{caseItem.customer_id}</div>
-            <div className="text-sm text-[#6b7280] mt-4 mb-2">Banker ID</div>
-            <div>{caseItem.banker_id || '—'}</div>
-            <div className="text-sm text-[#6b7280] mt-4 mb-2">Premium Budget</div>
-            <div>{caseItem.premium_budget ? `₹${caseItem.premium_budget.toLocaleString()}` : '—'}</div>
+      <Card className="mb-6 overflow-hidden border border-[#2a2f45] bg-[#11131e] rounded-xl shadow-lg">
+        <div className="border-b border-[#2a2f45] bg-[#161a2b] px-6 py-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[#e8eaf0] flex items-center gap-2">
+            <UserRound className="w-5 h-5 text-[#6366f1]" />
+            Customer & Case Details
+          </h3>
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#6366f1]/20 text-[#6366f1] border border-[#6366f1]/30">
+            Case Ref: {caseItem.case_number}
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#2a2f45]">
+          {/* Case Meta (Col span 5) */}
+          <div className="lg:col-span-5 p-6 space-y-5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#6366f1] mb-4">Case Metadata</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-1">Customer ID</p>
+                <p className="text-sm font-semibold text-[#e8eaf0] bg-[#0f1117] px-3 py-2 rounded-lg border border-[#2a2f45]/50 truncate" title={caseItem.customer_id}>{caseItem.customer_id?.slice(0, 8)}...</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-1">Banker ID</p>
+                <p className="text-sm font-semibold text-[#e8eaf0] bg-[#0f1117] px-3 py-2 rounded-lg border border-[#2a2f45]/50 truncate" title={caseItem.banker_id}>{caseItem.banker_id || '—'}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-1">Premium Budget</p>
+                <p className="text-sm font-semibold text-[#22c55e] bg-[#0f1117] px-3 py-2 rounded-lg border border-[#2a2f45]/50">
+                  {caseItem.premium_budget ? `₹${caseItem.premium_budget.toLocaleString()}` : '—'}
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-sm text-[#6b7280] mb-2">Customer Profile</div>
-            {profileEntries.length > 0 ? (
-              <div className="space-y-2">
-                {profileEntries.map(([key, value]) => (
-                  <div key={key}>
-                    <span className="font-semibold">{key.replace(/_/g, ' ')}:</span> {typeof value === 'object' ? JSON.stringify(value) : value?.toString() || '—'}
-                  </div>
-                ))}
+
+          {/* Customer Profile (Col span 7) */}
+          <div className="lg:col-span-7 p-6 space-y-5 bg-[#121625]/20">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#2dd4bf] mb-4">Customer Profile Information</h4>
+            {caseItem.customer_profile ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">Name</p>
+                  <p className="text-sm font-semibold text-[#e8eaf0]">{caseItem.customer_profile.name || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">Email</p>
+                  <p className="text-sm font-semibold text-[#e8eaf0] truncate" title={caseItem.customer_profile.email}>{caseItem.customer_profile.email || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">Phone</p>
+                  <p className="text-sm font-semibold text-[#e8eaf0]">{caseItem.customer_profile.phone || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">Age / DOB</p>
+                  <p className="text-sm font-semibold text-[#e8eaf0]">{caseItem.customer_profile.age || caseItem.customer_profile.dob || caseItem.customer_profile.date_of_birth || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">Annual Income</p>
+                  <p className="text-sm font-semibold text-[#22c55e]">
+                    {caseItem.customer_profile.annual_income ? `₹${Number(caseItem.customer_profile.annual_income).toLocaleString()}` : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">Risk Appetite</p>
+                  <p className="text-sm font-semibold text-[#fbbf24]">{caseItem.customer_profile.risk_appetite || '—'}</p>
+                </div>
+                {/* Fallback for other key-values in customer_profile that are not explicit */}
+                {Object.entries(caseItem.customer_profile)
+                  .filter(([key]) => !['name', 'email', 'phone', 'age', 'dob', 'date_of_birth', 'annual_income', 'risk_appetite'].includes(key))
+                  .map(([key, value]) => (
+                    <div key={key} className="sm:col-span-2 border-t border-[#2a2f45]/30 pt-2">
+                      <p className="text-xs text-[#6b7280] font-semibold uppercase tracking-wider mb-0.5">{key.replace(/_/g, ' ')}</p>
+                      <p className="text-sm font-semibold text-[#e8eaf0]">
+                        {typeof value === 'object' ? JSON.stringify(value) : value?.toString() || '—'}
+                      </p>
+                    </div>
+                  ))
+                }
               </div>
             ) : (
-              <div>Profile details not available.</div>
+              <div className="text-sm text-[#6b7280] italic">Profile details not available.</div>
             )}
           </div>
         </div>
