@@ -47,10 +47,10 @@ export default function LoginPage() {
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Email</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Email or Phone Number</label>
             <input
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-              placeholder="you@example.com"
+              type="text" value={email} onChange={(e) => setEmail(e.target.value)} required
+              placeholder="you@example.com or 9876543210"
               style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 12px", color: "var(--text)", fontSize: 14, outline: "none" }}
             />
           </div>

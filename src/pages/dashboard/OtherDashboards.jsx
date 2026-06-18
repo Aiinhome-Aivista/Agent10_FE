@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Alert, Spinner, Modal } from '../../components/common'
+import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Alert, Spinner, Modal, Input } from '../../components/common'
 import { Home, FileText, ShieldCheck, Clock, ClipboardList, Stethoscope, Bell, UserRound, BarChart3, CalendarClock } from 'lucide-react'
 import api from '../../services/api'
 import { KnowledgeBase, RAGChat } from '../../components/common/RAGComponents'
@@ -57,8 +57,13 @@ function StageTimeline({ stage, caseItem }) {
   const activeStage = caseItem ? (caseItem.status === 'COMPLETED' ? 'COMPLETED' : caseItem.current_stage) : stage;
   const idx = STAGES.indexOf(activeStage)
   const hasMedical = caseItem?.has_medical_requests ?? false;
-
   const stageCompleted = STAGES.map((s, i) => {
+    if (i <= 5) {
+      return true
+    }
+    if (s === 'BANKER_APPROVAL') {
+      return !!caseItem?.banker_approved || idx >= i
+    }
     if (s === 'PROPOSAL_GENERATION') {
       return idx >= STAGES.indexOf('MEDICAL_COORDINATION')
     }
@@ -104,13 +109,194 @@ function StageTimeline({ stage, caseItem }) {
   )
 }
 
+function PlanCard({ q, onSelect }) {
+  const [submitting, setSubmitting] = useState(false)
+  const matchPercent = q.ai_score ? Math.round(q.ai_score * 100) : 95
+
+  const handleSelect = async (e) => {
+    e.stopPropagation()
+    setSubmitting(true)
+    try {
+      await onSelect(q)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <Card className="relative flex flex-col justify-between border border-[#2a2f45] hover:border-[#6366f1] transition-all duration-200 min-h-[350px] p-5">
+      <span className="absolute -top-3 left-4 bg-[#0d9488] text-white text-[10px] px-3 py-0.5 rounded-full font-bold">
+        {matchPercent}% Match
+      </span>
+      
+      <div className="mt-2 flex-1">
+        <div className="flex justify-between items-start gap-4 mb-4">
+          <div>
+            <p className="font-bold text-base text-[#e8eaf0]">{q.insurer_name}</p>
+            <p className="text-xs text-[#6b7280]">{q.product_name}</p>
+          </div>
+          <div className="text-right min-w-max">
+            <p className="font-bold text-[#22c55e] text-base">₹{q.annual_premium?.toLocaleString()}</p>
+            <p className="text-[10px] text-[#6b7280]">per year</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
+            <p className="text-[10px] text-[#6b7280]">Sum Assured</p>
+            <p className="font-bold text-[#e8eaf0]">₹{q.sum_assured?.toLocaleString()}</p>
+          </div>
+          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
+            <p className="text-[10px] text-[#6b7280]">Tenure</p>
+            <p className="font-bold text-[#e8eaf0]">{q.policy_tenure} yrs</p>
+          </div>
+        </div>
+
+        {q.ai_recommendation_text && (
+          <div className="text-xs text-[#2dd4bf] bg-[#2dd4bf]/10 rounded-lg p-3 mb-4 leading-relaxed max-h-[120px] overflow-y-auto">
+            {q.ai_recommendation_text}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-2">
+        <Btn onClick={handleSelect} disabled={submitting} className="w-full">
+          {submitting ? "Processing Selection..." : "Proceed with Selection"}
+        </Btn>
+      </div>
+    </Card>
+  )
+}
+
+function ComparisonPanel({ caseItem, onProceed }) {
+  const [quotes, setQuotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    api.get(`/quotes/case/${caseItem.id}`)
+      .then(({ data }) => {
+        const sorted = (data.quotes || []).slice().sort((a, b) => (a.ai_rank ?? 99) - (b.ai_rank ?? 99))
+        setQuotes(sorted.slice(0, 3))
+      })
+      .catch((err) => setError("Failed to load quotes."))
+      .finally(() => setLoading(false))
+  }, [caseItem])
+
+  if (loading) return <Spinner />
+  if (error) return <Alert type="error" message={error} />
+  if (quotes.length === 0) return <Card className="text-center p-6 text-[#6b7280]">AI Agent is compiling policies. Refresh in a few seconds...</Card>
+
+  return (
+    <div className="mt-6">
+      <h3 className="text-base font-bold mb-4 text-[#e8eaf0]">AI Smart Match Recommendations (Top 3 Plans)</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {quotes.map((q) => (
+          <PlanCard key={q.id} q={q} onSelect={onProceed} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function CustomerMyCases() {
   const { user } = useSelector(s => s.auth)
   const [cases, setCases] = useState([])
+  const [policies, setPolicies] = useState([])
   const [loading, setL] = useState(true)
+
+  // Intake Form State
+  const [openModal, setOpenModal] = useState(false)
+  const [age, setAge] = useState("")
+  const [income, setIncome] = useState("")
+  const [chronic, setChronic] = useState("NO")
+  const [intent, setIntent] = useState({ life: true, health: false })
+  const [consent, setConsent] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+
+  const loadData = async () => {
+    try {
+      const [resCases, resPolicies] = await Promise.all([
+        api.get('/cases/'),
+        api.get(`/policies/customer/${user?.id}`)
+      ])
+      setCases(resCases.data.cases || [])
+      setPolicies(resPolicies.data.policies || [])
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setL(false)
+    }
+  }
+
   useEffect(() => {
-    api.get('/cases/').then(r => setCases(r.data.cases)).finally(() => setL(false))
-  }, [])
+    loadData()
+  }, [user])
+
+  useEffect(() => {
+    if (!loading && cases.length === 0) {
+      setOpenModal(true)
+    }
+  }, [loading, cases])
+
+  const handleIntakeSubmit = async (e) => {
+    e.preventDefault()
+    if (!consent) {
+      setSubmitError("You must grant consent to proceed.")
+      return
+    }
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const parsedIncome = parseFloat(income) || 0
+      const parsedAge = parseInt(age) || 30
+      const protectionList = []
+      if (intent.life) protectionList.push("Life Cover")
+      if (intent.health) protectionList.push("Health Cover")
+
+      if (protectionList.length === 0) {
+        setSubmitError("Please select at least one protection intent.")
+        setSubmitting(false)
+        return
+      }
+
+      let computedSumAssured = 500000
+      if (intent.life) {
+        computedSumAssured = Math.max(10 * parsedIncome, 5000000)
+      }
+      const computedPremiumBudget = Math.round(parsedIncome * 0.05)
+
+      await api.post("/cases/", {
+        customer_id: user.id,
+        customer_profile: {
+          age: parsedAge,
+          annual_income: parsedIncome,
+          chronic_illness: chronic === "YES" ? "Yes" : "No",
+          protection_intent: protectionList,
+          consent_granted: true,
+          dob: String(new Date().getFullYear() - parsedAge) + "-01-01"
+        },
+        sum_assured: computedSumAssured,
+        premium_budget: computedPremiumBudget,
+        policy_tenure: 20,
+        needs_analysis: {
+          purpose: protectionList.join(", ")
+        }
+      })
+      
+      setOpenModal(false)
+      setL(true)
+      await loadData()
+    } catch (err) {
+      setSubmitError(err.response?.data?.detail || "Failed to submit qualification profile.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div>
       <SectionHeader title="My Insurance Cases" />
@@ -119,25 +305,146 @@ function CustomerMyCases() {
         <StatCard title="Active" value={cases.filter(c => c.status === 'ACTIVE').length} color="#22c55e" icon={Clock} />
         <StatCard title="Completed" value={cases.filter(c => c.status === 'COMPLETED').length} color="#6366f1" icon={ShieldCheck} />
       </div>
-      {loading ? <Spinner /> : cases.length === 0
-        ? <Card className="text-center py-12 text-[#6b7280]">No cases yet. Contact your banker.</Card>
-        : cases.map(c => (
-          <Card key={c.id} className="mb-4">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="font-bold">{c.case_number}</p>
-                <Badge label={c.status} />
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <Badge label={c.kyc_status || 'PENDING_KYC'} />
-                  <Badge label={c.esign_status || 'NOT_STARTED'} />
-                </div>
-              </div>
-              <p className="text-sm font-bold text-[#22c55e]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ''}</p>
+
+      {/* Intake Modal Popup */}
+      <Modal open={openModal} onClose={() => {}} title="Quick Onboarding Qualification" className="max-w-md">
+        <form onSubmit={handleIntakeSubmit} className="flex flex-col gap-4">
+          <p className="text-xs text-[#6b7280] m-0">
+            Welcome! Please provide a few basic details to let our AI Match engine suggest the best insurance plans for you.
+          </p>
+
+          {submitError && <Alert type="error" message={submitError} />}
+
+          <Input 
+            label="Age" 
+            type="number" 
+            value={age} 
+            onChange={setAge} 
+            required 
+            placeholder="e.g. 35" 
+          />
+
+          <Input 
+            label="Estimated Annual Income (₹)" 
+            type="number" 
+            value={income} 
+            onChange={setIncome} 
+            required 
+            placeholder="e.g. 800000" 
+          />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-[#6b7280]">
+              Chronic Illness / Pre-existing Condition
+            </label>
+            <select 
+              value={chronic} 
+              onChange={(e) => setChronic(e.target.value)}
+              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]"
+            >
+              <option value="NO">No</option>
+              <option value="YES">Yes</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-[#6b7280]">
+              What type of protection do you want?
+            </label>
+            <div className="flex flex-col gap-2 mt-1">
+              <label className="flex items-center gap-2 text-xs text-[#e8eaf0] cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={intent.life} 
+                  onChange={(e) => setIntent({ ...intent, life: e.target.checked })} 
+                />
+                Life Cover
+              </label>
+              <label className="flex items-center gap-2 text-xs text-[#e8eaf0] cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={intent.health} 
+                  onChange={(e) => setIntent({ ...intent, health: e.target.checked })} 
+                />
+                Health Cover
+              </label>
             </div>
-            <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
-          </Card>
-        ))
-      }
+          </div>
+
+          <label className="flex items-start gap-2 text-xs text-[#6b7280] cursor-pointer mt-2">
+            <input 
+              type="checkbox" 
+              checked={consent} 
+              onChange={(e) => setConsent(e.target.checked)} 
+              required 
+              className="mt-0.5"
+            />
+            <span>I hereby grant consent to share my information for processing insurance quotes. (Consent Granted)</span>
+          </label>
+
+          <Btn type="submit" disabled={submitting} className="w-full mt-3">
+            {submitting ? "Submitting to AI Engine..." : "Submit Details & Qualify"}
+          </Btn>
+        </form>
+      </Modal>
+
+      {loading ? <Spinner /> : cases.length === 0 ? (
+        <Card className="text-center py-12 text-[#6b7280]">Please fill the qualification form above to start.</Card>
+      ) : (
+        cases.map(c => {
+          const relatedPolicy = policies.find(p => p.case_id === c.id)
+          return (
+            <Card key={c.id} className="mb-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="font-bold">{c.case_number}</p>
+                  <Badge label={c.status} />
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    <Badge label={c.kyc_status || 'PENDING_KYC'} />
+                    <Badge label={c.esign_status || 'NOT_STARTED'} />
+                  </div>
+                </div>
+                <p className="text-sm font-bold text-[#22c55e]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ''}</p>
+              </div>
+              <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
+
+              {/* If selected policy exists, show Download Proposal PDF */}
+              {relatedPolicy ? (
+                <div className="mt-4 p-4 bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-xl">
+                  <p className="m-0 mb-3 text-sm text-[#22c55e] font-semibold">
+                    Selected Plan: {relatedPolicy.insurer_name} — {relatedPolicy.product_name}
+                  </p>
+                  <Btn 
+                    onClick={() => {
+                      window.open(api.defaults.baseURL + '/policies/' + relatedPolicy.id + '/proposal-pdf?token=' + localStorage.getItem('access_token'), '_blank')
+                    }}
+                    variant="success"
+                    size="sm"
+                  >
+                    📥 Download Proposal PDF
+                  </Btn>
+                </div>
+              ) : (
+                /* If no policy exists and comparison is ready, show side-by-side matches */
+                STAGES.indexOf(c.current_stage) >= STAGES.indexOf('QUOTE_COMPARISON') && c.status === 'ACTIVE' && (
+                  <ComparisonPanel 
+                    caseItem={c} 
+                    onProceed={async (q) => {
+                      try {
+                        await api.post("/policies/", { case_id: c.id, quote_id: q.id })
+                        await api.put(`/cases/${c.id}/stage`, { stage: 'PROPOSAL_GENERATION' })
+                        loadData()
+                      } catch (e) {
+                        alert(e.response?.data?.detail || "Failed to proceed with selection.")
+                      }
+                    }} 
+                  />
+                )
+              )}
+            </Card>
+          )
+        })
+      )}
     </div>
   )
 }

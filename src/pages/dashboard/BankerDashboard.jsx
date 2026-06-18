@@ -229,6 +229,12 @@ function CaseList() {
               <div className="flex flex-wrap gap-1">
                 {STAGES.map((s, i) => {
                   const completed = (() => {
+                    if (i <= 5) {
+                      return true
+                    }
+                    if (s === 'BANKER_APPROVAL') {
+                      return !!activeCase?.banker_approved || stageIdx >= i
+                    }
                     if (s === 'PROPOSAL_GENERATION') {
                       return stageIdx >= STAGES.indexOf('MEDICAL_COORDINATION')
                     }
@@ -241,8 +247,9 @@ function CaseList() {
                     if (s === 'POLICY_ISSUANCE') {
                       return stageIdx >= STAGES.indexOf('COMPLETED')
                     }
-                    return i < stageIdx
+                    return i <= stageIdx
                   })()
+
                   const active = i === stageIdx
                   return (
                     <span key={s} className="text-xs px-2 py-0.5 rounded"
@@ -291,211 +298,6 @@ function CaseList() {
   )
 }
 
-// ── New Case Form ─────────────────────────────────────────────────────
-function NewCaseForm() {
-  const { user } = useSelector(s => s.auth)
-  const [customers, setCustomers] = useState([])
-  const [selectedCustomerId, setSelectedCustomerId] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loadingCustomers, setLoadingCustomers] = useState(true)
-  const [csvFile, setCsvFile] = useState(null)
-  const [csvUploading, setCsvUploading] = useState(false)
-  const [form, setForm] = useState({
-    sum_assured: '', premium_budget: '', policy_tenure: '20', purpose: '',
-  })
-  const [loading, setL] = useState(false)
-  const [err, setErr] = useState(null)
-  const [ok, setOk] = useState(false)
-  const set = k => v => setForm(f => ({ ...f, [k]: v }))
-
-  const selectedCustomer = customers.find((customer) => customer.user_id === selectedCustomerId) || null
-
-  const filteredCustomers = customers.filter((customer) => {
-    const query = searchTerm.trim().toLowerCase()
-    if (!query) return true
-    return [customer.name, customer.email, customer.phone]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(query))
-  })
-
-  const buildCustomerProfile = (customer) => {
-    const raw = customer?.raw_payload || {}
-    const normalized = customer?.normalized_payload || {}
-    return {
-      ...raw,
-      ...normalized,
-      name: customer?.name || normalized.name || raw.name || '',
-      email: customer?.email || normalized.email || raw.email || '',
-      phone: customer?.phone || normalized.phone || raw.phone || '',
-      dob: normalized.date_of_birth || normalized.dob || raw.date_of_birth || raw.dob || '',
-      annual_income: Number(normalized.annual_income) || Number(raw.annual_income) || 0,
-      dependents: Number(normalized.dependents) || Number(raw.dependents) || 0,
-      risk_appetite: normalized.risk_appetite || raw.risk_appetite || '',
-      kyc_status: normalized.kyc_status || raw.kyc_status || '',
-    }
-  }
-
-  const loadCustomers = async () => {
-    setLoadingCustomers(true)
-    try {
-      const { data } = await api.get('/banker/customers')
-      setCustomers(data.customers || [])
-    } catch (error) {
-      setErr(error.response?.data?.detail || 'Failed to load customers')
-    } finally {
-      setLoadingCustomers(false)
-    }
-  }
-
-  useEffect(() => { loadCustomers() }, [])
-
-  const submit = async () => {
-    if (!selectedCustomer) {
-      setErr('Please select a customer from the list below first.')
-      return
-    }
-    setL(true); setErr(null)
-    try {
-      await api.post('/cases/', {
-        customer_id: selectedCustomer.user_id || user?.id,
-        customer_profile: buildCustomerProfile(selectedCustomer),
-        sum_assured: parseFloat(form.sum_assured) || 0,
-        premium_budget: parseFloat(form.premium_budget) || 0,
-        policy_tenure: parseInt(form.policy_tenure) || 20,
-        needs_analysis: { purpose: form.purpose },
-      })
-      setOk(true)
-    } catch (e) { setErr(e.response?.data?.detail || 'Failed to create case') }
-    finally { setL(false) }
-  }
-
-  if (ok) return (
-    <Card className="text-center py-12">
-      <div className="text-5xl mb-4">✅</div>
-      <h3 className="text-lg font-bold mb-2">Case Created!</h3>
-      <p className="text-sm text-[#6b7280] mb-6">AI workflow has been triggered.</p>
-      <Btn onClick={() => setOk(false)}>Create Another</Btn>
-    </Card>
-  )
-
-  const uploadCsv = async () => {
-    if (!csvFile) return
-    setCsvUploading(true)
-    setErr(null)
-    setOk(null)
-    try {
-      const fd = new FormData()
-      fd.append('file', csvFile)
-      const { data } = await api.post('/banker/customers/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setOk(`CSV import completed. Imported ${data.imported || 0} customer(s).`)
-      setCsvFile(null)
-      await loadCustomers()
-    } catch (error) {
-      setErr(error.response?.data?.detail || 'CSV import failed')
-    } finally {
-      setCsvUploading(false)
-    }
-  }
-
-  const customerCols = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'source_type', label: 'Source', render: (row) => <Badge label={row.source_type} /> },
-    { key: 'created_at', label: 'Added', render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '—' },
-    {
-      key: 'actions',
-      label: '',
-      render: (row) => (
-        <Btn
-          size="sm"
-          variant={row.user_id === selectedCustomerId ? 'success' : 'secondary'}
-          onClick={() => setSelectedCustomerId(row.user_id)}
-        >
-          {row.user_id === selectedCustomerId ? 'Selected' : 'Select'}
-        </Btn>
-      ),
-    },
-  ]
-
-  return (
-    <div>
-      <SectionHeader title="New Case" subtitle="Upload customers by CSV, pick one below, then create the case" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <Upload size={16} />
-            <p className="font-semibold">CSV Customer Upload</p>
-          </div>
-          <p className="text-sm text-[#6b7280] mb-4">Upload customer rows to create logins automatically. Each imported customer receives the default password 852456 and will be required to change it on first login.</p>
-          {err && <Alert type="error" message={err} />}
-          {ok && <Alert type="success" message={ok} />}
-          <CsvDropzone
-            file={csvFile}
-            onFileChange={setCsvFile}
-            onClear={() => setCsvFile(null)}
-            description="Use a CSV with name and email columns. Common aliases like customer_name, customer_email, and phone_number also work."
-          />
-          <div className="mt-4 flex gap-2">
-            <Btn onClick={uploadCsv} disabled={!csvFile || csvUploading} className="flex-1">
-              {csvUploading ? 'Importing…' : 'Import CSV'}
-            </Btn>
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <Briefcase size={16} />
-            <p className="font-semibold">Case Details</p>
-          </div>
-          <div className="mb-4 rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
-            <p className="text-xs font-semibold text-[#6b7280] mb-2">Selected customer</p>
-            {selectedCustomer ? (
-              <div className="space-y-1 text-sm">
-                <p className="font-semibold text-[#e8eaf0]">{selectedCustomer.name}</p>
-                <p className="text-[#6b7280]">{selectedCustomer.email}</p>
-                <p className="text-[#6b7280]">{selectedCustomer.phone || '—'}</p>
-                <p className="text-xs text-[#6b7280]">User ID: {selectedCustomer.user_id}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-[#6b7280]">Pick a customer from the list below to continue.</p>
-            )}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Sum Assured (₹)" value={form.sum_assured} onChange={set('sum_assured')} placeholder="5000000" />
-            <Input label="Premium Budget/yr (₹)" value={form.premium_budget} onChange={set('premium_budget')} placeholder="60000" />
-            <Input label="Policy Tenure (years)" value={form.policy_tenure} onChange={set('policy_tenure')} placeholder="2" />
-            <Input label="Insurance Purpose" value={form.purpose} onChange={set('purpose')} placeholder="Family protection, tax saving…" className="sm:col-span-2" />
-          </div>
-          <Btn onClick={submit} disabled={loading || !selectedCustomer} className="mt-5 w-full">
-            {loading ? 'Creating…' : 'Create Case & Trigger Workflow'}
-          </Btn>
-        </Card>
-      </div>
-
-      <Card>
-        <div className="flex flex-col gap-4">
-          <SectionHeader title="Customers" subtitle="Search by name, email, or phone" />
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search customers by name, email, or phone"
-              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-[#6366f1]"
-            />
-          </div>
-          {loadingCustomers ? (
-            <Spinner />
-          ) : (
-            <DataTable columns={customerCols} rows={filteredCustomers} emptyText="No customers match your search." />
-          )}
-        </div>
-      </Card>
-
-    </div>
-  )
-}
 
 // ── Quote Comparison ──────────────────────────────────────────────────
 function QuoteCard({ q, isTop }) {
@@ -812,7 +614,7 @@ function BankerApprovals() {
   const dispatch = useDispatch()
   const { list: cases, loading } = useSelector(s => s.cases)
   const [loading2, setL2] = useState({})
-  const pending = cases.filter(c => (c.current_stage === 'RECOMMENDATION' || c.current_stage === 'BANKER_APPROVAL') && !c.banker_approved && c.status === 'ACTIVE')
+  const pending = cases.filter(c => !c.banker_approved && c.status === 'ACTIVE')
 
   useEffect(() => { dispatch(fetchCases()) }, [dispatch])
 
@@ -950,32 +752,15 @@ function CustomerIntake() {
 
   return (
     <div>
-      <SectionHeader title="Customer Intake" subtitle="Upload CSV or add customers manually for case onboarding" />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-        <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <Upload size={16} />
-            <p className="font-semibold">CSV Import</p>
-          </div>
-          <p className="text-sm text-[#6b7280] mb-4">Drop a CSV file to import customers. Required columns are name and email; aliases like customer_name, customer_email, and phone_number are accepted.</p>
-          {err && <Alert type="error" message={err} />}
-          {ok && <Alert type="success" message={ok} />}
-          <CsvDropzone
-            file={csvFile}
-            onFileChange={setCsvFile}
-            onClear={() => setCsvFile(null)}
-            description="Drag and drop a CSV here or click to browse."
-          />
-          <Btn onClick={uploadCsv} disabled={!csvFile || csvUploading} className="mt-4 w-full">
-            {csvUploading ? 'Importing…' : 'Import CSV'}
-          </Btn>
-        </Card>
-
+      <SectionHeader title="Customer Intake" subtitle="Add customers manually for case onboarding" />
+      <div className="max-w-3xl mx-auto mb-5">
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <FileText size={16} />
             <p className="font-semibold">Manual Add</p>
           </div>
+          {err && <Alert type="error" message={err} />}
+          {ok && <Alert type="success" message={ok} />}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Name" value={form.name} onChange={update('name')} placeholder="Rahul Kumar" />
             <Input label="Email" value={form.email} onChange={update('email')} placeholder="rahul@email.com" />
@@ -1037,6 +822,7 @@ function ProposalReview() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [policyId, setPolicyId] = useState(null)
 
   const loadCases = async () => {
     setLoading(true)
@@ -1072,11 +858,27 @@ function ProposalReview() {
     }
   }
 
+  const loadPolicy = async (caseId) => {
+    try {
+      const { data } = await api.get('/policies/')
+      const rel = data.policies.find(p => p.case_id === caseId)
+      if (rel) setPolicyId(rel.id)
+      else setPolicyId(null)
+    } catch (e) {
+      setPolicyId(null)
+    }
+  }
+
   useEffect(() => { loadCases() }, [])
 
   useEffect(() => {
-    if (selectedCaseId) loadQuotes(selectedCaseId)
-    else setQuotes([])
+    if (selectedCaseId) {
+      loadQuotes(selectedCaseId)
+      loadPolicy(selectedCaseId)
+    } else {
+      setQuotes([])
+      setPolicyId(null)
+    }
   }, [selectedCaseId])
 
   const selectedCase = cases.find(c => c.id === selectedCaseId)
@@ -1241,6 +1043,17 @@ function ProposalReview() {
               <Btn onClick={submitToUnderwriter} disabled={submitting || !selectedCase} className="w-full">
                 {submitting ? 'Submitting…' : 'Submit To Underwriter'}
               </Btn>
+              {policyId && (
+                <Btn 
+                  onClick={() => {
+                    window.open(api.defaults.baseURL + '/policies/' + policyId + '/proposal-pdf?token=' + localStorage.getItem('access_token'), '_blank')
+                  }}
+                  variant="success"
+                  className="w-full mt-2"
+                >
+                  📥 Download Proposal PDF
+                </Btn>
+              )}
             </Card>
 
             <Card>
@@ -1298,7 +1111,6 @@ export default function BankerDashboard() {
   return (
     <Routes>
       <Route index element={<CaseList />} />
-      <Route path="new" element={<NewCaseForm />} />
       <Route path="customers" element={<CustomerIntake />} />
       <Route path="quotes" element={<QuoteComparison />} />
       <Route path="recommendation" element={<BankerRecommendations />} />

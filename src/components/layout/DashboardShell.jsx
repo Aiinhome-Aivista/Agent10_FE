@@ -22,7 +22,6 @@ const NAV = {
   ],
   BANKER: [
     { label: 'My Cases', icon: Briefcase, to: '/dashboard/banker' },
-    { label: 'New Case', icon: FileText, to: '/dashboard/banker/new' },
     { label: 'Quotes', icon: Scale, to: '/dashboard/banker/quotes' },
     { label: 'Recommendation', icon: CheckCircle, to: '/dashboard/banker/recommendation' },
     { label: 'Proposal Review', icon: FileText, to: '/dashboard/banker/proposal-review' },
