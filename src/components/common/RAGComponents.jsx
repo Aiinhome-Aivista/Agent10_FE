@@ -126,7 +126,10 @@ export function KnowledgeBase() {
       const fd = new FormData()
       fd.append('file', file)
       fd.append('title', title)
-      await api.post('/rag/documents/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.post('/rag/documents/upload', fd, { 
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 300000
+      })
       setOk('Document indexed successfully')
       setFile(null)
       setTitle('')

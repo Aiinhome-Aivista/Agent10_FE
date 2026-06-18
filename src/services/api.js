@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api/v1', timeout: 30000 })
+const api = axios.create({ baseURL: '/api/v1', timeout: 120000 })
 
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('access_token')
