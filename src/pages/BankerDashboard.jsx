@@ -49,7 +49,7 @@ function NewCaseForm() {
   const [form, setForm] = useState({
     customer_name: "", customer_email: "", customer_phone: "",
     customer_dob: "", annual_income: "", sum_assured: "",
-    premium_budget: "", policy_tenure: "20", purpose: "",
+    premium_budget: "", policy_tenure: "2", purpose: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -92,7 +92,7 @@ function NewCaseForm() {
     { label: "Annual Income (₹)", key: "annual_income", placeholder: "1200000" },
     { label: "Sum Assured (₹)", key: "sum_assured", placeholder: "5000000" },
     { label: "Premium Budget / year (₹)", key: "premium_budget", placeholder: "60000" },
-    { label: "Policy Tenure (years)", key: "policy_tenure", placeholder: "20" },
+    { label: "Policy Tenure (years)", key: "policy_tenure", placeholder: "2" },
     { label: "Insurance Purpose", key: "purpose", placeholder: "Family protection, tax saving…" },
   ];
 

@@ -60,17 +60,13 @@ function StageTimeline({ stage, caseItem }) {
 
   const stageCompleted = STAGES.map((s, i) => {
     if (s === 'PROPOSAL_GENERATION') {
-      return idx >= STAGES.indexOf('PROPOSAL_GENERATION')
+      return idx >= STAGES.indexOf('MEDICAL_COORDINATION')
     }
     if (s === 'MEDICAL_COORDINATION') {
-      if (hasMedical) {
-        return idx >= STAGES.indexOf('UNDERWRITING')
-      } else {
-        return idx >= STAGES.indexOf('POLICY_ISSUANCE')
-      }
+      return hasMedical && idx >= STAGES.indexOf('UNDERWRITING')
     }
     if (s === 'UNDERWRITING') {
-      return idx >= STAGES.indexOf('POLICY_ISSUANCE')
+      return idx >= STAGES.indexOf('COMPLETED')
     }
     if (s === 'POLICY_ISSUANCE') {
       return idx >= STAGES.indexOf('COMPLETED')

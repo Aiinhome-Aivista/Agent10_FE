@@ -87,7 +87,7 @@ function CaseList() {
   const [selected, setSelected] = useState(null)
   const [quotes, setQuotes] = useState([])
   const [qLoading, setQL] = useState(false)
-  
+
   // Filtering states
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -164,7 +164,7 @@ function CaseList() {
         <StatCard title="Pending" value={pending} color="#f59e0b" icon={FileText} />
         <StatCard title="Completed" value={completed} color="#6366f1" icon={CheckCircle} />
       </div>
-      
+
       <Card>
         <div className="flex justify-between items-center mb-4">
           <p className="font-semibold text-sm text-[#e8eaf0]">Case Directory</p>
@@ -227,16 +227,34 @@ function CaseList() {
             <div className="mb-5">
               <p className="text-xs font-semibold text-[#6b7280] mb-2">Workflow Progress</p>
               <div className="flex flex-wrap gap-1">
-                {STAGES.map((s, i) => (
-                  <span key={s} className="text-xs px-2 py-0.5 rounded"
-                    style={{
-                      background: i < stageIdx ? '#22c55e22' : i === stageIdx ? '#6366f122' : '#1e2235',
-                      color: i < stageIdx ? '#22c55e' : i === stageIdx ? '#6366f1' : '#6b7280',
-                      border: `1px solid ${i <= stageIdx ? (i < stageIdx ? '#22c55e44' : '#6366f144') : '#2a2f45'}`
-                    }}>
-                    {i + 1}. {s.replace(/_/g, ' ')}
-                  </span>
-                ))}
+                {STAGES.map((s, i) => {
+                  const completed = (() => {
+                    if (s === 'PROPOSAL_GENERATION') {
+                      return stageIdx >= STAGES.indexOf('MEDICAL_COORDINATION')
+                    }
+                    if (s === 'MEDICAL_COORDINATION') {
+                      return activeCase?.has_medical_requests && stageIdx >= STAGES.indexOf('UNDERWRITING')
+                    }
+                    if (s === 'UNDERWRITING') {
+                      return stageIdx >= STAGES.indexOf('COMPLETED')
+                    }
+                    if (s === 'POLICY_ISSUANCE') {
+                      return stageIdx >= STAGES.indexOf('COMPLETED')
+                    }
+                    return i < stageIdx
+                  })()
+                  const active = i === stageIdx
+                  return (
+                    <span key={s} className="text-xs px-2 py-0.5 rounded"
+                      style={{
+                        background: completed ? '#22c55e22' : active ? '#6366f122' : '#1e2235',
+                        color: completed ? '#22c55e' : active ? '#6366f1' : '#6b7280',
+                        border: `1px solid ${completed ? '#22c55e44' : active ? '#6366f144' : '#2a2f45'}`
+                      }}>
+                      {i + 1}. {s.replace(/_/g, ' ')}
+                    </span>
+                  )
+                })}
               </div>
             </div>
 
@@ -252,8 +270,8 @@ function CaseList() {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <p className="text-xs font-semibold text-[#6b7280]">Quotes ({quotes.length})</p>
-                  <button 
-                    onClick={() => fetchQuotes(activeCase.id)} 
+                  <button
+                    onClick={() => fetchQuotes(activeCase.id)}
                     className="text-xs font-semibold text-[#6366f1] hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
                   >
                     🔄 Refresh Quotes
@@ -446,7 +464,7 @@ function NewCaseForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Sum Assured (₹)" value={form.sum_assured} onChange={set('sum_assured')} placeholder="5000000" />
             <Input label="Premium Budget/yr (₹)" value={form.premium_budget} onChange={set('premium_budget')} placeholder="60000" />
-            <Input label="Policy Tenure (years)" value={form.policy_tenure} onChange={set('policy_tenure')} placeholder="20" />
+            <Input label="Policy Tenure (years)" value={form.policy_tenure} onChange={set('policy_tenure')} placeholder="2" />
             <Input label="Insurance Purpose" value={form.purpose} onChange={set('purpose')} placeholder="Family protection, tax saving…" className="sm:col-span-2" />
           </div>
           <Btn onClick={submit} disabled={loading || !selectedCustomer} className="mt-5 w-full">
@@ -489,8 +507,8 @@ function QuoteCard({ q, isTop }) {
   const medicals = q.medical_requirements || []
 
   return (
-    <Card 
-      onClick={() => setExpanded(!expanded)} 
+    <Card
+      onClick={() => setExpanded(!expanded)}
       className={`relative flex flex-col justify-between cursor-pointer hover:border-[#6366f1] transition-all duration-200 ${isTop ? 'border-[#6366f1]' : ''}`}
     >
       {isTop && (
