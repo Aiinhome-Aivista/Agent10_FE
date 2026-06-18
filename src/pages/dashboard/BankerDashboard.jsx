@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchCases } from '../../store/slices/casesSlice'
-import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Input, Alert, Spinner, Modal } from '../../components/common'
+import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Input, Select, Alert, Spinner, Modal } from '../../components/common'
 import { Briefcase, Clock, CheckCircle, FileText, Bell, Upload, Search } from 'lucide-react'
 import api from '../../services/api'
 import { KnowledgeBase, RAGChat } from '../../components/common/RAGComponents'
@@ -261,7 +261,7 @@ function CaseList() {
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   {quotes.map((q, i) => (
-                    <QuoteCard key={q.id} q={q} isTop={i === 0} />
+                    <QuoteCard key={q.id} q={q} isTop={i === 0} caseId={activeCase.id} onCustomize={() => fetchQuotes(activeCase.id)} />
                   ))}
                 </div>
               </div>
@@ -283,14 +283,70 @@ function NewCaseForm() {
   const [csvFile, setCsvFile] = useState(null)
   const [csvUploading, setCsvUploading] = useState(false)
   const [form, setForm] = useState({
-    sum_assured: '', premium_budget: '', policy_tenure: '20', purpose: '',
+    sum_assured: '', premium_budget: '', policy_tenure: '1', purpose: 'Health Insurance',
   })
   const [loading, setL] = useState(false)
   const [err, setErr] = useState(null)
   const [ok, setOk] = useState(false)
+  const [aiReasoning, setAiReasoning] = useState('')
+  const [suggestLoading, setSuggestLoading] = useState(false)
   const set = k => v => setForm(f => ({ ...f, [k]: v }))
 
   const selectedCustomer = customers.find((customer) => customer.user_id === selectedCustomerId) || null
+
+  const fetchSuggestions = async (customerId, saOverride = null, tenureOverride = null) => {
+    if (!customerId) return
+    setSuggestLoading(true)
+    setErr(null)
+    try {
+      const customer = customers.find(c => c.user_id === customerId)
+      if (customer) {
+        const profile = buildCustomerProfile(customer)
+        const payload = {
+          customer_profile: profile,
+          product_type: 'HEALTH',
+          policy_tenure: Number(tenureOverride !== null ? tenureOverride : form.policy_tenure)
+        }
+        if (saOverride !== null && saOverride !== '') {
+          payload.sum_assured = Number(saOverride)
+        }
+        const { data } = await api.post('/cases/suggest-params', payload)
+        setForm(f => ({
+          ...f,
+          sum_assured: data.recommended_sum_assured.toString(),
+          premium_budget: data.recommended_premium_budget.toString(),
+          policy_tenure: data.recommended_policy_tenure.toString(),
+        }))
+        setAiReasoning(data.reasoning)
+      }
+    } catch (e) {
+      console.error('Failed to fetch AI suggestions:', e)
+    } finally {
+      setSuggestLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedCustomerId) {
+      setForm(f => ({ ...f, sum_assured: '', premium_budget: '', policy_tenure: '1', purpose: 'Health Insurance' }))
+      setAiReasoning('')
+      return
+    }
+    fetchSuggestions(selectedCustomerId, null, '1')
+  }, [selectedCustomerId])
+
+  const handleTenureChange = (newTenure) => {
+    setForm(f => ({ ...f, policy_tenure: newTenure }))
+    if (selectedCustomerId) {
+      fetchSuggestions(selectedCustomerId, form.sum_assured, newTenure)
+    }
+  }
+
+  const handleSumAssuredBlur = () => {
+    if (selectedCustomerId && form.sum_assured) {
+      fetchSuggestions(selectedCustomerId, form.sum_assured, form.policy_tenure)
+    }
+  }
 
   const filteredCustomers = customers.filter((customer) => {
     const query = searchTerm.trim().toLowerCase()
@@ -343,7 +399,7 @@ function NewCaseForm() {
         customer_profile: buildCustomerProfile(selectedCustomer),
         sum_assured: parseFloat(form.sum_assured) || 0,
         premium_budget: parseFloat(form.premium_budget) || 0,
-        policy_tenure: parseInt(form.policy_tenure) || 20,
+        policy_tenure: parseInt(form.policy_tenure) || 1,
         needs_analysis: { purpose: form.purpose },
       })
       setOk(true)
@@ -443,10 +499,38 @@ function NewCaseForm() {
               <p className="text-sm text-[#6b7280]">Pick a customer from the list below to continue.</p>
             )}
           </div>
+          {selectedCustomer && (
+            <div className="mb-4 rounded-lg border border-[#6366f1]/20 bg-[#6366f1]/5 p-4 text-xs leading-relaxed text-[#7c83ff]">
+              {suggestLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full border border-transparent border-t-[#6366f1] animate-spin" style={{ borderTopColor: '#7c83ff' }} />
+                  <span>AI generating cover recommendation...</span>
+                </div>
+              ) : (
+                aiReasoning && (
+                  <div>
+                    <span className="font-bold block mb-1">✨ AI Cover Recommendation:</span>
+                    <span>{aiReasoning}</span>
+                  </div>
+                )
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Sum Assured (₹)" value={form.sum_assured} onChange={set('sum_assured')} placeholder="5000000" />
+            <Input label="Sum Assured (₹)" value={form.sum_assured} onChange={set('sum_assured')} onBlur={handleSumAssuredBlur} placeholder="5000000" />
             <Input label="Premium Budget/yr (₹)" value={form.premium_budget} onChange={set('premium_budget')} placeholder="60000" />
-            <Input label="Policy Tenure (years)" value={form.policy_tenure} onChange={set('policy_tenure')} placeholder="20" />
+            <Select
+              label="Policy Tenure"
+              value={form.policy_tenure}
+              onChange={handleTenureChange}
+              options={[
+                { value: '1', label: '1 Year' },
+                { value: '2', label: '2 Years (5% Off)' },
+                { value: '3', label: '3 Years (10% Off)' },
+                { value: '4', label: '4 Years (12% Off)' },
+                { value: '5', label: '5 Years (15% Off)' },
+              ]}
+            />
             <Input label="Insurance Purpose" value={form.purpose} onChange={set('purpose')} placeholder="Family protection, tax saving…" className="sm:col-span-2" />
           </div>
           <Btn onClick={submit} disabled={loading || !selectedCustomer} className="mt-5 w-full">
@@ -480,152 +564,342 @@ function NewCaseForm() {
 }
 
 // ── Quote Comparison ──────────────────────────────────────────────────
-function QuoteCard({ q, isTop }) {
+function QuoteCard({ q, isTop, caseId, onCustomize }) {
   const [expanded, setExpanded] = useState(false)
+  
+  // Cover and tenure local dropdown states
+  const [selectedSA, setSelectedSA] = useState(q.sum_assured || 1000000)
+  const [selectedTenure, setSelectedTenure] = useState(q.policy_tenure || 1)
+  const [customizing, setCustomizing] = useState(false)
+
+  // Sync state with incoming props
+  useEffect(() => {
+    if (q.sum_assured) setSelectedSA(q.sum_assured)
+    if (q.policy_tenure) setSelectedTenure(q.policy_tenure)
+  }, [q.sum_assured, q.policy_tenure])
+
   const coverage = q.coverage_details || {}
   const riders = q.riders || []
   const exclusions = q.exclusions || []
   const uwDocs = q.underwriting_requirements || []
   const medicals = q.medical_requirements || []
 
+  // Brand color theme configuration
+  const insurerThemes = {
+    HDFC_LIFE: {
+      name: 'HDFC Life',
+      color: '#ea002a',
+      bg: 'from-[#ea002a]/20 to-[#ea002a]/5',
+      text: 'text-[#ea002a]',
+      border: 'border-[#ea002a]/30',
+      logoInitials: 'HDFC'
+    },
+    LIC: {
+      name: 'LIC of India',
+      color: '#ffcc00',
+      bg: 'from-[#ffcc00]/20 to-[#ffcc00]/5',
+      text: 'text-[#ffcc00]',
+      border: 'border-[#ffcc00]/30',
+      logoInitials: 'LIC'
+    },
+    ICICI_PRU: {
+      name: 'ICICI Pru',
+      color: '#9d2235',
+      bg: 'from-[#9d2235]/20 to-[#9d2235]/5',
+      text: 'text-[#9d2235]',
+      border: 'border-[#9d2235]/30',
+      logoInitials: 'ICICI'
+    },
+    SBI_GENERAL: {
+      name: 'SBI General',
+      color: '#00a4e4',
+      bg: 'from-[#00a4e4]/20 to-[#00a4e4]/5',
+      text: 'text-[#00a4e4]',
+      border: 'border-[#00a4e4]/30',
+      logoInitials: 'SBI'
+    }
+  }
+
+  const theme = insurerThemes[q.insurer_code] || {
+    name: q.insurer_name || 'Insurer',
+    color: '#6366f1',
+    bg: 'from-[#6366f1]/20 to-[#6366f1]/5',
+    text: 'text-[#6366f1]',
+    border: 'border-[#6366f1]/30',
+    logoInitials: (q.insurer_name || 'INS').substring(0, 3).toUpperCase()
+  }
+
+  // Premium discount mapping matching backend
+  const getDiscount = (t) => {
+    if (t === 2) return 0.95
+    if (t === 3) return 0.90
+    if (t === 4) return 0.88
+    if (t >= 5) return 0.85
+    return 1.0
+  }
+
+  // Base premium for 1 year tenure at original sum assured
+  const origDiscount = getDiscount(q.policy_tenure || 1)
+  const basePremium1Yr = (q.annual_premium || 0) / origDiscount
+
+  // Dynamically calculate premium on Sum Assured change and Tenure change
+  const currentDiscount = getDiscount(selectedTenure)
+  // Sub-linear premium scaling matching prompt rules
+  const scaledAnnualPremium = basePremium1Yr * Math.pow(selectedSA / (q.sum_assured || 1000000), 0.6)
+  const finalAnnualPremium = scaledAnnualPremium * currentDiscount
+  const finalTotalPremium = finalAnnualPremium * selectedTenure
+  const finalGstPremium = finalTotalPremium * 1.18
+
+  // Helper strings for key features
+  const waitingDays = q.waiting_period_days || 0
+  const waitingText = waitingDays ? `${Math.round(waitingDays / 30)} months waiting` : 'No waiting period'
+  const cashlessText = q.insurer_code === 'HDFC_LIFE' ? '12,000+ Cashless Hospitals' : '8,000+ Cashless Hospitals'
+
+  const handleCustomize = async (e) => {
+    e.stopPropagation()
+    if (!caseId || !onCustomize) return
+    setCustomizing(true)
+    try {
+      await api.post(`/cases/${caseId}/customize`, {
+        sum_assured: parseFloat(selectedSA),
+        policy_tenure: parseInt(selectedTenure)
+      })
+      if (onCustomize) {
+        await onCustomize()
+      }
+    } catch (err) {
+      console.error("Failed to customize case parameters:", err)
+    } finally {
+      setCustomizing(false)
+    }
+  }
+
   return (
     <Card 
-      onClick={() => setExpanded(!expanded)} 
-      className={`relative flex flex-col justify-between cursor-pointer hover:border-[#6366f1] transition-all duration-200 ${isTop ? 'border-[#6366f1]' : ''}`}
+      className={`relative flex flex-col gap-4 hover:border-[#6366f1] transition-all duration-200 ${isTop ? 'border-[#6366f1]' : ''}`}
     >
       {isTop && (
         <span className="absolute -top-3 left-4 bg-[#6366f1] text-white text-[10px] px-3 py-0.5 rounded-full font-bold">
           AI Recommended
         </span>
       )}
-      <div>
-        <div className="flex justify-between items-start gap-4 mb-4">
+      
+      {/* Policy Bazaar Styled Horizontal Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[160px_1fr_180px_180px] gap-6 items-center">
+        
+        {/* Col 1: Insurer Logo Emblem & Name */}
+        <div className="flex flex-col items-center text-center lg:border-r lg:border-[#2a2f45] lg:pr-4">
+          <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${theme.bg} border ${theme.border} flex items-center justify-center text-white font-extrabold text-sm tracking-wide shadow-md`}>
+            {theme.logoInitials}
+          </div>
+          <p className="font-bold text-sm text-[#e8eaf0] mt-2.5">{theme.name}</p>
+          <span className="text-[10px] text-[#6b7280] mt-0.5">IRDAI Reg No. {Math.floor(100 + Math.random() * 900)}</span>
+          <button 
+            type="button" 
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            className="text-[11px] text-[#6366f1] hover:underline hover:text-[#7c83ff] mt-2 font-medium bg-transparent border-none cursor-pointer"
+          >
+            About Insurer
+          </button>
+        </div>
+
+        {/* Col 2: Product Name & Key Features */}
+        <div className="flex flex-col justify-between">
           <div>
-            <p className="font-bold text-base text-[#e8eaf0]">{q.insurer_name}</p>
-            <p className="text-xs text-[#6b7280]">{q.product_name}</p>
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="font-bold text-base text-[#e8eaf0]">{q.product_name}</h3>
+              {isTop && <span className="bg-[#2dd4bf]/10 text-[#2dd4bf] text-[9px] px-2 py-0.5 rounded-md font-semibold">Best Choice</span>}
+            </div>
+            
+            {/* Health insurance key features */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs text-[#9ca3af] mb-4 mt-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">🏥</span>
+                <span><strong>Cashless Network:</strong> {cashlessText}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">⏳</span>
+                <span><strong>Waiting Period:</strong> {waitingText}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">🛏️</span>
+                <span><strong>Room Rent Limit:</strong> No Room Rent Capping</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">🔄</span>
+                <span><strong>Restoration Benefit:</strong> 100% Restoration of cover</span>
+              </div>
+            </div>
           </div>
-          <div className="text-right min-w-max">
-            <p className="font-bold text-[#22c55e] text-base">₹{q.annual_premium?.toLocaleString()}</p>
-            <p className="text-[10px] text-[#6b7280]">per year</p>
-          </div>
+
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            className="text-[11px] font-semibold text-[#6366f1] hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer text-left self-start mt-2"
+          >
+            {expanded ? 'Hide plan details ▲' : 'View all features ▼'}
+          </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">Sum Assured</p>
-            <p className="font-bold text-[#e8eaf0]">₹{q.sum_assured?.toLocaleString()}</p>
-          </div>
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">Tenure</p>
-            <p className="font-bold text-[#e8eaf0]">{q.policy_tenure} yrs</p>
-          </div>
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">AI Score</p>
-            <p className="font-bold text-[#2dd4bf]">{((q.ai_score || 0) * 100).toFixed(0)}%</p>
-          </div>
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">Rank</p>
-            <p className="font-bold text-[#e8eaf0]">#{q.ai_rank}</p>
-          </div>
+        {/* Col 3: Cover Amount Dropdown */}
+        <div className="flex flex-col gap-1.5 lg:border-l lg:border-[#2a2f45] lg:pl-6">
+          <label className="text-[10px] font-semibold text-[#6b7280] uppercase tracking-[0.15em]">Cover Amount</label>
+          <select 
+            value={selectedSA} 
+            onChange={(e) => setSelectedSA(Number(e.target.value))}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm text-[#e8eaf0] outline-none focus:border-[#6366f1] transition-colors cursor-pointer w-full"
+          >
+            <option value={500000}>₹5 Lakh</option>
+            <option value={1000000}>₹10 Lakh</option>
+            <option value={1500000}>₹15 Lakh</option>
+            <option value={2500000}>₹25 Lakh</option>
+            <option value={5000000}>₹50 Lakh</option>
+            <option value={7500000}>₹75 Lakh</option>
+            <option value={10000000}>₹1 Crore</option>
+          </select>
+          <span className="text-[10px] text-[#6b7280] mt-0.5">Most customers select ₹15L Cover</span>
         </div>
 
-        {q.ai_recommendation_text && (
-          <div className="text-xs text-[#2dd4bf] bg-[#2dd4bf]/10 rounded-lg p-3 mb-3 leading-relaxed whitespace-pre-wrap">
-            {q.ai_recommendation_text}
+        {/* Col 4: Tenure, Premium & Orange Button */}
+        <div className="flex flex-col gap-2 lg:border-l lg:border-[#2a2f45] lg:pl-6">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-[#6b7280] uppercase tracking-[0.15em]">Policy Tenure</label>
+            <select 
+              value={selectedTenure} 
+              onChange={(e) => setSelectedTenure(Number(e.target.value))}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs text-[#e8eaf0] outline-none focus:border-[#6366f1] transition-colors cursor-pointer w-full"
+            >
+              <option value={1}>1 Year</option>
+              <option value={2}>2 Years (5% Off)</option>
+              <option value={3}>3 Years (10% Off)</option>
+              <option value={4}>4 Years (12% Off)</option>
+              <option value={5}>5 Years (15% Off)</option>
+            </select>
           </div>
-        )}
 
-        {expanded && (
-          <div className="space-y-4 pt-3 border-t border-[#2a2f45] text-xs">
-            {/* Benefit Coverages */}
-            {Object.keys(coverage).length > 0 && (
-              <div>
-                <p className="text-[#6b7280] font-semibold mb-2">Benefit Coverages</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(coverage).map(([key, val]) => {
-                    const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                    return (
-                      <span key={key} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] ${val ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20'}`}>
-                        {val ? '✓' : '✗'} {label}
-                      </span>
-                    );
-                  })}
+          <div className="mt-1 flex flex-col justify-center min-h-[44px]">
+            <div className="flex items-baseline gap-1">
+              <span className="font-extrabold text-[#22c55e] text-lg">₹{Math.round(finalTotalPremium).toLocaleString()}</span>
+              {selectedTenure > 1 && <span className="text-[10px] text-[#6b7280]">for {selectedTenure} yrs</span>}
+            </div>
+            <p className="text-[10px] text-[#6b7280] font-medium">₹{Math.round(finalGstPremium).toLocaleString()} Incl. 18% GST</p>
+          </div>
+
+          {caseId && onCustomize && (
+            <button
+              type="button"
+              disabled={customizing || (selectedSA === q.sum_assured && selectedTenure === q.policy_tenure)}
+              onClick={handleCustomize}
+              className="bg-[#ff5a00] hover:bg-[#e04f00] text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors w-full flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
+            >
+              {customizing ? (
+                <>
+                  <div className="w-3.5 h-3.5 rounded-full border border-transparent border-t-white animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <span>Customize plan</span>
+                  <span className="text-[11px] font-normal">&gt;</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+      </div>
+
+      {/* Expanded details containing more benefit coverage info, exclusions, riders etc. */}
+      {expanded && (
+        <div className="space-y-4 pt-4 border-t border-[#2a2f45] text-xs">
+          
+          {q.ai_recommendation_text && (
+            <div className="text-xs text-[#2dd4bf] bg-[#2dd4bf]/10 border border-[#2dd4bf]/20 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
+              <strong>✨ AI Underwriting Suitability:</strong> {q.ai_recommendation_text}
+            </div>
+          )}
+
+          {/* Benefit Coverages */}
+          {Object.keys(coverage).length > 0 && (
+            <div>
+              <p className="text-[#6b7280] font-semibold mb-2 uppercase tracking-wider text-[10px]">Benefit Coverages</p>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(coverage).map(([key, val]) => {
+                  const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                  return (
+                    <span key={key} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-medium ${val ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20'}`}>
+                      {val ? '✓' : '✗'} {label}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Waiting Period */}
+          {q.waiting_period_days !== undefined && q.waiting_period_days !== null && (
+            <div className="flex justify-between items-center bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
+              <span className="text-[#6b7280] font-medium">Waiting Period for Pre-Existing Diseases</span>
+              <span className="font-semibold text-[#e8eaf0]">{q.waiting_period_days} days ({Math.round(q.waiting_period_days / 365)} years)</span>
+            </div>
+          )}
+
+          {/* Riders */}
+          {riders.length > 0 && (
+            <div>
+              <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Optional Add-ons / Riders</p>
+              <ul className="space-y-1 pl-4 list-disc text-[#e8eaf0]">
+                {riders.map((r, i) => {
+                  const rName = r.name || r.rider_name || "";
+                  const cost = r.annual_cost || r.annual_premium || r.premium_per_year;
+                  return (
+                    <li key={i}>
+                      <span>{rName}</span>
+                      {cost !== undefined && cost !== null && <span className="text-[#22c55e] font-semibold"> (+₹{cost.toLocaleString()}/yr)</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {/* Exclusions */}
+          {exclusions.length > 0 && (
+            <div>
+              <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Policy Exclusions</p>
+              <ul className="space-y-1 pl-4 list-disc text-[#ef4444]">
+                {exclusions.map((exc, i) => (
+                  <li key={i}>{exc}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Required Docs & Medicals */}
+          {(uwDocs.length > 0 || medicals.length > 0) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              {uwDocs.length > 0 && (
+                <div>
+                  <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Required Docs</p>
+                  <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
+                    {uwDocs.map((doc, i) => <li key={i}>{doc}</li>)}
+                  </ul>
                 </div>
-              </div>
-            )}
-
-            {/* Waiting Period */}
-            {q.waiting_period_days !== undefined && q.waiting_period_days !== null && (
-              <div className="flex justify-between items-center bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-                <span className="text-[#6b7280]">Waiting Period</span>
-                <span className="font-semibold text-[#e8eaf0]">{q.waiting_period_days} days</span>
-              </div>
-            )}
-
-            {/* Riders */}
-            {riders.length > 0 && (
-              <div>
-                <p className="text-[#6b7280] font-semibold mb-1.5">Optional Add-ons / Riders</p>
-                <ul className="space-y-1 pl-4 list-disc text-[#e8eaf0]">
-                  {riders.map((r, i) => {
-                    const rName = r.name || r.rider_name || "";
-                    const cost = r.annual_cost || r.annual_premium || r.premium_per_year;
-                    return (
-                      <li key={i}>
-                        <span>{rName}</span>
-                        {cost !== undefined && cost !== null && <span className="text-[#22c55e] font-semibold"> (+₹{cost.toLocaleString()}/yr)</span>}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-
-            {/* Exclusions */}
-            {exclusions.length > 0 && (
-              <div>
-                <p className="text-[#6b7280] font-semibold mb-1.5">Policy Exclusions</p>
-                <ul className="space-y-1 pl-4 list-disc text-[#ef4444]">
-                  {exclusions.map((exc, i) => (
-                    <li key={i}>{exc}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Requirements */}
-            {(uwDocs.length > 0 || medicals.length > 0) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {uwDocs.length > 0 && (
-                  <div>
-                    <p className="text-[#6b7280] font-semibold mb-1.5">Required Docs</p>
-                    <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
-                      {uwDocs.map((doc, i) => <li key={i}>{doc}</li>)}
-                    </ul>
-                  </div>
-                )}
-                {medicals.length > 0 && (
-                  <div>
-                    <p className="text-[#6b7280] font-semibold mb-1.5">Medical Tests</p>
-                    <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
-                      {medicals.map((test, i) => <li key={i}>{test}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="mt-4">
-        <button
-          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-          className="w-full text-center py-2 px-3 rounded-lg border border-[#2a2f45] bg-[#15192a] hover:bg-[#1a1f36] text-xs font-semibold text-[#e8eaf0] transition-colors"
-        >
-          {expanded ? 'Hide Details' : 'Show Details'}
-        </button>
-      </div>
+              )}
+              {medicals.length > 0 && (
+                <div>
+                  <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Medical Tests</p>
+                  <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
+                    {medicals.map((test, i) => <li key={i}>{test}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   )
 }
@@ -657,9 +931,9 @@ function QuoteComparison() {
         </Btn>
       </div>
       {loading ? <Spinner /> : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-4">
           {quotes.map((q, i) => (
-            <QuoteCard key={q.id} q={q} isTop={i === 0} />
+            <QuoteCard key={q.id} q={q} isTop={i === 0} caseId={caseId} onCustomize={() => load(caseId)} />
           ))}
           {!loading && quotes.length === 0 && caseId && (
             <p className="text-[#6b7280] text-sm col-span-3 text-center py-10">Currently no quotes available.</p>

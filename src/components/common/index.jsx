@@ -99,13 +99,14 @@ export function Btn({ children, onClick, variant='primary', size='md', disabled,
 }
 
 // ─── Input ───────────────────────────────────────────────────────────
-export function Input({ label, value, onChange, type='text', placeholder, required, className='' }) {
+export function Input({ label, value, onChange, type='text', placeholder, required, className='', ...props }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && <label className="text-xs font-semibold text-[#6b7280]">{label}{required && ' *'}</label>}
       <input type={type} value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder} required={required}
         className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm text-[#e8eaf0] outline-none focus:border-[#6366f1] transition-colors"
+        {...props}
       />
     </div>
   )
