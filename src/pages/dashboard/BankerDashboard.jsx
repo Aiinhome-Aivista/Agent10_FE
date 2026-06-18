@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Fragment } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchCases } from '../../store/slices/casesSlice'
@@ -276,6 +276,13 @@ function CaseList() {
 // ── New Case Form ─────────────────────────────────────────────────────
 function NewCaseForm() {
   const { user } = useSelector(s => s.auth)
+  const dispatch = useDispatch()
+  const { list: cases } = useSelector(s => s.cases)
+
+  const getCustomerCaseCount = (customerId) => {
+    if (!cases) return 0
+    return cases.filter(c => c.customer_id === customerId).length
+  }
   const [customers, setCustomers] = useState([])
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
@@ -291,6 +298,60 @@ function NewCaseForm() {
   const [aiReasoning, setAiReasoning] = useState('')
   const [suggestLoading, setSuggestLoading] = useState(false)
   const set = k => v => setForm(f => ({ ...f, [k]: v }))
+
+  // Collapsible existing cases state
+  const [expandedCustomerIds, setExpandedCustomerIds] = useState({})
+  
+  // Selected case for viewing details modal
+  const [selectedCase, setSelectedCase] = useState(null)
+  const [quotes, setQuotes] = useState([])
+  const [qLoading, setQL] = useState(false)
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const rowsPerPage = 10
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
+
+  const toggleCustomerExpand = (customerId) => {
+    setExpandedCustomerIds(prev => ({
+      ...prev,
+      [customerId]: !prev[customerId]
+    }))
+  }
+
+  const fetchCaseQuotes = async (caseId) => {
+    setQL(true)
+    try {
+      const { data } = await api.get(`/quotes/case/${caseId}`)
+      setQuotes(data.quotes || [])
+    } catch (e) {
+      console.error("Failed to fetch quotes:", e)
+    } finally {
+      setQL(false)
+    }
+  }
+
+  const handleViewCase = (caseObj) => {
+    setSelectedCase(caseObj)
+    fetchCaseQuotes(caseObj.id)
+  }
+
+  const approveCase = async (caseId) => {
+    await api.post(`/cases/${caseId}/banker-approve`, { remarks: 'Approved by banker' })
+    dispatch(fetchCases())
+    const updated = cases.find(c => c.id === caseId)
+    if (updated) setSelectedCase(updated)
+  }
+
+  const triggerCaseWorkflow = async (caseId) => {
+    await api.post(`/workflow/case/${caseId}/run`)
+    dispatch(fetchCases())
+    const updated = cases.find(c => c.id === caseId)
+    if (updated) setSelectedCase(updated)
+  }
 
   const selectedCustomer = customers.find((customer) => customer.user_id === selectedCustomerId) || null
 
@@ -385,7 +446,10 @@ function NewCaseForm() {
     }
   }
 
-  useEffect(() => { loadCustomers() }, [])
+  useEffect(() => {
+    loadCustomers()
+    dispatch(fetchCases())
+  }, [dispatch])
 
   const submit = async () => {
     if (!selectedCustomer) {
@@ -440,6 +504,14 @@ function NewCaseForm() {
     { key: 'email', label: 'Email' },
     { key: 'phone', label: 'Phone' },
     { key: 'source_type', label: 'Source', render: (row) => <Badge label={row.source_type} /> },
+    {
+      key: 'cases_count',
+      label: 'Cases',
+      render: (row) => {
+        const count = getCustomerCaseCount(row.user_id)
+        return <span className="font-semibold text-[#6366f1]">{count} Case{count !== 1 ? 's' : ''}</span>
+      }
+    },
     { key: 'created_at', label: 'Added', render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '—' },
     {
       key: 'actions',
@@ -494,6 +566,10 @@ function NewCaseForm() {
                 <p className="text-[#6b7280]">{selectedCustomer.email}</p>
                 <p className="text-[#6b7280]">{selectedCustomer.phone || '—'}</p>
                 <p className="text-xs text-[#6b7280]">User ID: {selectedCustomer.user_id}</p>
+                <div className="mt-2 pt-2 border-t border-[#2a2f45] flex items-center justify-between">
+                  <span className="text-xs text-[#6b7280]">Cases Generated So Far:</span>
+                  <Badge label={`${getCustomerCaseCount(selectedCustomer.user_id)} Case(s)`} />
+                </div>
               </div>
             ) : (
               <p className="text-sm text-[#6b7280]">Pick a customer from the list below to continue.</p>
@@ -553,11 +629,237 @@ function NewCaseForm() {
           </div>
           {loadingCustomers ? (
             <Spinner />
-          ) : (
-            <DataTable columns={customerCols} rows={filteredCustomers} emptyText="No customers match your search." />
-          )}
+          ) : filteredCustomers.length === 0 ? (
+            <p className="text-center py-10 text-[#6b7280]">No customers match your search.</p>
+          ) : (() => {
+            const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage)
+            const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+            
+            return (
+              <Fragment>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Name</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Email</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Phone</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Source</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Cases</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Added</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedCustomers.map((cust) => {
+                        const count = getCustomerCaseCount(cust.user_id)
+                        const isExpanded = !!expandedCustomerIds[cust.user_id]
+                        const isSelected = cust.user_id === selectedCustomerId
+                        const custCases = cases.filter(c => c.customer_id === cust.user_id)
+
+                        return (
+                          <Fragment key={cust.user_id}>
+                            {/* Main Customer Row */}
+                            <tr className="border-b border-[#2a2f45] hover:bg-[#1e2235]">
+                              <td className="px-3 py-2.5 text-[#e8eaf0] font-medium">{cust.name}</td>
+                              <td className="px-3 py-2.5 text-[#93a1c6]">{cust.email}</td>
+                              <td className="px-3 py-2.5 text-[#93a1c6]">{cust.phone || '—'}</td>
+                              <td className="px-3 py-2.5">
+                                <Badge label={cust.source_type} />
+                              </td>
+                              <td className="px-3 py-2.5">
+                                {count > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      toggleCustomerExpand(cust.user_id)
+                                    }}
+                                    className="inline-flex items-center gap-1 font-semibold text-[#6366f1] hover:text-[#7c83ff] hover:underline bg-transparent border-none cursor-pointer"
+                                  >
+                                    <span>{count} Case{count !== 1 ? 's' : ''}</span>
+                                    <span className="text-[9px] transition-transform duration-200" style={{ display: 'inline-block', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                      ▼
+                                    </span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[#6b7280]">0 Cases</span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2.5 text-[#6b7280]">
+                                {cust.created_at ? new Date(cust.created_at).toLocaleDateString() : '—'}
+                              </td>
+                              <td className="px-3 py-2.5 text-right">
+                                <Btn
+                                  size="sm"
+                                  variant={isSelected ? 'success' : 'secondary'}
+                                  onClick={() => setSelectedCustomerId(cust.user_id)}
+                                >
+                                  {isSelected ? 'Selected' : 'Select'}
+                                </Btn>
+                              </td>
+                            </tr>
+
+                            {/* Collapsible Cases Row */}
+                            {isExpanded && count > 0 && (
+                              <tr className="bg-[#0c0e18] border-b border-[#2a2f45]">
+                                <td colSpan={7} className="px-5 py-4">
+                                  <div className="rounded-xl border border-[#2a2f45] bg-[#101424] p-4">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-[#6b7280] mb-3">
+                                      Existing Cases for {cust.name}
+                                    </p>
+                                    <div className="space-y-2">
+                                      {custCases.map((c) => (
+                                        <div 
+                                          key={c.id} 
+                                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#2a2f45] bg-[#0c0e18] px-4 py-3 hover:border-[#6366f1]/50 transition-colors"
+                                        >
+                                          <div className="flex flex-wrap items-center gap-4 text-xs">
+                                            <div>
+                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Case #</span>
+                                              <span className="font-bold text-[#e8eaf0]">{c.case_number}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Stage</span>
+                                              <Badge label={c.current_stage} />
+                                            </div>
+                                            <div>
+                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Status</span>
+                                              <Badge label={c.status} />
+                                            </div>
+                                            <div>
+                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Sum Assured</span>
+                                              <span className="font-semibold text-[#e8eaf0]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : '—'}</span>
+                                            </div>
+                                          </div>
+                                          <Btn 
+                                            size="sm" 
+                                            variant="secondary"
+                                            onClick={() => handleViewCase(c)}
+                                          >
+                                            View Case Details
+                                          </Btn>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Rounded Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
+                    <p className="text-xs text-[#6b7280]">
+                      Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredCustomers.length)} of {filteredCustomers.length} customers
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                        className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                        title="Previous Page"
+                      >
+                        ◀
+                      </button>
+                      {Array.from({ length: totalPages }, (_, idx) => {
+                        const pageNum = idx + 1
+                        const isCurrent = pageNum === currentPage
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                          >
+                            {pageNum}
+                          </button>
+                        )
+                      })}
+                      <button
+                        type="button"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                        className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                        title="Next Page"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </Fragment>
+            )
+          })()}
         </div>
       </Card>
+
+      {/* Collapsible Case Details Modal */}
+      <Modal open={!!selectedCase} onClose={() => setSelectedCase(null)} title={`Case Details: ${selectedCase?.case_number}`} className="max-w-4xl">
+        {selectedCase && (
+          <div>
+            {/* Stage Progress */}
+            <div className="mb-5">
+              <p className="text-xs font-semibold text-[#6b7280] mb-2">Workflow Progress</p>
+              <div className="flex flex-wrap gap-1">
+                {STAGES.map((s, i) => {
+                  const activeCaseInList = cases.find(c => c.id === selectedCase.id) || selectedCase
+                  const activeStage = activeCaseInList.current_stage
+                  const currentStageVal = activeStage.value ? activeStage.value : activeStage
+                  const stageIdx = STAGES.indexOf(currentStageVal)
+                  return (
+                    <span key={s} className="text-xs px-2 py-0.5 rounded"
+                      style={{
+                        background: i < stageIdx ? '#22c55e22' : i === stageIdx ? '#6366f122' : '#1e2235',
+                        color: i < stageIdx ? '#22c55e' : i === stageIdx ? '#6366f1' : '#6b7280',
+                        border: `1px solid ${i <= stageIdx ? (i < stageIdx ? '#22c55e44' : '#6366f144') : '#2a2f45'}`
+                      }}>
+                      {i + 1}. {s.replace(/_/g, ' ')}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mb-5 flex-wrap">
+              <Btn size="sm" onClick={() => triggerCaseWorkflow(selectedCase.id)}>▶ Run AI Workflow</Btn>
+              <Btn size="sm" variant="secondary" onClick={() => fetchCaseQuotes(selectedCase.id)}>📊 Fetch Quotes</Btn>
+              {!selectedCase.banker_approved && selectedCase.current_stage === 'BANKER_APPROVAL' &&
+                <Btn size="sm" variant="success" onClick={() => approveCase(selectedCase.id)}>✅ Approve</Btn>}
+            </div>
+
+            {/* Quotes */}
+            {qLoading ? <Spinner /> : quotes.length > 0 ? (
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-xs font-semibold text-[#6b7280]">Quotes ({quotes.length})</p>
+                  <button 
+                    onClick={() => fetchCaseQuotes(selectedCase.id)} 
+                    className="text-xs font-semibold text-[#6366f1] hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
+                  >
+                    🔄 Refresh Quotes
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {quotes.map((q, i) => (
+                    <QuoteCard key={q.id} q={q} isTop={i === 0} caseId={selectedCase.id} onCustomize={() => fetchCaseQuotes(selectedCase.id)} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-[#6b7280]">No quotes fetched yet. Run the AI workflow or click "Fetch Quotes" above.</p>
+            )}
+          </div>
+        )}
+      </Modal>
 
     </div>
   )
@@ -1114,6 +1416,8 @@ function BankerApprovals() {
 }
 
 function CustomerIntake() {
+  const dispatch = useDispatch()
+  const { list: cases } = useSelector(s => s.cases)
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState(null)
@@ -1146,7 +1450,10 @@ function CustomerIntake() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    dispatch(fetchCases())
+  }, [dispatch])
 
   const update = (key) => (value) => setForm((current) => ({ ...current, [key]: value }))
 
@@ -1200,6 +1507,14 @@ function CustomerIntake() {
     { key: 'email', label: 'Email' },
     { key: 'phone', label: 'Phone' },
     { key: 'source_type', label: 'Source', render: (row) => <Badge label={row.source_type} /> },
+    {
+      key: 'cases_count',
+      label: 'Cases',
+      render: (row) => {
+        const count = cases.filter(c => c.customer_id === row.user_id).length
+        return <span className="font-semibold text-[#6366f1]">{count} Case{count !== 1 ? 's' : ''}</span>
+      }
+    },
     { key: 'status', label: 'Status', render: (row) => <Badge label={row.status} /> },
     { key: 'created_at', label: 'Added', render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '—' },
   ]
