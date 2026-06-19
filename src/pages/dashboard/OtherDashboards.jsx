@@ -2030,9 +2030,23 @@ function CustomerPolicies() {
   const { user } = useSelector(s => s.auth)
   const [policies, setP] = useState([])
   const [loading, setL] = useState(true)
+
   useEffect(() => {
     api.get(`/policies/customer/${user?.id}`).then(r => setP(r.data.policies)).finally(() => setL(false))
   }, [user])
+
+  const viewPolicy = (policyId) => {
+    const token = localStorage.getItem('access_token') || ''
+    const url = `/api/v1/policies/${policyId}/pdf${token ? `?token=${encodeURIComponent(token)}` : ''}`
+    window.open(url, '_blank')
+  }
+
+  const downloadPolicy = (policyId) => {
+    const token = localStorage.getItem('access_token') || ''
+    const url = `/api/v1/policies/${policyId}/pdf${token ? `?token=${encodeURIComponent(token)}` : ''}&download=true`
+    window.open(url, '_blank')
+  }
+
   const cols = [
     { key: 'policy_number', label: 'Policy #' },
     { key: 'insurer_name', label: 'Insurer' },
@@ -2040,7 +2054,20 @@ function CustomerPolicies() {
     { key: 'sum_assured', label: 'Sum Assured', render: r => `₹${r.sum_assured?.toLocaleString()}` },
     { key: 'annual_premium', label: 'Premium', render: r => `₹${r.annual_premium?.toLocaleString()}` },
     { key: 'status', label: 'Status', render: r => <Badge label={r.status} /> },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: r => r.status === 'ISSUED' ? (
+        <div className="flex gap-2">
+          <Btn size="sm" onClick={() => viewPolicy(r.id)}>View PDF</Btn>
+          <Btn size="sm" variant="secondary" onClick={() => downloadPolicy(r.id)}>Download PDF</Btn>
+        </div>
+      ) : (
+        <span className="text-xs text-[#6b7280]">Draft / Processing</span>
+      )
+    }
   ]
+
   return (
     <div>
       <SectionHeader title="My Policies" />

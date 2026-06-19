@@ -23,6 +23,7 @@ const NAV = {
     { label: 'My Cases',       icon: Home,        to: '/dashboard/customer' },
     { label: 'Policy Quotes',  icon: FileText,    to: '/dashboard/customer/quotes' },
     { label: 'Upload Documents', icon: Upload,     to: '/dashboard/customer/documents' },
+    { label: 'My Policies',    icon: ShieldCheck, to: '/dashboard/customer/policies' },
     { label: 'Notifications',  icon: Bell,        to: '/dashboard/customer/notifications' },
     { label: 'RAG Chat',       icon: MessageSquare, to: '/dashboard/customer/rag-chat' },
   ],
