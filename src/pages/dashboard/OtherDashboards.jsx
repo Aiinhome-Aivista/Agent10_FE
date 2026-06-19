@@ -588,8 +588,8 @@ function CustomerMyCases() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {cases.map(c => (
-            <div key={c.id} onClick={() => setSelectedCaseId(c.id)} className="cursor-pointer">
-              <Card className="hover:border-[#4f46e5] transition-all duration-200">
+            <div key={c.id}>
+              <Card className="transition-all duration-200">
                 <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                   <div>
                     <h3 className="font-bold text-base text-white">{c.case_number}</h3>
