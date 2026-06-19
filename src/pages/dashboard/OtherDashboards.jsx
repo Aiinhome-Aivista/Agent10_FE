@@ -24,6 +24,17 @@ function stripHtml(html) {
     .trim()
 }
 
+function formatDateDDMMMYYYY(dateStr) {
+  if (!dateStr) return '—'
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  const day = String(d.getDate()).padStart(2, '0')
+  const months_lower = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+  const month = months_lower[d.getMonth()]
+  const year = d.getFullYear()
+  return `${day}-${month}-${year}`
+}
+
 
 // ════════════════════════════════════════════════════════════════════
 // CUSTOMER DASHBOARD
@@ -1046,6 +1057,89 @@ function QuoteCard({ q, isTop, onShowDetails }) {
   )
 }
 
+function PolicyBazaarQuoteCard({ q, isSelected, onSelect, disabled }) {
+  const features = q.insurer_name?.toUpperCase().includes('HDFC') ? [
+    "98.6% Claim Settlement Ratio",
+    "Reduce waiting for pre-existing disease to Day 1 with rider",
+    "Single private AC Room allowed (No capping)",
+    "Unlimited Restoration of Cover, Forever"
+  ] : q.insurer_name?.toUpperCase().includes('LIC') ? [
+    "99.1% Government-backed Trust & Heritage",
+    "Tax benefits under Section 80C & 10(10D)",
+    "No Room Rent Limits on hospitalization",
+    "Life stage enhancement options included"
+  ] : [
+    "Cashless network of over 10,000+ hospitals",
+    "Pre-existing diseases covered after 3 years",
+    "Single private AC room eligibility",
+    "Restoration benefit included once per year"
+  ];
+
+  return (
+    <div className={`rounded-xl border p-5 mb-4 transition-all duration-200 bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] ${isSelected ? 'border-[#6366f1] ring-1 ring-[#6366f1]/50 shadow-lg' : 'border-[#2a2f45] hover:border-[#4f46e5]'}`}>
+      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2fr_1.5fr] gap-6 items-center">
+        {/* Left Column: Insurer Logo and About Insurer link */}
+        <div className="flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-[#2a2f45] pb-4 md:pb-0 pr-0 md:pr-6">
+          <div className="w-20 h-12 rounded-xl bg-white text-[#111827] font-bold flex items-center justify-center text-xs border border-[#2a2f45] px-2 shadow-sm mb-2">
+            {q.insurer_name === 'HDFC_Life' || q.insurer_name === 'HDFC' ? 'HDFC Life' : q.insurer_name === 'LIC' ? 'LIC India' : q.insurer_name}
+          </div>
+          <button className="text-[10px] text-[#6366f1] hover:underline mt-1 cursor-pointer font-medium">About Insurer &gt;</button>
+        </div>
+
+        {/* Middle Column: Product Title & Features */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-2.5">
+            <h4 className="font-bold text-base text-white">{q.product_name}</h4>
+            {q.ai_rank === 1 && (
+              <span className="bg-[#6366f1]/20 text-[#7c83ff] text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+                ★ AI Recommended
+              </span>
+            )}
+          </div>
+          
+          <ul className="space-y-1.5 text-xs text-[#9ca3af]">
+            {features.map((f, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <span className="text-[#22c55e] font-bold">✓</span>
+                <span className="leading-relaxed">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <button className="text-[10px] text-[#6b7280] hover:text-white hover:underline mt-3 block cursor-pointer">View all features &gt;</button>
+        </div>
+
+        {/* Right Column: Cover Amount, Premium, Select Button */}
+        <div className="flex flex-col items-stretch md:items-end justify-center border-t md:border-t-0 md:border-l border-[#2a2f45] pt-4 md:pt-0 pl-0 md:pl-6 min-w-[170px]">
+          <div className="mb-3.5 w-full md:w-auto">
+            <span className="text-[10px] text-[#6b7280] block md:text-right">Cover amount</span>
+            <select disabled className="bg-[#0f1117] border border-[#2a2f45] rounded px-2.5 py-1 text-xs text-white font-semibold outline-none w-full md:w-auto mt-1 cursor-not-allowed">
+              <option>₹{q.sum_assured?.toLocaleString()}</option>
+            </select>
+          </div>
+          
+          <div className="mb-4 text-left md:text-right w-full">
+            <span className="text-[10px] text-[#6b7280] block">Premium (1 year)</span>
+            <p className="font-bold text-xl text-[#22c55e] leading-tight">₹{q.annual_premium?.toLocaleString()}</p>
+            <p className="text-[9px] text-[#6b7280]">₹{(q.annual_premium * 1.18).toLocaleString(undefined, {maximumFractionDigits: 0})} incl. GST</p>
+          </div>
+
+          <button
+            onClick={onSelect}
+            disabled={disabled}
+            className={`w-full py-2 px-4 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer shadow-md text-center text-white
+              ${isSelected 
+                ? 'bg-[#22c55e] hover:bg-[#1ebd52] border border-[#22c55e]' 
+                : 'bg-[#ff5a22] hover:bg-[#ff6f3d] border border-[#ff5a22] active:scale-[0.98]'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isSelected ? '✓ Plan Selected' : 'Select Plan'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CustomerQuotes() {
   const { user } = useSelector(s => s.auth)
   const [cases, setCases] = useState([])
@@ -1054,90 +1148,237 @@ function CustomerQuotes() {
   const [loading, setLoading] = useState(true)
   const [quoteLoading, setQuoteLoading] = useState(false)
   const [error, setError] = useState(null)
+  
+  // Selection and OTP States
+  const [selectedQuoteId, setSelectedQuoteId] = useState('')
+  const [selecting, setSelecting] = useState(false)
+  const [otp, setOtp] = useState(Array(6).fill(''))
+  const [otpStatus, setOtpStatus] = useState('idle') // idle, sending, sent, verifying, success
+  const [otpErr, setOtpErr] = useState(null)
+
+  const activeCase = selectedCaseId ? cases.find(c => c.id === selectedCaseId) : null
+
+  const loadCases = async () => {
+    try {
+      const { data } = await api.get('/cases/')
+      const ownCases = (data.cases || []).filter(c => c.customer_id === user?.id)
+      setCases(ownCases)
+      if (ownCases.length > 0 && !selectedCaseId) {
+        setSelectedCaseId(ownCases[0].id)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    api.get('/cases/').then(r => {
-      const ownCases = (r.data.cases || []).filter(c => c.customer_id === user?.id)
-      setCases(ownCases)
-      if (ownCases.length > 0) setSelectedCaseId(ownCases[0].id)
-    }).finally(() => setLoading(false))
+    loadCases()
   }, [user])
 
   const loadQuotes = async (caseId) => {
     if (!caseId) return
     setQuoteLoading(true)
     setError(null)
+    setSelectedQuoteId('')
+    setOtpStatus('idle')
+    setOtp(Array(6).fill(''))
+    setOtpErr(null)
+
     try {
       const selected = cases.find(c => c.id === caseId)
       if (selected) {
+        // If banker has approved or case is at least in BANKER_APPROVAL
         const currentIdx = STAGES.indexOf(selected.current_stage)
-        const suitabilityIdx = STAGES.indexOf('SUITABILITY_VALIDATION')
-        if (currentIdx !== -1 && currentIdx < suitabilityIdx) {
-          setError('Please complete the Profile & Needs section first before retrieving quotes.')
+        const approvalIdx = STAGES.indexOf('BANKER_APPROVAL')
+        if (currentIdx !== -1 && currentIdx < approvalIdx) {
+          setError('Waiting for Banker to review and approve the recommended quotes before you can select a plan.')
           setQuotes([])
           setQuoteLoading(false)
           return
         }
       }
-      const { data } = await api.get(`/quotes/case/${caseId}`)
-      setQuotes(data.quotes || [])
 
-      // Advance stage to QUOTE_RETRIEVAL
-      if (selected) {
-        const currentIdx = STAGES.indexOf(selected.current_stage)
-        const targetIdx = STAGES.indexOf('QUOTE_RETRIEVAL')
-        if (currentIdx !== -1 && targetIdx > currentIdx) {
-          await api.put(`/cases/${caseId}/stage`, { stage: 'QUOTE_RETRIEVAL' })
-          selected.current_stage = 'QUOTE_RETRIEVAL'
-          setCases([...cases])
-        }
+      const { data } = await api.get(`/quotes/case/${caseId}`)
+      const quotesList = data.quotes || []
+      setQuotes(quotesList)
+
+      // Auto select quote if already selected in database
+      const selectedQuote = quotesList.find(q => q.status === 'SELECTED')
+      if (selectedQuote) {
+        setSelectedQuoteId(selectedQuote.id)
+        setOtpStatus('success')
+      } else if (selected && selected.consent_given) {
+        setOtpStatus('success')
       }
     } catch (e) {
-      setError(e.response?.data?.detail || 'Failed to load quote summary')
+      setError(e.response?.data?.detail || 'Failed to load quotes')
     } finally {
       setQuoteLoading(false)
     }
   }
 
-  const handleShowDetails = async (caseId) => {
-    const selected = cases.find(c => c.id === caseId)
-    if (selected) {
-      const currentIdx = STAGES.indexOf(selected.current_stage)
-      const targetIdx = STAGES.indexOf('QUOTE_COMPARISON')
-      if (currentIdx !== -1 && targetIdx > currentIdx) {
-        try {
-          await api.put(`/cases/${caseId}/stage`, { stage: 'QUOTE_COMPARISON' })
-          selected.current_stage = 'QUOTE_COMPARISON'
-          setCases([...cases])
-        } catch (e) {
-          console.error('Failed to update stage to QUOTE_COMPARISON:', e)
-        }
-      }
+  useEffect(() => {
+    if (selectedCaseId && cases.length > 0) {
+      loadQuotes(selectedCaseId)
+    }
+  }, [selectedCaseId, cases])
+
+  const handleSelectQuote = (quoteId) => {
+    if (otpStatus === 'success') return; // Cannot change selection after verification
+    setSelectedQuoteId(quoteId)
+    setOtpStatus('idle')
+    setOtp(Array(6).fill(''))
+    setOtpErr(null)
+  }
+
+  const handleSendOTP = async () => {
+    if (!selectedCaseId || !selectedQuoteId) return
+    setOtpStatus('sending')
+    setOtpErr(null)
+    try {
+      await api.post('/otp/send', { case_id: selectedCaseId })
+      setOtpStatus('sent')
+    } catch (e) {
+      setOtpErr(e.response?.data?.detail || 'Failed to send OTP. Please try again.')
+      setOtpStatus('idle')
     }
   }
 
-  useEffect(() => { if (selectedCaseId) loadQuotes(selectedCaseId) }, [selectedCaseId])
+  const handleOtpDigit = (index, value) => {
+    if (!/^[0-9]?$/.test(value)) return
+    const next = [...otp]
+    next[index] = value
+    setOtp(next)
+    if (value && index < 5) {
+      document.getElementById(`quotes-otp-${index + 1}`)?.focus()
+    }
+  }
+
+  const handleVerifyOTP = async () => {
+    if (!selectedCaseId || !selectedQuoteId) return
+    if (otp.join('').length < 6) {
+      setOtpErr('Please enter the full 6-digit OTP.')
+      return
+    }
+    setOtpStatus('verifying')
+    setOtpErr(null)
+    try {
+      await api.post('/otp/verify', {
+        case_id: selectedCaseId,
+        otp_code: otp.join(''),
+        selected_quote_id: selectedQuoteId,
+      })
+      setOtpStatus('success')
+      await loadCases() // Refresh case details
+    } catch (e) {
+      setOtpErr(e.response?.data?.detail || 'Invalid OTP. Please check the code.')
+      setOtpStatus('sent')
+    }
+  }
 
   if (loading) return <Spinner />
 
   return (
     <div>
-      <SectionHeader title="Quote Summary & Recommendation" subtitle="Review AI-ranked quotes and compare trade-offs" />
-      {error && <Alert type="error" message={error} />}
+      <SectionHeader title="Policy Quotes & Consent" subtitle="Compare plan details and provide OTP consent to proceed" />
+      {error && <Alert type="warning" message={error} />}
+      
       <Card className="mb-5">
         <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
-        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]">
           <option value="">Choose a case…</option>
-          {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>)}
+          {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — Stage: {c.current_stage.replace(/_/g, ' ')}</option>)}
         </select>
       </Card>
-      {quoteLoading ? <Spinner /> : quotes.length === 0 ? (
-        <Card className="text-center py-12 text-[#6b7280]">Currently no quotes available.</Card>
+
+      {quoteLoading ? (
+        <Spinner />
+      ) : quotes.length === 0 ? (
+        !error && <Card className="text-center py-12 text-[#6b7280]">Currently no quotes available for this case.</Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {quotes.map((quote, index) => (
-            <QuoteCard key={quote.id} q={quote} isTop={index === 0} onShowDetails={() => handleShowDetails(selectedCaseId)} />
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2">Available Quotations (Aggregated from brochures)</p>
+          
+          {quotes.map((quote) => (
+            <PolicyBazaarQuoteCard
+              key={quote.id}
+              q={quote}
+              isSelected={selectedQuoteId === quote.id}
+              onSelect={() => handleSelectQuote(quote.id)}
+              disabled={otpStatus === 'success'}
+            />
           ))}
+
+          {/* OTP Consent Section */}
+          {selectedQuoteId && (
+            <Card className="border border-[#2a2f45] bg-[#0b0d14] p-5 mt-6">
+              <h3 className="font-bold text-sm text-white mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#ff5a22]"></span>
+                OTP Verification & Consent
+              </h3>
+              <p className="text-xs text-[#9ca3af] mb-4">
+                Confirm your policy selection of <strong>{quotes.find(q => q.id === selectedQuoteId)?.insurer_name} - {quotes.find(q => q.id === selectedQuoteId)?.product_name}</strong>.
+              </p>
+              
+              {otpErr && <Alert type="error" message={otpErr} />}
+
+              {otpStatus === 'success' ? (
+                <div className="p-4 bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-xl text-center">
+                  <p className="text-sm text-[#22c55e] font-bold">🎉 Consent Confirmed Successfully!</p>
+                  <p className="text-xs text-[#6b7280] mt-1.5">
+                    Your choice has been recorded. The case stage is now <strong>OTP CONSENT</strong>. Underwriter has been notified to request your documents.
+                  </p>
+                </div>
+              ) : otpStatus === 'idle' || otpStatus === 'sending' ? (
+                <div className="text-center py-3">
+                  <Btn 
+                    onClick={handleSendOTP} 
+                    disabled={otpStatus === 'sending'} 
+                    className="w-full bg-[#ff5a22] hover:bg-[#ff6f3d] text-white border-0"
+                  >
+                    {otpStatus === 'sending' ? 'Sending OTP…' : 'Send OTP Consent to Email'}
+                  </Btn>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-[#6b7280] text-center">
+                    Enter the 6-digit verification code sent to your registered email. (Use <strong>123456</strong> for testing)
+                  </p>
+                  <div className="flex gap-2 justify-center my-4">
+                    {otp.map((d, i) => (
+                      <input
+                        key={i}
+                        id={`quotes-otp-${i}`}
+                        maxLength={1}
+                        value={d}
+                        onChange={e => handleOtpDigit(i, e.target.value)}
+                        onKeyDown={e => e.key === 'Backspace' && !d && i > 0 && document.getElementById(`quotes-otp-${i - 1}`)?.focus()}
+                        className="w-10 h-12 text-center text-lg font-bold rounded-lg border outline-none bg-[#0f1117] text-white border-[#2a2f45] focus:border-[#6366f1]"
+                      />
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    <Btn 
+                      onClick={handleVerifyOTP} 
+                      disabled={otp.join('').length < 6 || otpStatus === 'verifying'} 
+                      className="flex-1 bg-[#22c55e] hover:bg-[#1ebd52] border-0"
+                    >
+                      {otpStatus === 'verifying' ? 'Verifying…' : 'Verify & Confirm'}
+                    </Btn>
+                    <Btn 
+                      variant="secondary" 
+                      onClick={handleSendOTP} 
+                      disabled={otpStatus === 'verifying'}
+                    >
+                      Resend OTP
+                    </Btn>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       )}
     </div>
@@ -2249,9 +2490,19 @@ function UWQueue() {
   const [err, setErr] = useState(null)
   const [ok, setOk] = useState(null)
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const rowsPerPage = 10
+  const [searchQuery, setSearchQuery] = useState('')
+
   useEffect(() => {
     api.get('/underwriting/queue').then(r => setQueue(r.data.queue)).finally(() => setL(false))
   }, [])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [queue.length, searchQuery])
+
   const navigate = useNavigate()
 
   const submit = async policyId => {
@@ -2265,11 +2516,35 @@ function UWQueue() {
     finally { setSaving(false) }
   }
 
+  const filteredQueue = queue.filter(c =>
+    !searchQuery || c.case_number.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  const sortedQueue = [...filteredQueue].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  const totalPages = Math.ceil(sortedQueue.length / rowsPerPage)
+  const paginatedQueue = sortedQueue.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+
   const cols = [
     { key: 'case_number', label: 'Case #' },
-    { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage} /> },
+    { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage || r.stage} /> },
     { key: 'sum_assured', label: 'Sum Assured', render: r => r.sum_assured ? `₹${r.sum_assured.toLocaleString()}` : '—' },
-    { key: 'created_at', label: 'Created', render: r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '—' },
+    {
+      key: 'document_upload_status',
+      label: 'Doc Status',
+      render: r => {
+        const status = r.document_upload_status || 'Not Requested';
+        let color = '#6b7280';
+        if (status === 'Verified') color = '#22c55e';
+        else if (status === 'Uploaded (Pending Review)') color = '#f59e0b';
+        else if (status === 'Pending Upload') color = '#ef4444';
+        return (
+          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold"
+                style={{ color, background: color + '22', border: `1px solid ${color}44` }}>
+            {status}
+          </span>
+        );
+      }
+    },
+    { key: 'created_at', label: 'Created', render: r => formatDateDDMMMYYYY(r.created_at) },
     { key: 'actions', label: '', render: r => <Btn size="sm" onClick={() => navigate(`/dashboard/underwriter/review/${r.id}`)}>Review</Btn> },
   ]
 
@@ -2280,7 +2555,67 @@ function UWQueue() {
         <StatCard title="Pending Review" value={queue.length} icon={ClipboardList} />
       </div>
       {ok && <Alert type="success" message={ok} />}
-      <Card>{loading ? <Spinner /> : <DataTable columns={cols} rows={queue} emptyText="No cases in UW queue." />}</Card>
+      <Card>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <p className="font-semibold text-sm text-[#e8eaf0]">Queue Directory</p>
+              <div className="w-64">
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search by Case #..."
+                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs outline-none text-[#e8eaf0] focus:border-[#6366f1] transition-colors"
+                />
+              </div>
+            </div>
+            <DataTable columns={cols} rows={paginatedQueue} emptyText="No cases in UW queue." />
+            {totalPages > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
+                <p className="text-xs text-[#6b7280]">
+                  Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, sortedQueue.length)} of {sortedQueue.length} cases
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    title="Previous Page"
+                  >
+                    ◀
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1
+                    const isCurrent = pageNum === currentPage
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    title="Next Page"
+                  >
+                    ▶
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
 
       {modal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -2570,6 +2905,12 @@ function PolicyIssuanceQueue() {
   const [loading, setL] = useState(true)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const rowsPerPage = 10
+  const [searchQuery, setSearchQuery] = useState('')
+
   const navigate = useNavigate()
 
   const load = () => {
@@ -2585,12 +2926,40 @@ function PolicyIssuanceQueue() {
 
   useEffect(load, [])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [queue.length, searchQuery])
+
+  const filteredQueue = queue.filter(c =>
+    !searchQuery || c.case_number.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  const sortedQueue = [...filteredQueue].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  const totalPages = Math.ceil(sortedQueue.length / rowsPerPage)
+  const paginatedQueue = sortedQueue.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+
   const cols = [
     { key: 'case_number', label: 'Case #' },
     { key: 'customer_id', label: 'Customer', render: r => r.customer_id.slice(0, 8) + '…' },
     { key: 'sum_assured', label: 'Sum Assured', render: r => `₹${r.sum_assured?.toLocaleString() || '—'}` },
-    { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage} /> },
-    { key: 'created_at', label: 'Created', render: r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '—' },
+    { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage || r.stage} /> },
+    {
+      key: 'document_upload_status',
+      label: 'Doc Status',
+      render: r => {
+        const status = r.document_upload_status || 'Not Requested';
+        let color = '#6b7280';
+        if (status === 'Verified') color = '#22c55e';
+        else if (status === 'Uploaded (Pending Review)') color = '#f59e0b';
+        else if (status === 'Pending Upload') color = '#ef4444';
+        return (
+          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold"
+                style={{ color, background: color + '22', border: `1px solid ${color}44` }}>
+            {status}
+          </span>
+        );
+      }
+    },
+    { key: 'created_at', label: 'Created', render: r => formatDateDDMMMYYYY(r.created_at) },
     { key: 'actions', label: '', render: r => (
       <Btn size="sm" variant="primary" onClick={() => navigate(`view/${r.id}`)}>
         View
@@ -2606,7 +2975,67 @@ function PolicyIssuanceQueue() {
       <div className="mb-5">
         <StatCard title="Pending Policy Issuance" value={queue.length} icon={FileText} color="#22c55e" />
       </div>
-      <Card>{loading ? <Spinner /> : <DataTable columns={cols} rows={queue} emptyText="No policies awaiting issuance." />}</Card>
+      <Card>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <p className="font-semibold text-sm text-[#e8eaf0]">Policies Directory</p>
+              <div className="w-64">
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search by Case #..."
+                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs outline-none text-[#e8eaf0] focus:border-[#6366f1] transition-colors"
+                />
+              </div>
+            </div>
+            <DataTable columns={cols} rows={paginatedQueue} emptyText="No policies awaiting issuance." />
+            {totalPages > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
+                <p className="text-xs text-[#6b7280]">
+                  Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, sortedQueue.length)} of {sortedQueue.length} cases
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    title="Previous Page"
+                  >
+                    ◀
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1
+                    const isCurrent = pageNum === currentPage
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    title="Next Page"
+                  >
+                    ▶
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
     </div>
   )
 }
