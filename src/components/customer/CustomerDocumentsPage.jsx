@@ -5,6 +5,70 @@ import { Card, SectionHeader, Btn, Alert, Spinner, Badge, StatCard } from '../co
 import { FileText, FolderOpen, ShieldCheck, RefreshCw, CheckCircle2, Clock, Upload, Eye } from 'lucide-react'
 import api from '../../services/api'
 
+function Dropzone({ docType, onUpload, uploading, isEsignCompleted }) {
+  const [isDragActive, setIsDragActive] = useState(false)
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true)
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+    if (isEsignCompleted) return
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onUpload(docType, Array.from(e.dataTransfer.files))
+    }
+  }
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onUpload(docType, Array.from(e.target.files))
+    }
+  }
+
+  return (
+    <div
+      onDragEnter={handleDrag}
+      onDragOver={handleDrag}
+      onDragLeave={handleDrag}
+      onDrop={handleDrop}
+      className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200
+        ${isDragActive 
+          ? 'border-[#6366f1] bg-[#6366f1]/5 scale-[1.01]' 
+          : 'border-[#2a2f45] hover:border-[#4f46e5] bg-[#0b0d14]'
+        }`}
+      onClick={() => document.getElementById(`file-input-${docType}`).click()}
+    >
+      <input
+        type="file"
+        id={`file-input-${docType}`}
+        multiple
+        accept=".pdf,.jpg,.jpeg,.png,.zip"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={uploading}
+      />
+      <div className="flex flex-col items-center justify-center gap-2">
+        <span className="text-2xl text-[#6366f1]">☁️</span>
+        <p className="text-xs font-semibold text-[#e8eaf0]">
+          Drag & drop files here, or <span className="text-[#6366f1] hover:underline">browse</span>
+        </p>
+        <p className="text-[10px] text-[#6b7280]">Supports multiple PDF, JPG, PNG, or ZIP files</p>
+        {uploading && <span className="text-xs text-[#6366f1] mt-1 font-semibold animate-pulse">Uploading files…</span>}
+      </div>
+    </div>
+  )
+}
+
 export default function CustomerDocumentsPage() {
   const navigate = useNavigate()
   const { user } = useSelector(s => s.auth)
@@ -76,26 +140,44 @@ export default function CustomerDocumentsPage() {
     }
   }, [selectedCaseId, cases])
 
-  const handleUpload = async (docType, file) => {
-    if (!file || !activeRequest) return
+  const handleUploadMultiple = async (docType, files) => {
+    if (!files || files.length === 0 || !activeRequest) return
     setUploading(prev => ({ ...prev, [docType]: true }))
     setErr('')
     setMsg('')
+    let successCount = 0
+    let failCount = 0
+
+    for (const file of files) {
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('medical_request_id', activeRequest.id)
+        fd.append('document_type', docType)
+        await api.post('/medical/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        successCount++
+      } catch (e) {
+        failCount++
+        console.error(e)
+      }
+    }
+
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('medical_request_id', activeRequest.id)
-      fd.append('document_type', docType) // KYC or MEDICAL
-      await api.post('/medical/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setMsg(`${docType} document uploaded successfully!`)
-      // Refresh documents list
       const { data: docsRes } = await api.get(`/documents/medical-request/${activeRequest.id}`)
       setUploadedDocs(docsRes.documents || [])
     } catch (e) {
-      setErr(e.response?.data?.detail || `Failed to upload ${docType} document`)
-    } finally {
-      setUploading(prev => ({ ...prev, [docType]: false }))
+      console.error(e)
     }
+
+    if (successCount > 0 && failCount === 0) {
+      setMsg(`Successfully uploaded ${successCount} ${docType} document(s).`)
+    } else if (successCount > 0 && failCount > 0) {
+      setMsg(`Uploaded ${successCount} document(s) successfully, but ${failCount} failed.`)
+    } else if (failCount > 0) {
+      setErr(`Failed to upload ${failCount} ${docType} document(s).`)
+    }
+
+    setUploading(prev => ({ ...prev, [docType]: false }))
   }
 
   const handleESign = async () => {
@@ -132,8 +214,9 @@ export default function CustomerDocumentsPage() {
   const medDocs = uploadedDocs.filter(d => d.document_type === 'MEDICAL')
   const hasKyc = kycDocs.length > 0
   const hasMed = medDocs.length > 0
-  const allUploaded = hasKyc && hasMed
-  const isEsignCompleted = activeCase?.esign_status === 'COMPLETED' || activeCase?.current_stage === 'UNDERWRITING' || activeCase?.status === 'COMPLETED'
+  const isQuery = activeRequest?.ops_remarks === 'Underwriter raised query'
+  const allUploaded = isQuery ? (hasKyc || hasMed) : (hasKyc && hasMed)
+  const isEsignCompleted = (activeCase?.esign_status === 'COMPLETED' || activeCase?.current_stage === 'UNDERWRITING' || activeCase?.status === 'COMPLETED') && activeRequest?.status !== 'PENDING'
 
   return (
     <div className="space-y-6">
@@ -196,6 +279,24 @@ export default function CustomerDocumentsPage() {
           {/* Document list & upload boxes */}
           <div className="lg:col-span-3 space-y-4">
             
+            {/* Underwriter Query Remarks Display */}
+            {activeRequest.requirements && activeRequest.requirements.length > 0 && activeRequest.requirements[0] !== 'QUERY_RESPONSE' && (
+              <Card className="border border-yellow-500/30 bg-yellow-500/5">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">⚠️</span>
+                  <h4 className="text-sm font-semibold text-yellow-500">Underwriter Query Notes</h4>
+                </div>
+                <p className="text-xs text-white bg-[#0f1117] border border-[#2a2f45] p-3 rounded-lg leading-relaxed whitespace-pre-wrap">
+                  {activeRequest.requirements.join('\n')}
+                </p>
+                {activeRequest.ops_remarks && activeRequest.ops_remarks !== 'Underwriter raised query' && (
+                  <p className="text-[11px] text-[#6b7280] mt-2 italic">
+                    Status: {activeRequest.ops_remarks}
+                  </p>
+                )}
+              </Card>
+            )}
+
             {/* KYC Documents Section */}
             <Card className={`border ${hasKyc ? 'border-[#22c55e]/30 bg-[#22c55e]/5' : 'border-[#2a2f45] bg-[#0f1117]'}`}>
               <div className="flex items-start justify-between gap-4 mb-3 border-b border-[#2a2f45]/50 pb-3">
@@ -228,7 +329,7 @@ export default function CustomerDocumentsPage() {
 
               {/* Mandatory requirements checklist */}
               <div className="p-3 bg-[#1e2235]/40 rounded-lg text-xs text-[#9ca3af] border border-[#2a2f45]/40 mb-4">
-                <span className="font-bold text-white block mb-1">⚠️ Mandatory KYC Documents to Upload:</span>
+                <span className="font-bold text-white block mb-1">⚠️ KYC Documents to Upload:</span>
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
                   <li>PAN Card (Mandatory Identity Proof)</li>
                   <li>Aadhaar Card / Voter ID / Passport (Address Proof)</li>
@@ -238,27 +339,13 @@ export default function CustomerDocumentsPage() {
               </div>
               
               {!isEsignCompleted && (
-                <div className="flex items-center justify-between gap-3 pt-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.zip"
-                    id="kyc-file-input"
-                    className="hidden"
-                    onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) handleUpload('KYC', file)
-                    }}
-                    disabled={uploading.KYC}
+                <div className="pt-2">
+                  <Dropzone 
+                    docType="KYC" 
+                    onUpload={handleUploadMultiple} 
+                    uploading={uploading.KYC} 
+                    isEsignCompleted={isEsignCompleted} 
                   />
-                  <Btn 
-                    size="sm" 
-                    onClick={() => document.getElementById('kyc-file-input')?.click()}
-                    disabled={uploading.KYC}
-                    className="w-full justify-center gap-2"
-                  >
-                    <Upload size={14} />
-                    {uploading.KYC ? 'Uploading…' : 'Upload File (PDF / Image)'}
-                  </Btn>
                 </div>
               )}
             </Card>
@@ -295,7 +382,7 @@ export default function CustomerDocumentsPage() {
 
               {/* Mandatory requirements checklist */}
               <div className="p-3 bg-[#1e2235]/40 rounded-lg text-xs text-[#9ca3af] border border-[#2a2f45]/40 mb-4">
-                <span className="font-bold text-white block mb-1">⚠️ Mandatory Medical Documents to Upload:</span>
+                <span className="font-bold text-white block mb-1">⚠️ Medical Documents to Upload:</span>
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
                   <li>Latest Blood Test Report (CBC, Blood Sugar, Cholesterol)</li>
                   <li>Urine Analysis Report</li>
@@ -304,27 +391,13 @@ export default function CustomerDocumentsPage() {
               </div>
 
               {!isEsignCompleted && (
-                <div className="flex items-center justify-between gap-3 pt-2">
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.zip"
-                    id="med-file-input"
-                    className="hidden"
-                    onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) handleUpload('MEDICAL', file)
-                    }}
-                    disabled={uploading.MEDICAL}
+                <div className="pt-2">
+                  <Dropzone 
+                    docType="MEDICAL" 
+                    onUpload={handleUploadMultiple} 
+                    uploading={uploading.MEDICAL} 
+                    isEsignCompleted={isEsignCompleted} 
                   />
-                  <Btn 
-                    size="sm" 
-                    onClick={() => document.getElementById('med-file-input')?.click()}
-                    disabled={uploading.MEDICAL}
-                    className="w-full justify-center gap-2"
-                  >
-                    <Upload size={14} />
-                    {uploading.MEDICAL ? 'Uploading…' : 'Upload File (PDF / Image)'}
-                  </Btn>
                 </div>
               )}
             </Card>
@@ -383,7 +456,10 @@ export default function CustomerDocumentsPage() {
                   
                   {!allUploaded && (
                     <p className="text-[10px] text-[#f59e0b] text-center mt-2 font-medium">
-                      ⚠️ Upload at least one KYC and one Medical document to enable e-Signing.
+                      {isQuery
+                        ? '⚠️ Upload at least one document to enable e-Signing.'
+                        : '⚠️ Upload at least one KYC and one Medical document to enable e-Signing.'
+                      }
                     </p>
                   )}
                 </div>
