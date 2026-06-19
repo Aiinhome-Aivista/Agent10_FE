@@ -588,25 +588,24 @@ function CustomerMyCases() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {cases.map(c => (
-            <Card key={c.id} className="hover:border-[#4f46e5] transition-all duration-200">
-              <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
-                <div>
-                  <h3 className="font-bold text-base text-white">{c.case_number}</h3>
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    <Badge label={c.current_stage.replace(/_/g, ' ')} />
-                    <Badge label={c.status} />
+            <div key={c.id} onClick={() => setSelectedCaseId(c.id)} className="cursor-pointer">
+              <Card className="hover:border-[#4f46e5] transition-all duration-200">
+                <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
+                  <div>
+                    <h3 className="font-bold text-base text-white">{c.case_number}</h3>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <Badge label={c.current_stage.replace(/_/g, ' ')} />
+                      <Badge label={c.status} />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-[#6b7280]">Sum Assured</p>
+                    <p className="text-base font-bold text-[#22c55e]">₹{c.sum_assured?.toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-[#6b7280]">Sum Assured</p>
-                  <p className="text-base font-bold text-[#22c55e]">₹{c.sum_assured?.toLocaleString()}</p>
-                </div>
-              </div>
-              <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
-              <div className="flex justify-end mt-4 border-t border-[#2a2f45]/50 pt-3">
-                <Btn onClick={() => setSelectedCaseId(c.id)}>Open Case Details</Btn>
-              </div>
-            </Card>
+                <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
+              </Card>
+            </div>
           ))}
         </div>
       )}
@@ -3332,7 +3331,7 @@ function PolicyIssuanceDetails() {
               <div>
                 <p className="text-xs text-[#6b7280] mb-1">Medical Requests Created</p>
                 <p className="font-medium text-white">
-                  {caseItem?.medical_requests?.length ? `Yes (${caseItem.medical_requests.length} Requests)` : 'No'}
+                  {caseItem?.medical_requests?.length || docs.some(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name) || /medical/i.test(x.file_name)) ? 'Yes' : 'No'}
                 </p>
               </div>
               {docs.filter(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name)).length > 0 && (
