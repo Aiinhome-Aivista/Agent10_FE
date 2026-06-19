@@ -6,6 +6,7 @@ import { StatCard, DataTable, Badge, Card, SectionHeader, Btn, Input, Select, Al
 import { Briefcase, Clock, CheckCircle, FileText, Bell, Upload, Search } from 'lucide-react'
 import api from '../../services/api'
 import { KnowledgeBase, RAGChat } from '../../components/common/RAGComponents'
+import { UnifiedNotificationFeed } from './OtherDashboards'
 
 const STAGES = [
   'CUSTOMER_INTAKE', 'NEEDS_ANALYSIS', 'SUITABILITY_VALIDATION', 'QUOTE_RETRIEVAL',
@@ -88,13 +89,19 @@ function CaseList() {
   const [quotes, setQuotes] = useState([])
   const [qLoading, setQL] = useState(false)
   
-  // Filtering states
+  // Filtering and pagination states
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStage, setFilterStage] = useState('ALL')
   const [filterStatus, setFilterStatus] = useState('ALL')
+  const [currentPage, setCurrentPage] = useState(1)
+  const rowsPerPage = 10
 
   useEffect(() => { dispatch(fetchCases()) }, [dispatch])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, filterStage, filterStatus])
 
   const fetchQuotes = async caseId => {
     setQL(true)
@@ -132,7 +139,7 @@ function CaseList() {
       render: r => (
         <div className="flex gap-2">
           <Btn size="sm" onClick={() => { setSelected(r); fetchQuotes(r.id) }}>View</Btn>
-          {!r.banker_approved && r.current_stage === 'BANKER_APPROVAL' &&
+          {!r.banker_approved && r.current_stage === 'RECOMMENDATION' &&
             <Btn size="sm" variant="success" onClick={() => approve(r.id)}>Approve</Btn>}
         </div>
       )
@@ -154,6 +161,9 @@ function CaseList() {
     const matchesStatus = filterStatus === 'ALL' || c.status === filterStatus
     return matchesSearch && matchesStage && matchesStatus
   })
+
+  const totalPages = Math.ceil(filteredCases.length / rowsPerPage)
+  const paginatedCases = filteredCases.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
 
   return (
     <div>
@@ -216,7 +226,56 @@ function CaseList() {
           </div>
         )}
 
-        {loading ? <Spinner /> : <DataTable columns={cols} rows={filteredCases} emptyText="No cases match your filters." />}
+        {loading ? (
+          <Spinner />
+        ) : (
+          <>
+            <DataTable columns={cols} rows={paginatedCases} emptyText="No cases match your filters." />
+            
+            {/* Rounded Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
+                <p className="text-xs text-[#6b7280]">
+                  Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredCases.length)} of {filteredCases.length} cases
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    title="Previous Page"
+                  >
+                    ◀
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1
+                    const isCurrent = pageNum === currentPage
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    title="Next Page"
+                  >
+                    ▶
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </Card>
 
       {/* Case Detail Modal */}
@@ -244,7 +303,7 @@ function CaseList() {
             <div className="flex gap-3 mb-5 flex-wrap">
               <Btn size="sm" onClick={() => triggerWorkflow(activeCase.id)}>▶ Run AI Workflow</Btn>
               <Btn size="sm" variant="secondary" onClick={() => triggerFetch(activeCase.id)}>📊 Fetch Quotes</Btn>
-              {!activeCase.banker_approved && <Btn size="sm" variant="success" onClick={() => approve(activeCase.id)}>✅ Approve</Btn>}
+              {!activeCase.banker_approved && activeCase.current_stage === 'RECOMMENDATION' && <Btn size="sm" variant="success" onClick={() => approve(activeCase.id)}>✅ Approve</Btn>}
             </div>
 
             {/* Quotes */}
@@ -831,7 +890,7 @@ function NewCaseForm() {
             <div className="flex gap-3 mb-5 flex-wrap">
               <Btn size="sm" onClick={() => triggerCaseWorkflow(selectedCase.id)}>▶ Run AI Workflow</Btn>
               <Btn size="sm" variant="secondary" onClick={() => fetchCaseQuotes(selectedCase.id)}>📊 Fetch Quotes</Btn>
-              {!selectedCase.banker_approved && selectedCase.current_stage === 'BANKER_APPROVAL' &&
+              {!selectedCase.banker_approved && selectedCase.current_stage === 'RECOMMENDATION' &&
                 <Btn size="sm" variant="success" onClick={() => approveCase(selectedCase.id)}>✅ Approve</Btn>}
             </div>
 
@@ -1850,42 +1909,14 @@ function ProposalReview() {
   )
 }
 
-function NotificationFeed() {
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    api.get('/notifications/mine').then(({ data }) => setItems(data.notifications || [])).finally(() => setLoading(false))
-  }, [])
-
-  const cols = [
-    { key: 'subject', label: 'Subject' },
-    { key: 'reference_type', label: 'Type' },
-    { key: 'status', label: 'Status', render: (row) => <Badge label={row.status} /> },
-    { key: 'created_at', label: 'Time', render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '—' },
-  ]
-
-  return (
-    <div>
-      <SectionHeader title="Notifications" subtitle="Notifications and email events for your account" />
-      <Card>{loading ? <Spinner /> : <DataTable columns={cols} rows={items} emptyText="No notifications yet." />}</Card>
-    </div>
-  )
-}
-
 export default function BankerDashboard() {
   return (
     <Routes>
       <Route index element={<CaseList />} />
       <Route path="new" element={<NewCaseForm />} />
-      <Route path="customers" element={<CustomerIntake />} />
-      <Route path="quotes" element={<QuoteComparison />} />
-      <Route path="recommendation" element={<BankerRecommendations />} />
-      <Route path="proposal-review" element={<ProposalReview />} />
-      <Route path="approvals" element={<BankerApprovals />} />
+      <Route path="notifications" element={<UnifiedNotificationFeed title="Notifications" subtitle="Updates and alerts on your cases" />} />
       <Route path="kb" element={<KnowledgeBase />} />
       <Route path="rag-chat" element={<RAGChat title="Insurance Knowledge Chat" placeholder="What is the difference between HDFC and LIC term plans?" />} />
-      <Route path="notifications" element={<NotificationFeed />} />
     </Routes>
   )
 }

@@ -12,62 +12,27 @@ import {
 import api from '../../services/api'
 
 const NAV = {
-  SUPER_ADMIN: [
-    { label: 'Overview', icon: LayoutDashboard, to: '/dashboard/admin' },
-    { label: 'User Mgmt', icon: Users, to: '/dashboard/admin/users' },
-    { label: 'Audit Logs', icon: ClipboardList, to: '/dashboard/admin/audit' },
-    { label: 'Escalations', icon: Bell, to: '/dashboard/admin/escalations' },
-    { label: 'Knowledge Base', icon: BookOpen, to: '/dashboard/admin/kb' },
-    { label: 'RAG Chat', icon: MessageSquare, to: '/dashboard/admin/rag-chat' },
-  ],
   BANKER: [
     { label: 'My Cases', icon: Briefcase, to: '/dashboard/banker' },
     { label: 'New Case', icon: FileText, to: '/dashboard/banker/new' },
-    { label: 'Quotes', icon: Scale, to: '/dashboard/banker/quotes' },
-    { label: 'Recommendation', icon: CheckCircle, to: '/dashboard/banker/recommendation' },
-    { label: 'Proposal Review', icon: FileText, to: '/dashboard/banker/proposal-review' },
-    { label: 'Approvals', icon: CheckCircle, to: '/dashboard/banker/approvals' },
     { label: 'Notifications', icon: Bell, to: '/dashboard/banker/notifications' },
     { label: 'Knowledge Base', icon: BookOpen, to: '/dashboard/banker/kb' },
     { label: 'RAG Chat', icon: MessageSquare, to: '/dashboard/banker/rag-chat' },
   ],
   CUSTOMER: [
     { label: 'My Cases',       icon: Home,        to: '/dashboard/customer' },
-    { label: 'Profile & Needs', icon: UserRound,   to: '/dashboard/customer/profile' },
-    { label: 'Quotes',         icon: BarChart3,    to: '/dashboard/customer/quotes' },
-    { label: 'My Recommendation', icon: CheckCircle, to: '/dashboard/customer/recommendation' },
-    { label: 'OTP Consent',    icon: ShieldCheck,  to: '/dashboard/customer/consent' },
-    { label: 'Medical',        icon: Stethoscope,  to: '/dashboard/customer/medical' },
-    { label: 'Documents',      icon: FolderOpen,   to: '/dashboard/customer/documents' },
-    { label: 'Queries',        icon: MessageSquare, to: '/dashboard/customer/queries' },
-    { label: 'My Policies',    icon: FileText,     to: '/dashboard/customer/policies' },
-    { label: 'Notifications',  icon: Bell,         to: '/dashboard/customer/notifications' },
+    { label: 'Notifications',  icon: Bell,        to: '/dashboard/customer/notifications' },
     { label: 'RAG Chat',       icon: MessageSquare, to: '/dashboard/customer/rag-chat' },
   ],
   UNDERWRITER: [
     { label: 'UW Queue', icon: ClipboardList, to: '/dashboard/underwriter' },
     { label: 'Policy Issuance', icon: FileText, to: '/dashboard/underwriter/policies' },
-    { label: 'KYC / Documents', icon: ShieldCheck, to: '/dashboard/underwriter/kyc' },
-    { label: 'Medical', icon: Stethoscope, to: '/dashboard/underwriter/medical' },
+    { label: 'Notifications', icon: Bell, to: '/dashboard/underwriter/notifications' },
     { label: 'Knowledge Base', icon: BookOpen, to: '/dashboard/underwriter/kb' },
     { label: 'RAG Chat', icon: MessageSquare, to: '/dashboard/underwriter/rag-chat' },
   ],
-  COMPLIANCE: [
-    { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard/compliance' },
-    { label: 'Exceptions', icon: Bell, to: '/dashboard/compliance/exceptions' },
-    { label: 'Consents', icon: ShieldCheck, to: '/dashboard/compliance/consents' },
-    { label: 'Audit Logs', icon: ClipboardList, to: '/dashboard/compliance/audit' },
-    { label: 'Knowledge Base', icon: BookOpen, to: '/dashboard/compliance/kb' },
-    { label: 'RAG Chat', icon: MessageSquare, to: '/dashboard/compliance/rag-chat' },
-  ],
-  OPS_ADMIN: [
-    { label: 'Medical Queue', icon: Stethoscope, to: '/dashboard/ops' },
-    { label: 'Escalations', icon: Bell, to: '/dashboard/ops/escalations' },
-    { label: 'SLA Monitor', icon: ClipboardList, to: '/dashboard/ops/sla' },
-    { label: 'Knowledge Base', icon: BookOpen, to: '/dashboard/ops/kb' },
-    { label: 'RAG Chat', icon: MessageSquare, to: '/dashboard/ops/rag-chat' },
-  ],
 }
+
 
 // Strip HTML tags and decode basic HTML entities to plain text
 function stripHtml(html) {

@@ -112,36 +112,493 @@ function CustomerMyCases() {
   const { user } = useSelector(s => s.auth)
   const [cases, setCases] = useState([])
   const [loading, setL] = useState(true)
+  const [selectedCaseId, setSelectedCaseId] = useState(null)
+  
+  // Case Details States
+  const [quotes, setQuotes] = useState([])
+  const [loadingQuotes, setLoadingQuotes] = useState(false)
+  const [selectedQuoteId, setSelectedQuoteId] = useState('')
+  const [otp, setOtp] = useState(Array(6).fill(''))
+  const [otpStatus, setOtpStatus] = useState('idle') // idle, sent, verifying, success
+  const [otpErr, setOtpErr] = useState(null)
+  
+  // Documents States
+  const [medicalRequests, setMedicalRequests] = useState([])
+  const [medicalDocs, setMedicalDocs] = useState({})
+  const [uploadingDoc, setUploadingDoc] = useState({})
+  const [docMsg, setDocMsg] = useState(null)
+  const [docErr, setDocErr] = useState(null)
+  const [esignChecked, setEsignChecked] = useState(false)
+  const [esignLoading, setEsignLoading] = useState(false)
+
+  const loadCases = () => {
+    setL(true)
+    api.get('/cases/').then(r => {
+      const ownCases = (r.data.cases || []).filter(c => c.customer_id === user?.id)
+      setCases(ownCases)
+    }).finally(() => setL(false))
+  }
+
   useEffect(() => {
-    api.get('/cases/').then(r => setCases(r.data.cases)).finally(() => setL(false))
-  }, [])
+    loadCases()
+  }, [user])
+
+  const activeCase = selectedCaseId ? cases.find(c => c.id === selectedCaseId) : null
+
+  // Load Quotes and Requests when activeCase changes
+  const loadCaseDetails = async (caseId) => {
+    setLoadingQuotes(true)
+    setOtpErr(null)
+    setDocErr(null)
+    setDocMsg(null)
+    try {
+      const [quotesRes, reqRes] = await Promise.all([
+        api.get(`/quotes/case/${caseId}`),
+        api.get('/medical/customer/requests'),
+      ])
+      
+      const quotesList = quotesRes.data.quotes || []
+      setQuotes(quotesList)
+      
+      // Auto-select quote if already selected
+      const selected = quotesList.find(q => q.status === 'SELECTED')
+      if (selected) {
+        setSelectedQuoteId(selected.id)
+        setOtpStatus('success')
+      } else {
+        setSelectedQuoteId('')
+        setOtpStatus('idle')
+      }
+
+      const requestsList = (reqRes.data.requests || []).filter(r => r.case_id === caseId)
+      setMedicalRequests(requestsList)
+
+      // Fetch documents for each request
+      const docsMap = {}
+      for (const mr of requestsList) {
+        try {
+          const { data: mrDocs } = await api.get(`/documents/medical-request/${mr.id}`)
+          docsMap[mr.id] = mrDocs.documents || []
+        } catch {
+          docsMap[mr.id] = []
+        }
+      }
+      setMedicalDocs(docsMap)
+
+    } catch (e) {
+      setDocErr('Failed to load details for case')
+    } finally {
+      setLoadingQuotes(false)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedCaseId) {
+      loadCaseDetails(selectedCaseId)
+    }
+  }, [selectedCaseId])
+
+  // OTP handlers
+  const sendOTP = async () => {
+    if (!selectedCaseId) return
+    setOtpErr(null)
+    try {
+      await api.post('/otp/send', { case_id: selectedCaseId })
+      setOtpStatus('sent')
+    } catch (e) {
+      setOtpErr(e.response?.data?.detail || 'Failed to send OTP')
+    }
+  }
+
+  const handleDigit = (i, val) => {
+    if (!/^\d?$/.test(val)) return
+    const next = [...otp]
+    next[i] = val
+    setOtp(next)
+    if (val && i < 5) document.getElementById(`cust-otp-${i + 1}`)?.focus()
+  }
+
+  const verifyOTP = async () => {
+    if (!selectedCaseId || !selectedQuoteId) return
+    setOtpStatus('verifying')
+    setOtpErr(null)
+    try {
+      await api.post('/otp/verify', {
+        case_id: selectedCaseId,
+        otp_code: otp.join(''),
+        selected_quote_id: selectedQuoteId,
+      })
+      setOtpStatus('success')
+      loadCases() // Reload cases to get updated stages
+    } catch (e) {
+      setOtpErr(e.response?.data?.detail || 'Invalid OTP')
+      setOtpStatus('sent')
+    }
+  }
+
+  // Document Upload handler
+  const handleUploadDoc = async (reqId, docType, file) => {
+    if (!file) return
+    setUploadingDoc(prev => ({ ...prev, [docType]: true }))
+    setDocErr(null)
+    setDocMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('medical_request_id', reqId)
+      fd.append('document_type', docType)
+      await api.post('/medical/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setDocMsg(`${docType.replace(/_/g, ' ')} uploaded successfully!`)
+      
+      // Reload documents for this request
+      const { data: mrDocs } = await api.get(`/documents/medical-request/${reqId}`)
+      setMedicalDocs(prev => ({ ...prev, [reqId]: mrDocs.documents || [] }))
+    } catch (e) {
+      setDocErr(e.response?.data?.detail || `Failed to upload ${docType}`)
+    } finally {
+      setUploadingDoc(prev => ({ ...prev, [docType]: false }))
+    }
+  }
+
+  // eSign handler
+  const handleEsign = async () => {
+    if (!selectedCaseId || !esignChecked) return
+    setEsignLoading(true)
+    setDocErr(null)
+    setDocMsg(null)
+    try {
+      await api.post('/medical/customer/esign', {
+        case_id: selectedCaseId,
+        consent_text: 'I consent to KYC review and policy processing.',
+      })
+      setDocMsg('Proposal signed and submitted to underwriting successfully!')
+      loadCases()
+      loadCaseDetails(selectedCaseId)
+    } catch (e) {
+      setDocErr(e.response?.data?.detail || 'Failed to complete e-Sign')
+    } finally {
+      setEsignLoading(false)
+    }
+  }
+
+  if (activeCase) {
+    const isOTPVerified = otpStatus === 'success' || activeCase.consent_given
+    const activeRequest = medicalRequests[0] || null
+    const uploadedDocs = activeRequest ? (medicalDocs[activeRequest.id] || []) : []
+    
+    // Check if standard KYC documents are uploaded
+    const kycDocs = ['PAN_CARD', 'ADDRESS_PROOF', 'SELFIE', 'SIGNATURE']
+    const kycCompleted = activeRequest && kycDocs.every(d => uploadedDocs.some(doc => doc.document_type === d))
+    const isEsignCompleted = activeCase.esign_status === 'COMPLETED' || activeCase.current_stage === 'UNDERWRITING' || activeCase.status === 'COMPLETED'
+
+    return (
+      <div>
+        <SectionHeader 
+          title={`Case Details — ${activeCase.case_number}`} 
+          subtitle="Follow the step-by-step process below to complete your policy setup"
+          action={<Btn variant="secondary" onClick={() => { setSelectedCaseId(null); loadCases(); }}>Back to List</Btn>}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-6">
+          {/* Left Column: Summary & Stage Timeline */}
+          <div className="space-y-4">
+            <Card>
+              <h3 className="font-bold text-sm text-[#e8eaf0] mb-3">Case Status</h3>
+              <div className="space-y-2.5 text-xs text-[#9ca3af]">
+                <div>
+                  <span className="text-[#6b7280]">Current Stage:</span>
+                  <div className="mt-1 font-semibold text-white bg-[#6366f1]/10 border border-[#6366f1]/25 px-2.5 py-1 rounded inline-block">
+                    {activeCase.current_stage.replace(/_/g, ' ')}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[#6b7280]">Sum Assured:</span>
+                  <p className="text-white font-semibold text-sm">₹{activeCase.sum_assured?.toLocaleString()}</p>
+                </div>
+                <div>
+                  <span className="text-[#6b7280]">Premium Budget:</span>
+                  <p className="text-white font-semibold">₹{activeCase.premium_budget?.toLocaleString()}</p>
+                </div>
+                {activeCase.status === 'COMPLETED' && (
+                  <div className="mt-3 p-3 bg-[#22c55e]/15 border border-[#22c55e]/30 rounded-lg">
+                    <p className="text-[#22c55e] font-bold">🎉 Case Completed!</p>
+                    <p className="text-[#6b7280] text-[10px] mt-1">Your policy has been successfully issued by the underwriter.</p>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card>
+              <h3 className="font-bold text-sm text-[#e8eaf0] mb-3">Timeline Checklist</h3>
+              <StageTimeline stage={activeCase.status === 'COMPLETED' ? 'COMPLETED' : activeCase.current_stage} caseItem={activeCase} />
+            </Card>
+          </div>
+
+          {/* Right Column: Steps */}
+          <div className="space-y-5">
+            {/* Step 1: Quote Selection and OTP Consent */}
+            <Card>
+              <div className="flex items-center justify-between border-b border-[#2a2f45] pb-3 mb-4">
+                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-xs">1</span>
+                  Select Plan & Give Consent
+                </h3>
+                {isOTPVerified ? (
+                  <span className="bg-[#22c55e]/20 text-[#22c55e] text-xs px-2.5 py-0.5 rounded-full font-bold">✓ Consent Given</span>
+                ) : (
+                  <span className="bg-yellow-500/20 text-yellow-500 text-xs px-2.5 py-0.5 rounded-full font-bold">Pending Action</span>
+                )}
+              </div>
+
+              {loadingQuotes ? (
+                <Spinner />
+              ) : (!activeCase.banker_approved && STAGES.indexOf(activeCase.current_stage) < STAGES.indexOf('BANKER_APPROVAL')) ? (
+                <div className="text-center py-6 border border-dashed border-[#2a2f45] rounded-xl bg-[#0f1117]">
+                  <p className="text-sm text-yellow-500 font-semibold mb-1">Waiting for Banker Approval</p>
+                  <p className="text-xs text-[#6b7280]">Your banker must review and approve the recommended quotes before you can select a plan and provide consent.</p>
+                </div>
+              ) : quotes.length === 0 ? (
+                <p className="text-sm text-[#6b7280]">No quotes available.</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Quotes Aggregator Grid (PolicyBazaar Style) */}
+                  <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-1">
+                    {quotes.map(q => {
+                      const isSelected = selectedQuoteId === q.id
+                      return (
+                        <div
+                          key={q.id}
+                          onClick={() => { if (!isOTPVerified) setSelectedQuoteId(q.id) }}
+                          className={`rounded-xl border p-4 transition-all duration-200 bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] flex items-start gap-3 ${!isOTPVerified ? 'cursor-pointer' : ''} ${isSelected ? 'border-[#6366f1] ring-1 ring-[#6366f1]' : 'border-[#2a2f45] hover:border-[#4f46e5]'}`}
+                        >
+                          <input
+                            type="radio"
+                            name="selected_quote"
+                            checked={isSelected}
+                            disabled={isOTPVerified}
+                            onChange={() => setSelectedQuoteId(q.id)}
+                            className="mt-1 accent-[#6366f1] cursor-pointer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <p className="font-semibold text-sm text-[#e8eaf0]">{q.insurer_name}</p>
+                              {q.ai_rank === 1 && (
+                                <span className="bg-[#6366f1]/25 text-[#7c83ff] text-[9px] px-2 py-0.5 rounded-full font-bold">
+                                  AI Recommended
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-[#6b7280] mt-0.5">{q.product_name}</p>
+
+                            <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] bg-[#0f1117] border border-[#2a2f45]/50 rounded-lg p-2">
+                              <div>
+                                <p className="text-[9px] text-[#6b7280]">Premium</p>
+                                <p className="font-bold text-[#22c55e]">₹{q.annual_premium?.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] text-[#6b7280]">Sum Assured</p>
+                                <p className="font-semibold text-[#e8eaf0]">₹{q.sum_assured?.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] text-[#6b7280]">AI Score</p>
+                                <p className="font-semibold text-[#2dd4bf]">{((q.ai_score || 0) * 100).toFixed(0)}%</p>
+                              </div>
+                            </div>
+                            {q.ai_recommendation_text && (
+                              <p className="text-[10px] text-[#9ca3af] mt-2 italic leading-relaxed border-t border-[#2a2f45]/30 pt-1.5">{q.ai_recommendation_text.split('\n')[0]}</p>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* OTP Submission */}
+                  {!isOTPVerified && selectedQuoteId && (
+                    <div className="border-t border-[#2a2f45] pt-4 mt-3">
+                      {otpErr && <Alert type="error" message={otpErr} />}
+                      {otpStatus === 'idle' && (
+                        <div className="text-center py-2">
+                          <p className="text-xs text-[#6b7280] mb-3">Provide OTP consent to proceed to underwriting.</p>
+                          <Btn onClick={sendOTP} className="w-full">Send OTP to Email</Btn>
+                        </div>
+                      )}
+                      {(otpStatus === 'sent' || otpStatus === 'verifying') && (
+                        <div>
+                          <p className="text-xs text-[#6b7280] mb-3 text-center">Enter the 6-digit OTP sent to your email (Use **`123456`** for test).</p>
+                          <div className="flex gap-2 justify-center mb-4">
+                            {otp.map((d, i) => (
+                              <input key={i} id={`cust-otp-${i}`} maxLength={1} value={d}
+                                onChange={e => handleDigit(i, e.target.value)}
+                                onKeyDown={e => e.key === 'Backspace' && !d && i > 0 && document.getElementById(`cust-otp-${i - 1}`)?.focus()}
+                                className="w-10 h-11 text-center text-lg font-bold rounded-lg border outline-none bg-[#0f1117]"
+                                style={{ borderColor: d ? '#6366f1' : '#2a2f45', color: '#e8eaf0' }} />
+                            ))}
+                          </div>
+                          <Btn onClick={verifyOTP} disabled={otp.join('').length < 6 || otpStatus === 'verifying'} className="w-full">
+                            {otpStatus === 'verifying' ? 'Verifying…' : 'Verify & Give Consent'}
+                          </Btn>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+
+            {/* Step 2: Upload Documents */}
+            {isOTPVerified && (
+              <Card>
+                <div className="flex items-center justify-between border-b border-[#2a2f45] pb-3 mb-4">
+                  <h3 className="font-bold text-base text-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-xs">2</span>
+                    Upload KYC & Medical Documents
+                  </h3>
+                  {isEsignCompleted ? (
+                    <span className="bg-[#22c55e]/20 text-[#22c55e] text-xs px-2.5 py-0.5 rounded-full font-bold">✓ Submitted</span>
+                  ) : kycCompleted ? (
+                    <span className="bg-[#6366f1]/20 text-[#7c83ff] text-xs px-2.5 py-0.5 rounded-full font-bold">Ready to Sign</span>
+                  ) : (
+                    <span className="bg-yellow-500/20 text-yellow-500 text-xs px-2.5 py-0.5 rounded-full font-bold">Pending Upload</span>
+                  )}
+                </div>
+
+                {docErr && <Alert type="error" message={docErr} />}
+                {docMsg && <Alert type="success" message={docMsg} />}
+
+                {!activeRequest ? (
+                  <div className="text-center py-6 border border-dashed border-[#2a2f45] rounded-xl bg-[#0f1117]">
+                    <p className="text-sm text-[#6b7280]">Waiting for Underwriter to request KYC and Medical documents...</p>
+                    <p className="text-xs text-[#525876] mt-1">Once requested, you will be able to upload files here.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* List active requests with upload buttons */}
+                    <div className="space-y-3">
+                      {activeRequest.requirements?.map(req => {
+                        const existingDoc = uploadedDocs.find(d => d.document_type === req)
+                        const isUploading = uploadingDoc[req]
+                        return (
+                          <div key={req} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[#2a2f45] rounded-xl p-3 bg-[#0f1117]">
+                            <div>
+                              <p className="text-sm font-semibold text-white">{req.replace(/_/g, ' ')}</p>
+                              {existingDoc ? (
+                                <p className="text-xs text-[#22c55e] mt-0.5">✓ {existingDoc.file_name}</p>
+                              ) : (
+                                <p className="text-xs text-yellow-500 mt-0.5">⊙ Required</p>
+                              )}
+                            </div>
+                            {!isEsignCompleted && (
+                              <div>
+                                <input
+                                  type="file"
+                                  id={`file-input-${req}`}
+                                  className="hidden"
+                                  onChange={e => {
+                                    const file = e.target.files?.[0]
+                                    if (file) handleUploadDoc(activeRequest.id, req, file)
+                                  }}
+                                />
+                                <Btn 
+                                  size="sm" 
+                                  disabled={isUploading}
+                                  onClick={() => document.getElementById(`file-input-${req}`)?.click()}
+                                >
+                                  {isUploading ? 'Uploading…' : existingDoc ? 'Replace File' : 'Upload File'}
+                                </Btn>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Step 3: e-Signature */}
+            {isOTPVerified && kycCompleted && (
+              <Card>
+                <div className="flex items-center justify-between border-b border-[#2a2f45] pb-3 mb-4">
+                  <h3 className="font-bold text-base text-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-xs">3</span>
+                    e-Sign & Submit Proposal
+                  </h3>
+                </div>
+
+                {isEsignCompleted ? (
+                  <div className="text-center py-6 bg-[#22c55e]/10 border border-[#22c55e]/25 rounded-xl">
+                    <p className="text-sm text-[#22c55e] font-bold">Proposal e-Signed & Submitted!</p>
+                    <p className="text-xs text-[#6b7280] mt-1">Underwriting review is in progress.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="flex items-start gap-3 cursor-pointer text-xs text-[#9ca3af] leading-relaxed">
+                      <input 
+                        type="checkbox" 
+                        checked={esignChecked} 
+                        onChange={e => setEsignChecked(e.target.checked)}
+                        className="mt-0.5 accent-[#6366f1]"
+                      />
+                      <span>
+                        I hereby declare that the statements, answers, and details uploaded in KYC and Medical records are true and complete. I consent to the underwriting checks.
+                      </span>
+                    </label>
+                    <Btn 
+                      onClick={handleEsign} 
+                      disabled={!esignChecked || esignLoading} 
+                      className="w-full"
+                    >
+                      {esignLoading ? 'Signing…' : 'Sign & Submit to Underwriter'}
+                    </Btn>
+                  </div>
+                )}
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
-      <SectionHeader title="My Insurance Cases" />
+      <SectionHeader title="My Cases" subtitle="List of your active insurance proposals" />
+      
       <div className="grid grid-cols-3 gap-4 mb-5">
         <StatCard title="Total" value={cases.length} icon={Home} />
         <StatCard title="Active" value={cases.filter(c => c.status === 'ACTIVE').length} color="#22c55e" icon={Clock} />
         <StatCard title="Completed" value={cases.filter(c => c.status === 'COMPLETED').length} color="#6366f1" icon={ShieldCheck} />
       </div>
-      {loading ? <Spinner /> : cases.length === 0
-        ? <Card className="text-center py-12 text-[#6b7280]">No cases yet. Contact your banker.</Card>
-        : cases.map(c => (
-          <Card key={c.id} className="mb-4">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="font-bold">{c.case_number}</p>
-                <Badge label={c.status} />
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <Badge label={c.kyc_status || 'PENDING_KYC'} />
-                  <Badge label={c.esign_status || 'NOT_STARTED'} />
+
+      {loading ? <Spinner /> : cases.length === 0 ? (
+        <Card className="text-center py-12 text-[#6b7280]">No cases found. Please consult your banker.</Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {cases.map(c => (
+            <Card key={c.id} className="hover:border-[#4f46e5] transition-all duration-200">
+              <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
+                <div>
+                  <h3 className="font-bold text-base text-white">{c.case_number}</h3>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    <Badge label={c.current_stage.replace(/_/g, ' ')} />
+                    <Badge label={c.status} />
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-[#6b7280]">Sum Assured</p>
+                  <p className="text-base font-bold text-[#22c55e]">₹{c.sum_assured?.toLocaleString()}</p>
                 </div>
               </div>
-              <p className="text-sm font-bold text-[#22c55e]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : ''}</p>
-            </div>
-            <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
-          </Card>
-        ))
-      }
+              <StageTimeline stage={c.status === 'COMPLETED' ? 'COMPLETED' : c.current_stage} caseItem={c} />
+              <div className="flex justify-end mt-4 border-t border-[#2a2f45]/50 pt-3">
+                <Btn onClick={() => setSelectedCaseId(c.id)}>Open Case Details</Btn>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -1352,15 +1809,19 @@ function CustomerPolicies() {
   )
 }
 
-function CustomerNotifications() {
+export function UnifiedNotificationFeed({ title = "Notifications", subtitle = "Messages and updates for your account" }) {
   const [notifs, setNotifs] = useState([])
-  const [loading, setL] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   const load = () => {
-    api.get('/notifications/mine').then(r => setNotifs(r.data.notifications || [])).finally(() => setL(false))
+    api.get('/notifications/mine').then(r => setNotifs(r.data.notifications || [])).finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    const interval = setInterval(load, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   const markAllRead = async () => {
     await api.post('/notifications/mark-all-read')
@@ -1369,7 +1830,7 @@ function CustomerNotifications() {
 
   return (
     <div>
-      <SectionHeader title="Notifications" subtitle="Messages and updates from your banker or underwriter" />
+      <SectionHeader title={title} subtitle={subtitle} />
       <div className="flex justify-end mb-4">
         {notifs.some(n => n.status === 'PENDING') && (
           <Btn variant="secondary" onClick={markAllRead}>Mark all as read</Btn>
@@ -1400,6 +1861,10 @@ function CustomerNotifications() {
       )}
     </div>
   )
+}
+
+function CustomerNotifications() {
+  return <UnifiedNotificationFeed title="Notifications" subtitle="Messages and updates from your banker or underwriter" />
 }
 
 export function CustomerDashboard() {
@@ -1765,6 +2230,7 @@ export function UnderwriterDashboard() {
       <Route path="review/:caseId" element={<UWCaseReview />} />
       <Route path="policies" element={<PolicyIssuanceQueue />} />
       <Route path="policies/view/:caseId" element={<PolicyIssuanceDetails />} />
+      <Route path="notifications" element={<UnifiedNotificationFeed title="Notifications" subtitle="Updates and alerts on your cases" />} />
       <Route path="kyc" element={<UWKYCDocs />} />
       <Route path="medical" element={<UWMedical />} />
       <Route path="kb" element={<KnowledgeBase />} />
@@ -1856,6 +2322,7 @@ function UWCaseReview() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [quotes, setQuotes] = useState([])
+  const [docs, setDocs] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -1866,13 +2333,15 @@ function UWCaseReview() {
     const load = async () => {
       setLoading(true); setError(null)
       try {
-        const [{ data: caseRes }, { data: quotesRes }] = await Promise.all([
+        const [{ data: caseRes }, { data: quotesRes }, { data: docsRes }] = await Promise.all([
           api.get(`/cases/${caseId}`),
           api.get(`/quotes/case/${caseId}`),
+          api.get(`/documents/case/${caseId}`),
         ])
         if (!mounted) return
         setData(caseRes)
         setQuotes(quotesRes.quotes || [])
+        setDocs(docsRes.documents || [])
       } catch (e) {
         setError(e.response?.data?.detail || 'Failed to load case review data')
       } finally {
@@ -1886,12 +2355,18 @@ function UWCaseReview() {
   const submitDecision = async (decision) => {
     setSaving(true); setError(null)
     try {
-      const remarks = decisionNotes
+      const remarks = decision === 'QUERY' ? 'KYC & Medical documents required: PAN_CARD, ADDRESS_PROOF, SELFIE, SIGNATURE' : decisionNotes
       await api.post('/underwriting/decision', { case_id: caseId, decision, remarks })
       navigate('/dashboard/underwriter')
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to submit decision')
     } finally { setSaving(false) }
+  }
+
+  const openDoc = (id) => {
+    const token = localStorage.getItem('access_token') || ''
+    const url = `/api/v1/documents/${id}/view${token ? `?token=${token}` : ''}`
+    window.open(url, '_blank')
   }
 
   const formatDateTime = (dateStr) => {
@@ -2032,6 +2507,24 @@ function UWCaseReview() {
               </div>
             </div>
           </Card>
+
+          <Card>
+            <p className="text-sm font-semibold text-[#6b7280] mb-3">Uploaded Documents</p>
+            <div className="space-y-2">
+              {docs.length === 0 && <p className="text-sm text-[#9ca3af]">No documents uploaded for this case.</p>}
+              {docs.map(d => (
+                <div key={d.id} className="flex items-center justify-between">
+                  <div className="text-sm">
+                    <p className="font-medium text-white">{d.file_name}</p>
+                    <p className="text-xs text-[#6b7280]">{d.document_type.replace(/_/g, ' ')}</p>
+                  </div>
+                  <div>
+                    <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View</Btn>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
 
         <div className="space-y-4">
@@ -2042,8 +2535,22 @@ function UWCaseReview() {
 
           <Card>
             <div className="flex flex-col gap-3">
-              <Btn variant="success" onClick={() => submitDecision('APPROVED')} disabled={saving}>{saving ? 'Submitting…' : 'Approve'}</Btn>
-              <Btn variant="danger" onClick={() => submitDecision('REJECTED')} disabled={saving}>{saving ? 'Submitting…' : 'Reject'}</Btn>
+              {(data?.current_stage === 'OTP_CONSENT' || !data?.medical_requests?.length) && (
+                <Btn variant="primary" onClick={() => submitDecision('QUERY')} disabled={saving}>
+                  {saving ? 'Submitting…' : 'Request KYC & Medical Documents'}
+                </Btn>
+              )}
+              {data?.current_stage === 'UNDERWRITING' && (
+                <Btn variant="success" onClick={() => submitDecision('APPROVED')} disabled={saving}>
+                  {saving ? 'Submitting…' : 'Approve Underwriting'}
+                </Btn>
+              )}
+              <Btn variant="danger" onClick={() => submitDecision('REJECTED')} disabled={saving}>
+                {saving ? 'Submitting…' : 'Reject Underwriting'}
+              </Btn>
+              <Btn variant="secondary" onClick={() => navigate('/dashboard/underwriter')}>
+                Cancel
+              </Btn>
             </div>
           </Card>
         </div>

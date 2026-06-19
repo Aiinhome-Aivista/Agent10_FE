@@ -48,9 +48,6 @@ export default function App() {
         <Route path="/dashboard" element={<Guard><DashboardShell /></Guard>}>
           <Route index element={<RoleRedirect />} />
 
-          {/* Super Admin — /dashboard/admin/* */}
-          <Route path="admin/*" element={<SuperAdminDashboard />} />
-
           {/* Banker — /dashboard/banker/* */}
           <Route path="banker/*" element={<BankerDashboard />} />
 
@@ -59,12 +56,6 @@ export default function App() {
 
           {/* Underwriter — /dashboard/underwriter/* */}
           <Route path="underwriter/*" element={<UnderwriterDashboard />} />
-
-          {/* Compliance — /dashboard/compliance/* */}
-          <Route path="compliance/*" element={<ComplianceDashboard />} />
-
-          {/* Ops Admin — /dashboard/ops/* */}
-          <Route path="ops/*" element={<OpsAdminDashboard />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
