@@ -93,7 +93,7 @@ function NewCaseForm() {
     { label: "Sum Assured (₹)", key: "sum_assured", placeholder: "5000000" },
     { label: "Premium Budget / year (₹)", key: "premium_budget", placeholder: "60000" },
     { label: "Policy Tenure (years)", key: "policy_tenure", placeholder: "20" },
-    { label: "Insurance Purpose", key: "purpose", placeholder: "Family protection, tax saving…" },
+    { label: "Insurance Type", key: "purpose", placeholder: "Family protection, tax saving…" },
   ];
 
   return (

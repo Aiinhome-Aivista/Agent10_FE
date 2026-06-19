@@ -607,14 +607,13 @@ function NewCaseForm() {
                 { value: '5', label: '5 Years (15% Off)' },
               ]}
             />
-            <Input label="Insurance Purpose" value={form.purpose} onChange={set('purpose')} placeholder="Family protection, tax saving…" className="sm:col-span-2" />
+            <Input label="Insurance Type" value={form.purpose} onChange={set('purpose')} placeholder="Family protection, tax saving…" className="sm:col-span-2" />
           </div>
           <Btn onClick={submit} disabled={loading || !selectedCustomer} className="mt-5 w-full">
             {loading ? 'Creating…' : 'Create Case & Trigger Workflow'}
           </Btn>
         </Card>
       </div>
-
       <Card>
         <div className="flex flex-col gap-4">
           <SectionHeader title="Customers" subtitle="Search by name, email, or phone" />
@@ -952,10 +951,12 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
   const finalTotalPremium = finalAnnualPremium * selectedTenure
   const finalGstPremium = finalTotalPremium * 1.18
 
-  // Helper strings for key features
+  // Helper strings for key features (retrieved dynamically from knowledgebase coverage details)
   const waitingDays = q.waiting_period_days || 0
-  const waitingText = waitingDays ? `${Math.round(waitingDays / 30)} months waiting` : 'No waiting period'
-  const cashlessText = q.insurer_code === 'HDFC_LIFE' ? '12,000+ Cashless Hospitals' : '8,000+ Cashless Hospitals'
+  const waitingText = q.coverage_details?.waiting_period_desc || (waitingDays ? `${Math.round(waitingDays / 30)} months waiting` : 'No waiting period')
+  const cashlessText = q.coverage_details?.cashless_hospitals || (q.insurer_code === 'HDFC_LIFE' ? '12,000+ Cashless Hospitals' : '8,000+ Cashless Hospitals')
+  const roomRentText = q.coverage_details?.room_rent_limit || 'No Room Rent Capping'
+  const restorationText = q.coverage_details?.restoration_benefit || '100% Restoration of cover'
 
   const handleCustomize = async (e) => {
     e.stopPropagation()
@@ -1025,11 +1026,11 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">🛏️</span>
-                <span><strong>Room Rent Limit:</strong> No Room Rent Capping</span>
+                <span><strong>Room Rent Limit:</strong> {roomRentText}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">🔄</span>
-                <span><strong>Restoration Benefit:</strong> 100% Restoration of cover</span>
+                <span><strong>Restoration Benefit:</strong> {restorationText}</span>
               </div>
             </div>
           </div>
@@ -1129,6 +1130,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
               <p className="text-[#6b7280] font-semibold mb-2 uppercase tracking-wider text-[10px]">Benefit Coverages</p>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(coverage).map(([key, val]) => {
+                  if (typeof val === 'string') return null; // skip string properties
                   const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                   return (
                     <span key={key} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-medium ${val ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20'}`}>

@@ -497,6 +497,7 @@ function QuoteCard({ q, isTop, onShowDetails }) {
                 <p className="text-[#6b7280] font-semibold mb-2">Benefit Coverages</p>
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(coverage).map(([key, val]) => {
+                    if (typeof val === 'string') return null; // skip string key features
                     const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                     return (
                       <span key={key} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] ${val ? 'bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20' : 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20'}`}>
