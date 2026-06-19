@@ -2527,6 +2527,7 @@ function UWQueue() {
     { key: 'case_number', label: 'Case #' },
     { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage || r.stage} /> },
     { key: 'sum_assured', label: 'Sum Assured', render: r => r.sum_assured ? `₹${r.sum_assured.toLocaleString()}` : '—' },
+    { key: 'policy_tenure', label: 'Tenure', render: r => r.policy_tenure ? `${r.policy_tenure} Years` : '—' },
     {
       key: 'document_upload_status',
       label: 'Doc Status',
@@ -2941,6 +2942,7 @@ function PolicyIssuanceQueue() {
     { key: 'case_number', label: 'Case #' },
     { key: 'customer_id', label: 'Customer', render: r => r.customer_id.slice(0, 8) + '…' },
     { key: 'sum_assured', label: 'Sum Assured', render: r => `₹${r.sum_assured?.toLocaleString() || '—'}` },
+    { key: 'policy_tenure', label: 'Tenure', render: r => r.policy_tenure ? `${r.policy_tenure} Years` : '—' },
     { key: 'current_stage', label: 'Stage', render: r => <Badge label={r.current_stage || r.stage} /> },
     {
       key: 'document_upload_status',
@@ -3157,7 +3159,20 @@ function PolicyIssuanceDetails() {
     )
   }
 
-  const profileEntries = caseItem.customer_profile ? Object.entries(caseItem.customer_profile) : []
+  const selectedQuote = quotes.find(q => q.status === 'SELECTED' || q.id === policy?.quote_id)
+
+  const customerName = caseItem.customer_profile?.name || caseItem.customer_profile?.Full_Name || '—'
+  const customerEmail = caseItem.customer_profile?.email || caseItem.customer_profile?.Email || '—'
+  const customerPhone = caseItem.customer_profile?.phone || caseItem.customer_profile?.Phone || '—'
+  const customerDob = caseItem.customer_profile?.dob || caseItem.customer_profile?.date_of_birth || caseItem.customer_profile?.DOB || '—'
+  const customerAge = caseItem.customer_profile?.age || caseItem.customer_profile?.Age || '—'
+  const customerOccupation = caseItem.customer_profile?.occupation || caseItem.customer_profile?.Occupation || '—'
+  const customerIncome = caseItem.customer_profile?.annual_income || caseItem.customer_profile?.Annual_Income || '—'
+  const customerRisk = caseItem.customer_profile?.risk_appetite || caseItem.customer_profile?.Risk_Appetite || '—'
+
+  const formattedIncome = typeof customerIncome === 'number'
+    ? `₹${customerIncome.toLocaleString()}`
+    : customerIncome !== '—' ? `₹${Number(customerIncome.toString().replace(/[^0-9.]/g, '') || 0).toLocaleString()}` : '—'
 
   return (
     <div>
@@ -3179,106 +3194,179 @@ function PolicyIssuanceDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.6fr] gap-5">
         <div className="space-y-4">
           <Card>
-            <h3 className="text-lg font-semibold mb-4">Customer & Case Details</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Customer Information</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 text-sm">
               <div>
-                <div className="text-sm text-[#6b7280] mb-2">Customer ID</div>
-                <div>{caseItem.customer_id}</div>
-                <div className="text-sm text-[#6b7280] mt-4 mb-2">Banker ID</div>
-                <div>{caseItem.banker_id || '—'}</div>
-                <div className="text-sm text-[#6b7280] mt-4 mb-2">Premium Budget</div>
-                <div>{caseItem.premium_budget ? `₹${caseItem.premium_budget.toLocaleString()}` : '—'}</div>
+                <p className="text-xs text-[#6b7280] mb-1">Name</p>
+                <p className="font-semibold text-white">{customerName}</p>
               </div>
               <div>
-                <div className="text-sm text-[#6b7280] mb-2">Customer Profile</div>
-                {profileEntries.length > 0 ? (
-                  <div className="space-y-2">
-                    {profileEntries.map(([key, value]) => (
-                      <div key={key}>
-                        <span className="font-semibold">{key.replace(/_/g, ' ')}:</span> {typeof value === 'object' ? JSON.stringify(value) : value?.toString() || '—'}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div>Profile details not available.</div>
-                )}
+                <p className="text-xs text-[#6b7280] mb-1">Email</p>
+                <p className="font-medium text-white truncate" title={customerEmail}>{customerEmail}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Phone</p>
+                <p className="font-medium text-white">{customerPhone}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">DOB / Age</p>
+                <p className="font-medium text-white">
+                  {customerDob !== '—' ? customerDob : ''} {customerAge !== '—' ? `(${customerAge} yrs)` : ''}
+                  {customerDob === '—' && customerAge === '—' ? '—' : ''}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Occupation</p>
+                <p className="font-medium text-white">{customerOccupation}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Annual Income</p>
+                <p className="font-semibold text-[#22c55e]">{formattedIncome}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Risk Profile</p>
+                <p className="font-medium text-white">{customerRisk}</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Customer ID</p>
+                <p className="font-mono text-xs text-[#9ca3af] truncate" title={caseItem.customer_id}>{caseItem.customer_id.slice(0, 8)}...</p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Banker ID</p>
+                <p className="font-mono text-xs text-[#9ca3af] truncate" title={caseItem.banker_id}>{caseItem.banker_id ? `${caseItem.banker_id.slice(0, 8)}...` : '—'}</p>
               </div>
             </div>
           </Card>
 
           <Card>
-            <h3 className="text-lg font-semibold mb-4">Selected Policy</h3>
-            {policy ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div>
-                  <div className="text-sm text-[#6b7280] mb-2">Insurer</div>
-                  <div>{policy.insurer_name}</div>
+            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Selected Insurance Plan Details</h3>
+            {policy || selectedQuote ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 text-sm">
+                <div className="col-span-2 sm:col-span-3 border-b border-[#2a2f45] pb-3 mb-1">
+                  <p className="text-xs text-[#6b7280] mb-1">Product Name</p>
+                  <p className="font-bold text-base text-white">
+                    {policy?.product_name || selectedQuote?.product_name || '—'}
+                  </p>
                 </div>
                 <div>
-                  <div className="text-sm text-[#6b7280] mb-2">Product</div>
-                  <div>{policy.product_name || '—'}</div>
+                  <p className="text-xs text-[#6b7280] mb-1">Insurer</p>
+                  <p className="font-semibold text-white">
+                    {policy?.insurer_name || selectedQuote?.insurer_name || '—'}
+                  </p>
                 </div>
                 <div>
-                  <div className="text-sm text-[#6b7280] mb-2">Policy Number</div>
-                  <div>{policy.policy_number || 'Draft'}</div>
+                  <p className="text-xs text-[#6b7280] mb-1">Policy Status</p>
+                  <div className="mt-0.5">
+                    <Badge label={policy?.status || selectedQuote?.status || 'DRAFT'} />
+                  </div>
                 </div>
                 <div>
-                  <div className="text-sm text-[#6b7280] mb-2">Status</div>
-                  <div>{policy.status || 'DRAFT'}</div>
+                  <p className="text-xs text-[#6b7280] mb-1">Policy Number</p>
+                  <p className="font-mono text-white">{policy?.policy_number || 'Draft (Pending Issuance)'}</p>
                 </div>
                 <div>
-                  <div className="text-sm text-[#6b7280] mb-2">Annual Premium</div>
-                  <div>{policy.annual_premium ? `₹${policy.annual_premium.toLocaleString()}` : '—'}</div>
+                  <p className="text-xs text-[#6b7280] mb-1">Annual Premium</p>
+                  <p className="font-bold text-base text-[#22c55e]">
+                    ₹{(policy?.annual_premium || selectedQuote?.annual_premium || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] mb-1">Policy Tenure</p>
+                  <p className="font-semibold text-white">
+                    {caseItem.policy_tenure || selectedQuote?.policy_tenure || '—'} Years
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280] mb-1">Sum Assured</p>
+                  <p className="font-semibold text-white">
+                    ₹{(caseItem.sum_assured || selectedQuote?.sum_assured || 0).toLocaleString()}
+                  </p>
                 </div>
               </div>
             ) : (
-              <div>No policy draft found for this case.</div>
+              <div className="text-sm text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg">
+                No policy draft or selected quote found for this case.
+              </div>
             )}
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">KYC Status</p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Verification & Consent Status</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
               <div>
-                <p className="text-xs text-[#6b7280]">PAN Verified</p>
-                <p>{caseItem?.kyc_status === 'PAN_VERIFIED' || caseItem?.customer_profile?.pan_verified ? 'Verified' : 'Pending'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-[#6b7280]">Aadhaar Verified</p>
-                <p>{caseItem?.kyc_status === 'AADHAAR_VERIFIED' || caseItem?.customer_profile?.aadhaar_verified ? 'Verified' : 'Pending'}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Medical</p>
-            <div className="text-sm">
-              <p>Medical Required: {quotes?.some(q => q.medical_requirements) ? 'Yes' : 'No'}</p>
-              <p>Medical Completed: {caseItem?.medical_requests?.length ? 'Yes' : 'No'}</p>
-              {docs.filter(x => /medical/i.test(x.document_type)).map(d => (
-                <div key={d.id} className="mt-2 flex items-center justify-between">
-                  <div className="text-sm">{d.file_name}</div>
-                  <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View Medical Report</Btn>
+                <p className="text-xs text-[#6b7280] mb-1">KYC Status</p>
+                <div className="mt-0.5">
+                  <Badge label={caseItem.kyc_status || 'Pending'} />
                 </div>
-              ))}
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">PAN Verification</p>
+                <p className="font-medium text-white">
+                  {caseItem?.kyc_status === 'PAN_VERIFIED' || caseItem?.customer_profile?.pan_verified || caseItem?.kyc_status === 'AADHAAR_VERIFIED' ? '✅ Verified' : '⏳ Pending'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Aadhaar Verification</p>
+                <p className="font-medium text-white">
+                  {caseItem?.kyc_status === 'AADHAAR_VERIFIED' || caseItem?.customer_profile?.aadhaar_verified ? '✅ Verified' : '⏳ Pending'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">OTP Consent Status</p>
+                <p className="font-medium text-white">
+                  {caseItem.consent_given ? '✅ Verified' : '⏳ Pending'}
+                </p>
+              </div>
             </div>
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Uploaded Documents</p>
+            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Medical Coordination</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Medical Required</p>
+                <p className="font-medium text-white">
+                  {quotes?.some(q => q.medical_requirements) ? 'Yes' : 'No'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[#6b7280] mb-1">Medical Requests Created</p>
+                <p className="font-medium text-white">
+                  {caseItem?.medical_requests?.length ? `Yes (${caseItem.medical_requests.length} Requests)` : 'No'}
+                </p>
+              </div>
+              {docs.filter(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name)).length > 0 && (
+                <div className="col-span-1 sm:col-span-2 border-t border-[#2a2f45] pt-3 mt-1">
+                  <p className="text-xs text-[#6b7280] mb-2">Medical Reports / Attachments</p>
+                  <div className="space-y-2">
+                    {docs.filter(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name)).map(d => (
+                      <div key={d.id} className="flex items-center justify-between bg-[#0f1117] border border-[#2a2f45] p-2.5 rounded-lg">
+                        <span className="text-xs text-white truncate mr-2">{d.file_name}</span>
+                        <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View Report</Btn>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Uploaded Documents Directory</h3>
             <div className="space-y-2">
-              {docs.length === 0 && <p className="text-sm text-[#9ca3af]">No documents uploaded for this case.</p>}
-              {docs.map(d => (
-                <div key={d.id} className="flex items-center justify-between">
-                  <div className="text-sm">
-                    <p className="font-medium">{d.file_name}</p>
-                    <p className="text-xs text-[#6b7280]">{d.document_type}</p>
+              {docs.length === 0 ? (
+                <p className="text-xs text-[#9ca3af]">No documents uploaded for this case.</p>
+              ) : (
+                docs.map(d => (
+                  <div key={d.id} className="flex items-center justify-between border border-[#2a2f45] bg-[#0f1117] p-3 rounded-lg">
+                    <div className="text-sm min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-white truncate">{d.file_name}</p>
+                      <p className="text-xs text-[#6b7280] mt-0.5">{d.document_type.replace(/_/g, ' ')}</p>
+                    </div>
+                    <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)} className="flex-shrink-0">View File</Btn>
                   </div>
-                  <div>
-                    <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View</Btn>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
 
