@@ -886,49 +886,52 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
   const medicals = q.medical_requirements || []
 
   // Brand color theme configuration
-  const insurerThemes = {
-    HDFC_LIFE: {
-      name: 'HDFC Life',
-      color: '#ea002a',
-      bg: 'from-[#ea002a]/20 to-[#ea002a]/5',
-      text: 'text-[#ea002a]',
-      border: 'border-[#ea002a]/30',
-      logoInitials: 'HDFC'
-    },
-    LIC: {
-      name: 'LIC of India',
-      color: '#ffcc00',
-      bg: 'from-[#ffcc00]/20 to-[#ffcc00]/5',
-      text: 'text-[#ffcc00]',
-      border: 'border-[#ffcc00]/30',
-      logoInitials: 'LIC'
-    },
-    ICICI_PRU: {
-      name: 'ICICI Pru',
-      color: '#9d2235',
-      bg: 'from-[#9d2235]/20 to-[#9d2235]/5',
-      text: 'text-[#9d2235]',
-      border: 'border-[#9d2235]/30',
-      logoInitials: 'ICICI'
-    },
-    SBI_GENERAL: {
-      name: 'SBI General',
-      color: '#00a4e4',
-      bg: 'from-[#00a4e4]/20 to-[#00a4e4]/5',
-      text: 'text-[#00a4e4]',
-      border: 'border-[#00a4e4]/30',
-      logoInitials: 'SBI'
+  const getTheme = (code, name) => {
+    const cleanCode = (code || 'INSURER').toUpperCase();
+    const cleanName = (name || cleanCode).replace(/_/g, ' ');
+    const insurerThemes = {
+      HDFC_LIFE: { name: 'HDFC Life', bgClass: 'from-[#ea002a]/20 to-[#ea002a]/5 border-[#ea002a]/30', logoInitials: 'HDFC' },
+      LIC: { name: 'LIC of India', bgClass: 'from-[#ffcc00]/20 to-[#ffcc00]/5 border-[#ffcc00]/30', logoInitials: 'LIC' },
+      ICICI_PRU: { name: 'ICICI Pru', bgClass: 'from-[#9d2235]/20 to-[#9d2235]/5 border-[#9d2235]/30', logoInitials: 'ICICI' },
+      SBI_GENERAL: { name: 'SBI General', bgClass: 'from-[#00a4e4]/20 to-[#00a4e4]/5 border-[#00a4e4]/30', logoInitials: 'SBI' }
+    }
+    
+    if (insurerThemes[cleanCode]) {
+      return {
+        name: insurerThemes[cleanCode].name,
+        bgClass: insurerThemes[cleanCode].bgClass,
+        logoInitials: insurerThemes[cleanCode].logoInitials,
+        style: {}
+      }
+    }
+
+    // Dynamic HSL hashing for any custom insurer from knowledgebase
+    let hash = 0;
+    for (let i = 0; i < cleanName.length; i++) {
+      hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    const initials = cleanName
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w[0])
+      .join('')
+      .substring(0, 4)
+      .toUpperCase() || 'INS';
+
+    return {
+      name: cleanName,
+      bgClass: '',
+      logoInitials: initials,
+      style: {
+        background: `linear-gradient(135deg, hsl(${hue}, 80%, 20%) 0%, hsl(${hue}, 80%, 8%) 100%)`,
+        borderColor: `hsl(${hue}, 80%, 35%)`,
+        borderWidth: '1px'
+      }
     }
   }
 
-  const theme = insurerThemes[q.insurer_code] || {
-    name: q.insurer_name || 'Insurer',
-    color: '#6366f1',
-    bg: 'from-[#6366f1]/20 to-[#6366f1]/5',
-    text: 'text-[#6366f1]',
-    border: 'border-[#6366f1]/30',
-    logoInitials: (q.insurer_name || 'INS').substring(0, 3).toUpperCase()
-  }
+  const theme = getTheme(q.insurer_code, q.insurer_name);
 
   // Premium discount mapping matching backend
   const getDiscount = (t) => {
@@ -992,7 +995,10 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
         
         {/* Col 1: Insurer Logo Emblem & Name */}
         <div className="flex flex-col items-center text-center lg:border-r lg:border-[#2a2f45] lg:pr-4">
-          <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${theme.bg} border ${theme.border} flex items-center justify-center text-white font-extrabold text-sm tracking-wide shadow-md`}>
+          <div 
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-extrabold text-sm tracking-wide shadow-md ${theme.bgClass ? 'bg-gradient-to-br ' + theme.bgClass : ''}`}
+            style={theme.style}
+          >
             {theme.logoInitials}
           </div>
           <p className="font-bold text-sm text-[#e8eaf0] mt-2.5">{theme.name}</p>
