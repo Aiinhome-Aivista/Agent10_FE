@@ -763,9 +763,10 @@ export default function LoginPage() {
                       <div
                         key={cond} onClick={() => toggleCondition(cond)}
                         style={{
-                          padding: "12px", background: isSelected ? "rgba(99, 102, 241, 0.1)" : "var(--surface-alt)",
+                          padding: "12px", background: isSelected ? "rgba(var(--color-primary), 0.1)" : "var(--surface-alt)",
                           border: isSelected ? "1.5px solid var(--accent)" : "1px solid var(--border)",
-                          borderRadius: 8, textAlign: "center", cursor: "pointer", color: isSelected ? "#fff" : "var(--text-muted)",
+                          borderRadius: 8, textAlign: "center", cursor: "pointer",
+                          color: isSelected ? "var(--accent)" : "var(--text-muted)",
                           fontWeight: 600, fontSize: 13, transition: "all 0.2s"
                         }}
                       >
