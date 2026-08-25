@@ -7,5 +7,4 @@ coverage
 .idea
 .vscode
 *.log
-Dockerfile
 docker-compose.yml
