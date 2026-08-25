@@ -39,11 +39,11 @@ const ALCOHOL_OPTIONS = ['NO', 'YES', 'OCCASIONALLY', 'RARELY']
 function SelectField({ label, value, options, onChange }) {
   return (
     <div>
-      <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">{label}</label>
+      <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">{label}</label>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1] transition-colors"
+        className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary transition-colors"
       >
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -54,13 +54,13 @@ function SelectField({ label, value, options, onChange }) {
 function TextField({ label, value, onChange, placeholder, type = 'text' }) {
   return (
     <div>
-      <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">{label}</label>
+      <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">{label}</label>
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] placeholder-[#4b5563] focus:border-[#6366f1] transition-colors"
+        className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text placeholder-[#4b5563] focus:border-pwc-primary transition-colors"
       />
     </div>
   )
@@ -69,13 +69,13 @@ function TextField({ label, value, onChange, placeholder, type = 'text' }) {
 function TextareaField({ label, value, onChange, placeholder }) {
   return (
     <div>
-      <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">{label}</label>
+      <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">{label}</label>
       <textarea
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         rows={3}
-        className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none text-[#e8eaf0] placeholder-[#4b5563] focus:border-[#6366f1] transition-colors"
+        className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none resize-none text-pwc-text placeholder-[#4b5563] focus:border-pwc-primary transition-colors"
       />
     </div>
   )
@@ -170,16 +170,16 @@ export default function CustomerMedicalPage() {
       <Card>
         <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
           <p className="font-bold text-base flex items-center gap-2">
-            <Stethoscope size={18} className="text-[#6366f1]" />
+            <Stethoscope size={18} className="text-pwc-primary" />
             Medical Status
           </p>
           {cases.length > 1 && (
             <div className="flex items-center gap-2">
-              <label className="text-xs text-[#6b7280]">Case:</label>
+              <label className="text-xs text-pwc-text-muted">Case:</label>
               <select
                 value={selectedCaseId}
                 onChange={e => setSelectedCaseId(e.target.value)}
-                className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs outline-none text-[#e8eaf0]"
+                className="bg-pwc-bg border border-pwc-border rounded-lg px-3 py-1.5 text-xs outline-none text-pwc-text"
               >
                 {cases.map(c => <option key={c.id} value={c.id}>{c.case_number}</option>)}
               </select>
@@ -196,16 +196,16 @@ export default function CustomerMedicalPage() {
               { label: 'KYC Status',       value: selectedCase.kyc_status || 'PENDING_KYC', badge: true },
             ].map(({ label, value, badge }) => (
               <div key={label} className="bg-[#0b0d14] border border-[#1f2436] rounded-lg p-3">
-                <p className="text-[10px] text-[#6b7280] uppercase tracking-wide mb-1">{label}</p>
+                <p className="text-[10px] text-pwc-text-muted uppercase tracking-wide mb-1">{label}</p>
                 {badge
                   ? <Badge label={value} />
-                  : <p className="text-sm font-semibold text-[#e8eaf0] truncate">{value}</p>
+                  : <p className="text-sm font-semibold text-pwc-text truncate">{value}</p>
                 }
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-[#6b7280]">No cases found. Contact your banker.</p>
+          <p className="text-sm text-pwc-text-muted">No cases found. Contact your banker.</p>
         )}
 
         {selectedCase && !activeRequest && (
@@ -213,7 +213,7 @@ export default function CustomerMedicalPage() {
             <Btn onClick={handleCreateRequest} disabled={creating}>
               {creating ? 'Creating…' : '+ Create Medical Request'}
             </Btn>
-            <p className="text-xs text-[#6b7280]">
+            <p className="text-xs text-pwc-text-muted">
               Creates a medical request for this case and enables document uploads.
             </p>
           </div>
@@ -270,7 +270,7 @@ export default function CustomerMedicalPage() {
             />
           </div>
         </div>
-        <p className="text-xs text-[#6b7280] mt-4">
+        <p className="text-xs text-pwc-text-muted mt-4">
           * Questionnaire data is stored locally for your reference. The underwriter will review your uploaded medical reports.
         </p>
       </Card>
@@ -281,7 +281,7 @@ export default function CustomerMedicalPage() {
           <Upload size={18} className="text-[#f59e0b]" />
           Medical Report Upload
         </p>
-        <p className="text-xs text-[#6b7280] mb-5">
+        <p className="text-xs text-pwc-text-muted mb-5">
           {activeRequest
             ? `Uploading for request: ${activeRequest.id.slice(0, 8)}… — Status: ${activeRequest.status}`
             : 'Create a medical request above to enable uploads.'}
@@ -300,15 +300,15 @@ export default function CustomerMedicalPage() {
                 className={`rounded-xl border p-4 transition-all duration-200 ${
                   isDone   ? 'border-[#22c55e]/40 bg-[#22c55e]/5' :
                   isError  ? 'border-[#ef4444]/40 bg-[#ef4444]/5' :
-                  'border-[#2a2f45] bg-[#0f1117]'
+                  'border-pwc-border bg-pwc-bg'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{icon}</span>
                     <div>
-                      <p className="text-sm font-semibold text-[#e8eaf0]">{label}</p>
-                      <p className="text-[10px] text-[#6b7280]">PDF, JPG, PNG (max 10MB)</p>
+                      <p className="text-sm font-semibold text-pwc-text">{label}</p>
+                      <p className="text-[10px] text-pwc-text-muted">PDF, JPG, PNG (max 10MB)</p>
                     </div>
                   </div>
                   {isDone   && <Badge label="Uploaded" />}
@@ -322,9 +322,9 @@ export default function CustomerMedicalPage() {
                   accept=".pdf,.jpg,.jpeg,.png"
                   disabled={!activeRequest || isUploading}
                   onChange={e => handleUpload(key, e.target.files?.[0])}
-                  className="block w-full text-xs text-[#6b7280]
+                  className="block w-full text-xs text-pwc-text-muted
                     file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0
-                    file:bg-[#6366f1] file:text-white file:text-xs file:font-semibold
+                    file:bg-pwc-primary file:text-pwc-white file:text-xs file:font-semibold
                     file:cursor-pointer cursor-pointer disabled:opacity-40"
                 />
               </div>
@@ -342,8 +342,8 @@ export default function CustomerMedicalPage() {
             {loading ? 'Refreshing…' : 'Refresh Status'}
           </Btn>
           {activeRequest && (
-            <div className="text-xs text-[#6b7280] flex items-center">
-              Request ID: <span className="text-[#e8eaf0] ml-1 font-mono">{activeRequest.id.slice(0, 12)}…</span>
+            <div className="text-xs text-pwc-text-muted flex items-center">
+              Request ID: <span className="text-pwc-text ml-1 font-mono">{activeRequest.id.slice(0, 12)}…</span>
             </div>
           )}
         </div>
@@ -359,18 +359,18 @@ export default function CustomerMedicalPage() {
                 key={req.id}
                 className={`rounded-lg border p-3 flex items-center justify-between gap-4 transition-colors ${
                   req.case_id === selectedCaseId
-                    ? 'border-[#6366f1]/50 bg-[#6366f1]/5'
-                    : 'border-[#2a2f45] bg-[#0f1117]'
+                    ? 'border-pwc-primary/50 bg-pwc-primary/5'
+                    : 'border-pwc-border bg-pwc-bg'
                 }`}
               >
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#e8eaf0] truncate">
+                  <p className="text-xs font-semibold text-pwc-text truncate">
                     Case: {req.case_id.slice(0, 8)}…
                   </p>
-                  <p className="text-[10px] text-[#6b7280] mt-0.5">
+                  <p className="text-[10px] text-pwc-text-muted mt-0.5">
                     Requirements: {(req.requirements || []).join(', ') || '—'}
                   </p>
-                  <p className="text-[10px] text-[#6b7280]">
+                  <p className="text-[10px] text-pwc-text-muted">
                     {req.created_at ? new Date(req.created_at).toLocaleString() : ''}
                   </p>
                 </div>

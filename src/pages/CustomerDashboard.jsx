@@ -83,7 +83,7 @@ function MyCases() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 16, marginBottom: 24 }}>
         <StatCard title="Total" value={cases.length} icon={FileText} />
         <StatCard title="Active" value={cases.filter((c) => c.status === "ACTIVE").length} color="#22c55e" icon={Clock} />
-        <StatCard title="Completed" value={cases.filter((c) => c.status === "COMPLETED").length} color="#6366f1" icon={ShieldCheck} />
+        <StatCard title="Completed" value={cases.filter((c) => c.status === "COMPLETED").length} color="rgb(var(--color-primary))" icon={ShieldCheck} />
       </div>
       {loading ? <Spinner /> : cases.map((c) => (
         <Card key={c.id} style={{ marginBottom: 16 }}>

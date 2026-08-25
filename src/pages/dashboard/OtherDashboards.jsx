@@ -314,33 +314,33 @@ function CustomerMyCases() {
           {/* Left Column: Summary & Stage Timeline */}
           <div className="space-y-4">
             <Card>
-              <h3 className="font-bold text-sm text-[#e8eaf0] mb-3">Case Status</h3>
+              <h3 className="font-bold text-sm text-pwc-text mb-3">Case Status</h3>
               <div className="space-y-2.5 text-xs text-[#9ca3af]">
                 <div>
-                  <span className="text-[#6b7280]">Current Stage:</span>
-                  <div className="mt-1 font-semibold text-white bg-[#6366f1]/10 border border-[#6366f1]/25 px-2.5 py-1 rounded inline-block">
+                  <span className="text-pwc-text-muted">Current Stage:</span>
+                  <div className="mt-1 font-semibold text-pwc-white bg-pwc-primary/10 border border-pwc-primary/25 px-2.5 py-1 rounded inline-block">
                     {activeCase.current_stage.replace(/_/g, ' ')}
                   </div>
                 </div>
                 <div>
-                  <span className="text-[#6b7280]">Sum Assured:</span>
-                  <p className="text-white font-semibold text-sm">₹{activeCase.sum_assured?.toLocaleString()}</p>
+                  <span className="text-pwc-text-muted">Sum Assured:</span>
+                  <p className="text-pwc-white font-semibold text-sm">₹{activeCase.sum_assured?.toLocaleString()}</p>
                 </div>
                 <div>
-                  <span className="text-[#6b7280]">Premium Budget:</span>
-                  <p className="text-white font-semibold">₹{activeCase.premium_budget?.toLocaleString()}</p>
+                  <span className="text-pwc-text-muted">Premium Budget:</span>
+                  <p className="text-pwc-white font-semibold">₹{activeCase.premium_budget?.toLocaleString()}</p>
                 </div>
                 {activeCase.status === 'COMPLETED' && (
                   <div className="mt-3 p-3 bg-[#22c55e]/15 border border-[#22c55e]/30 rounded-lg">
                     <p className="text-[#22c55e] font-bold">🎉 Case Completed!</p>
-                    <p className="text-[#6b7280] text-[10px] mt-1">Your policy has been successfully issued by the underwriter.</p>
+                    <p className="text-pwc-text-muted text-[10px] mt-1">Your policy has been successfully issued by the underwriter.</p>
                   </div>
                 )}
               </div>
             </Card>
 
             <Card>
-              <h3 className="font-bold text-sm text-[#e8eaf0] mb-3">Timeline Checklist</h3>
+              <h3 className="font-bold text-sm text-pwc-text mb-3">Timeline Checklist</h3>
               <StageTimeline stage={activeCase.status === 'COMPLETED' ? 'COMPLETED' : activeCase.current_stage} caseItem={activeCase} />
             </Card>
           </div>
@@ -349,9 +349,9 @@ function CustomerMyCases() {
           <div className="space-y-5">
             {/* Step 1: Quote Selection and OTP Consent */}
             <Card>
-              <div className="flex items-center justify-between border-b border-[#2a2f45] pb-3 mb-4">
-                <h3 className="font-bold text-base text-white flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-xs">1</span>
+              <div className="flex items-center justify-between border-b border-pwc-border pb-3 mb-4">
+                <h3 className="font-bold text-base text-pwc-white flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-pwc-primary text-pwc-white flex items-center justify-center text-xs">1</span>
                   Select Plan & Give Consent
                 </h3>
                 {isOTPVerified ? (
@@ -364,12 +364,12 @@ function CustomerMyCases() {
               {loadingQuotes ? (
                 <Spinner />
               ) : (!activeCase.banker_approved && STAGES.indexOf(activeCase.current_stage) < STAGES.indexOf('BANKER_APPROVAL')) ? (
-                <div className="text-center py-6 border border-dashed border-[#2a2f45] rounded-xl bg-[#0f1117]">
+                <div className="text-center py-6 border border-dashed border-pwc-border rounded-xl bg-pwc-bg">
                   <p className="text-sm text-yellow-500 font-semibold mb-1">Waiting for Banker Approval</p>
-                  <p className="text-xs text-[#6b7280]">Your banker must review and approve the recommended quotes before you can select a plan and provide consent.</p>
+                  <p className="text-xs text-pwc-text-muted">Your banker must review and approve the recommended quotes before you can select a plan and provide consent.</p>
                 </div>
               ) : quotes.length === 0 ? (
-                <p className="text-sm text-[#6b7280]">No quotes available.</p>
+                <p className="text-sm text-pwc-text-muted">No quotes available.</p>
               ) : (
                 <div className="space-y-4">
                   {/* Quotes Aggregator Grid (PolicyBazaar Style) */}
@@ -380,7 +380,7 @@ function CustomerMyCases() {
                         <div
                           key={q.id}
                           onClick={() => { if (!isOTPVerified) setSelectedQuoteId(q.id) }}
-                          className={`rounded-xl border p-4 transition-all duration-200 bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] flex items-start gap-3 ${!isOTPVerified ? 'cursor-pointer' : ''} ${isSelected ? 'border-[#6366f1] ring-1 ring-[#6366f1]' : 'border-[#2a2f45] hover:border-[#4f46e5]'}`}
+                          className={`rounded-xl border p-4 transition-all duration-200 bg-pwc-bg flex items-start gap-3 ${!isOTPVerified ? 'cursor-pointer' : ''} ${isSelected ? 'border-pwc-primary ring-1 ring-pwc-primary' : 'border-pwc-border hover:border-[#4f46e5]'}`}
                         >
                           <input
                             type="radio"
@@ -388,35 +388,35 @@ function CustomerMyCases() {
                             checked={isSelected}
                             disabled={isOTPVerified}
                             onChange={() => setSelectedQuoteId(q.id)}
-                            className="mt-1 accent-[#6366f1] cursor-pointer"
+                            className="mt-1 accent-pwc-primary cursor-pointer"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 flex-wrap">
-                              <p className="font-semibold text-sm text-[#e8eaf0]">{q.insurer_name}</p>
+                              <p className="font-semibold text-sm text-pwc-text">{q.insurer_name}</p>
                               {q.ai_rank === 1 && (
-                                <span className="bg-[#6366f1]/25 text-[#7c83ff] text-[9px] px-2 py-0.5 rounded-full font-bold">
+                                <span className="bg-pwc-primary/25 text-[#7c83ff] text-[9px] px-2 py-0.5 rounded-full font-bold">
                                   AI Recommended
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-[#6b7280] mt-0.5">{q.product_name}</p>
+                            <p className="text-xs text-pwc-text-muted mt-0.5">{q.product_name}</p>
 
-                            <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] bg-[#0f1117] border border-[#2a2f45]/50 rounded-lg p-2">
+                            <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] bg-pwc-bg border border-pwc-border/50 rounded-lg p-2">
                               <div>
-                                <p className="text-[9px] text-[#6b7280]">Premium</p>
+                                <p className="text-[9px] text-pwc-text-muted">Premium</p>
                                 <p className="font-bold text-[#22c55e]">₹{q.annual_premium?.toLocaleString()}</p>
                               </div>
                               <div>
-                                <p className="text-[9px] text-[#6b7280]">Sum Assured</p>
-                                <p className="font-semibold text-[#e8eaf0]">₹{q.sum_assured?.toLocaleString()}</p>
+                                <p className="text-[9px] text-pwc-text-muted">Sum Assured</p>
+                                <p className="font-semibold text-pwc-text">₹{q.sum_assured?.toLocaleString()}</p>
                               </div>
                               <div>
-                                <p className="text-[9px] text-[#6b7280]">AI Score</p>
+                                <p className="text-[9px] text-pwc-text-muted">AI Score</p>
                                 <p className="font-semibold text-[#2dd4bf]">{((q.ai_score || 0) * 100).toFixed(0)}%</p>
                               </div>
                             </div>
                             {q.ai_recommendation_text && (
-                              <p className="text-[10px] text-[#9ca3af] mt-2 italic leading-relaxed border-t border-[#2a2f45]/30 pt-1.5">{q.ai_recommendation_text.split('\n')[0]}</p>
+                              <p className="text-[10px] text-[#9ca3af] mt-2 italic leading-relaxed border-t border-pwc-border/30 pt-1.5">{q.ai_recommendation_text.split('\n')[0]}</p>
                             )}
                           </div>
                         </div>
@@ -426,24 +426,24 @@ function CustomerMyCases() {
 
                   {/* OTP Submission */}
                   {!isOTPVerified && selectedQuoteId && (
-                    <div className="border-t border-[#2a2f45] pt-4 mt-3">
+                    <div className="border-t border-pwc-border pt-4 mt-3">
                       {otpErr && <Alert type="error" message={otpErr} />}
                       {otpStatus === 'idle' && (
                         <div className="text-center py-2">
-                          <p className="text-xs text-[#6b7280] mb-3">Provide OTP consent to proceed to underwriting.</p>
+                          <p className="text-xs text-pwc-text-muted mb-3">Provide OTP consent to proceed to underwriting.</p>
                           <Btn onClick={sendOTP} className="w-full">Send OTP to Email</Btn>
                         </div>
                       )}
                       {(otpStatus === 'sent' || otpStatus === 'verifying') && (
                         <div>
-                          <p className="text-xs text-[#6b7280] mb-3 text-center">Enter the 6-digit OTP sent to your email (Use **`123456`** for test).</p>
+                          <p className="text-xs text-pwc-text-muted mb-3 text-center">Enter the 6-digit OTP sent to your email (Use **`123456`** for test).</p>
                           <div className="flex gap-2 justify-center mb-4">
                             {otp.map((d, i) => (
                               <input key={i} id={`cust-otp-${i}`} maxLength={1} value={d}
                                 onChange={e => handleDigit(i, e.target.value)}
                                 onKeyDown={e => e.key === 'Backspace' && !d && i > 0 && document.getElementById(`cust-otp-${i - 1}`)?.focus()}
-                                className="w-10 h-11 text-center text-lg font-bold rounded-lg border outline-none bg-[#0f1117]"
-                                style={{ borderColor: d ? '#6366f1' : '#2a2f45', color: '#e8eaf0' }} />
+                                className="w-10 h-11 text-center text-lg font-bold rounded-lg border outline-none bg-pwc-bg"
+                                style={{ borderColor: d ? 'rgb(var(--color-primary))' : '#2a2f45', color: '#e8eaf0' }} />
                             ))}
                           </div>
                           <Btn onClick={verifyOTP} disabled={otp.join('').length < 6 || otpStatus === 'verifying'} className="w-full">
@@ -460,15 +460,15 @@ function CustomerMyCases() {
             {/* Step 2: Upload Documents */}
             {isOTPVerified && (
               <Card>
-                <div className="flex items-center justify-between border-b border-[#2a2f45] pb-3 mb-4">
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-xs">2</span>
+                <div className="flex items-center justify-between border-b border-pwc-border pb-3 mb-4">
+                  <h3 className="font-bold text-base text-pwc-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-pwc-primary text-pwc-white flex items-center justify-center text-xs">2</span>
                     Upload KYC & Medical Documents
                   </h3>
                   {isEsignCompleted ? (
                     <span className="bg-[#22c55e]/20 text-[#22c55e] text-xs px-2.5 py-0.5 rounded-full font-bold">✓ Submitted</span>
                   ) : kycCompleted ? (
-                    <span className="bg-[#6366f1]/20 text-[#7c83ff] text-xs px-2.5 py-0.5 rounded-full font-bold">Ready to Sign</span>
+                    <span className="bg-pwc-primary/20 text-[#7c83ff] text-xs px-2.5 py-0.5 rounded-full font-bold">Ready to Sign</span>
                   ) : (
                     <span className="bg-yellow-500/20 text-yellow-500 text-xs px-2.5 py-0.5 rounded-full font-bold">Pending Upload</span>
                   )}
@@ -478,8 +478,8 @@ function CustomerMyCases() {
                 {docMsg && <Alert type="success" message={docMsg} />}
 
                 {!activeRequest ? (
-                  <div className="text-center py-6 border border-dashed border-[#2a2f45] rounded-xl bg-[#0f1117]">
-                    <p className="text-sm text-[#6b7280]">Waiting for Underwriter to request KYC and Medical documents...</p>
+                  <div className="text-center py-6 border border-dashed border-pwc-border rounded-xl bg-pwc-bg">
+                    <p className="text-sm text-pwc-text-muted">Waiting for Underwriter to request KYC and Medical documents...</p>
                     <p className="text-xs text-[#525876] mt-1">Once requested, you will be able to upload files here.</p>
                   </div>
                 ) : (
@@ -490,9 +490,9 @@ function CustomerMyCases() {
                         const existingDoc = uploadedDocs.find(d => d.document_type === req)
                         const isUploading = uploadingDoc[req]
                         return (
-                          <div key={req} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[#2a2f45] rounded-xl p-3 bg-[#0f1117]">
+                          <div key={req} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-pwc-border rounded-xl p-3 bg-pwc-bg">
                             <div>
-                              <p className="text-sm font-semibold text-white">{req.replace(/_/g, ' ')}</p>
+                              <p className="text-sm font-semibold text-pwc-white">{req.replace(/_/g, ' ')}</p>
                               {existingDoc ? (
                                 <p className="text-xs text-[#22c55e] mt-0.5">✓ {existingDoc.file_name}</p>
                               ) : (
@@ -531,9 +531,9 @@ function CustomerMyCases() {
             {/* Step 3: e-Signature */}
             {isOTPVerified && kycCompleted && (
               <Card>
-                <div className="flex items-center justify-between border-b border-[#2a2f45] pb-3 mb-4">
-                  <h3 className="font-bold text-base text-white flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-[#6366f1] text-white flex items-center justify-center text-xs">3</span>
+                <div className="flex items-center justify-between border-b border-pwc-border pb-3 mb-4">
+                  <h3 className="font-bold text-base text-pwc-white flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-pwc-primary text-pwc-white flex items-center justify-center text-xs">3</span>
                     e-Sign & Submit Proposal
                   </h3>
                 </div>
@@ -541,7 +541,7 @@ function CustomerMyCases() {
                 {isEsignCompleted ? (
                   <div className="text-center py-6 bg-[#22c55e]/10 border border-[#22c55e]/25 rounded-xl">
                     <p className="text-sm text-[#22c55e] font-bold">Proposal e-Signed & Submitted!</p>
-                    <p className="text-xs text-[#6b7280] mt-1">Underwriting review is in progress.</p>
+                    <p className="text-xs text-pwc-text-muted mt-1">Underwriting review is in progress.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -550,7 +550,7 @@ function CustomerMyCases() {
                         type="checkbox" 
                         checked={esignChecked} 
                         onChange={e => setEsignChecked(e.target.checked)}
-                        className="mt-0.5 accent-[#6366f1]"
+                        className="mt-0.5 accent-pwc-primary"
                       />
                       <span>
                         I hereby declare that the statements, answers, and details uploaded in KYC and Medical records are true and complete. I consent to the underwriting checks.
@@ -580,11 +580,11 @@ function CustomerMyCases() {
       <div className="grid grid-cols-3 gap-4 mb-5">
         <StatCard title="Total" value={cases.length} icon={Home} />
         <StatCard title="Active" value={cases.filter(c => c.status === 'ACTIVE').length} color="#22c55e" icon={Clock} />
-        <StatCard title="Completed" value={cases.filter(c => c.status === 'COMPLETED').length} color="#6366f1" icon={ShieldCheck} />
+        <StatCard title="Completed" value={cases.filter(c => c.status === 'COMPLETED').length} color="rgb(var(--color-primary))" icon={ShieldCheck} />
       </div>
 
       {loading ? <Spinner /> : cases.length === 0 ? (
-        <Card className="text-center py-12 text-[#6b7280]">No cases found. Please consult your banker.</Card>
+        <Card className="text-center py-12 text-pwc-text-muted">No cases found. Please consult your banker.</Card>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {cases.map(c => (
@@ -592,14 +592,14 @@ function CustomerMyCases() {
               <Card className="transition-all duration-200">
                 <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                   <div>
-                    <h3 className="font-bold text-base text-white">{c.case_number}</h3>
+                    <h3 className="font-bold text-base text-pwc-white">{c.case_number}</h3>
                     <div className="flex gap-2 mt-2 flex-wrap">
                       <Badge label={c.current_stage.replace(/_/g, ' ')} />
                       <Badge label={c.status} />
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-[#6b7280]">Sum Assured</p>
+                    <p className="text-sm font-semibold text-pwc-text-muted">Sum Assured</p>
                     <p className="text-base font-bold text-[#22c55e]">₹{c.sum_assured?.toLocaleString()}</p>
                   </div>
                 </div>
@@ -730,19 +730,19 @@ function CustomerProfileNeeds() {
 
   const Field = ({ fieldKey, label, alwaysReadOnly }) => (
     <div>
-      <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">{label}</label>
+      <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">{label}</label>
       <input
         value={String(profile[fieldKey] ?? '')}
         onChange={e => setProfile(prev => ({ ...prev, [fieldKey]: e.target.value }))}
         readOnly={!profileEditable || alwaysReadOnly}
         className={`w-full rounded-lg px-3 py-2 text-sm outline-none border transition-colors
           ${(profileEditable && !alwaysReadOnly)
-            ? 'bg-[#0f1117] border-[#6366f1]/50 focus:border-[#6366f1] text-[#e8eaf0]'
+            ? 'bg-pwc-bg border-pwc-primary/50 focus:border-pwc-primary text-pwc-text'
             : 'bg-[#0b0d14] border-[#1f2436] text-[#94a3b8] cursor-default'
           }`}
         placeholder={profileEditable && !alwaysReadOnly ? label : '—'}
       />
-      {alwaysReadOnly && <p className="text-[10px] text-[#6b7280] mt-0.5">System generated — not editable</p>}
+      {alwaysReadOnly && <p className="text-[10px] text-pwc-text-muted mt-0.5">System generated — not editable</p>}
     </div>
   )
 
@@ -757,9 +757,9 @@ function CustomerProfileNeeds() {
         <Card className="mb-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex-1 min-w-[180px]">
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
               <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)}
-                className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+                className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                 {cases.map(c => <option key={c.id} value={c.id}>{c.case_number}</option>)}
               </select>
             </div>
@@ -778,7 +778,7 @@ function CustomerProfileNeeds() {
         <div className="flex items-center justify-between gap-3 mb-5">
           <div>
             <p className="font-bold text-base">Personal Profile</p>
-            <p className="text-xs text-[#6b7280] mt-0.5">
+            <p className="text-xs text-pwc-text-muted mt-0.5">
               {profileEditable ? 'Edit mode — fields are now editable' : 'Read-only — click Edit to make changes'}
             </p>
           </div>
@@ -802,7 +802,7 @@ function CustomerProfileNeeds() {
             <div key={f.key} className={f.fullWidth ? 'col-span-1 sm:col-span-2 lg:col-span-3' : ''}>
               {f.fullWidth ? (
                 <div>
-                  <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">{f.label}</label>
+                  <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">{f.label}</label>
                   <textarea
                     value={String(profile[f.key] ?? '')}
                     onChange={e => setProfile(prev => ({ ...prev, [f.key]: e.target.value }))}
@@ -810,7 +810,7 @@ function CustomerProfileNeeds() {
                     rows={2}
                     className={`w-full rounded-lg px-3 py-2 text-sm outline-none resize-none border transition-colors
                       ${profileEditable
-                        ? 'bg-[#0f1117] border-[#6366f1]/50 focus:border-[#6366f1] text-[#e8eaf0]'
+                        ? 'bg-pwc-bg border-pwc-primary/50 focus:border-pwc-primary text-pwc-text'
                         : 'bg-[#0b0d14] border-[#1f2436] text-[#94a3b8] cursor-default'
                       }`}
                     placeholder={profileEditable ? f.label : '—'}
@@ -825,7 +825,7 @@ function CustomerProfileNeeds() {
 
         {/* Notes — full width */}
         <div className="mt-4">
-          <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Notes / Additional Info</label>
+          <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Notes / Additional Info</label>
           <textarea
             value={profile.notes ?? ''}
             onChange={e => setProfile(prev => ({ ...prev, notes: e.target.value }))}
@@ -833,7 +833,7 @@ function CustomerProfileNeeds() {
             readOnly={!profileEditable}
             className={`w-full rounded-lg px-3 py-2 text-sm outline-none resize-none border transition-colors
               ${profileEditable
-                ? 'bg-[#0f1117] border-[#6366f1]/50 focus:border-[#6366f1] text-[#e8eaf0]'
+                ? 'bg-pwc-bg border-pwc-primary/50 focus:border-pwc-primary text-pwc-text'
                 : 'bg-[#0b0d14] border-[#1f2436] text-[#94a3b8] cursor-default'
               }`}
             placeholder={profileEditable ? 'Any additional notes…' : '—'}
@@ -849,42 +849,42 @@ function CustomerProfileNeeds() {
         >
           <div className="text-left">
             <p className="font-bold text-base">Needs Analysis</p>
-            <p className="text-xs text-[#6b7280] mt-0.5">Insurance goals, tenure, sum assured target, riders</p>
+            <p className="text-xs text-pwc-text-muted mt-0.5">Insurance goals, tenure, sum assured target, riders</p>
           </div>
-          <div className={`text-[#6b7280] text-lg transition-transform duration-200 ${needsOpen ? 'rotate-180' : ''}`}>
+          <div className={`text-pwc-text-muted text-lg transition-transform duration-200 ${needsOpen ? 'rotate-180' : ''}`}>
             ▾
           </div>
         </button>
 
         {needsOpen && (
-          <div className="mt-5 pt-5 border-t border-[#2a2f45]">
+          <div className="mt-5 pt-5 border-t border-pwc-border">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Purpose</label>
+                <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Purpose</label>
                 <input value={needs.purpose}
                   onChange={e => setNeeds(prev => ({ ...prev, purpose: e.target.value }))}
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none"
                   placeholder="Family protection, retirement, tax planning…" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Policy Term</label>
+                <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Policy Term</label>
                 <input value={needs.term}
                   onChange={e => setNeeds(prev => ({ ...prev, term: e.target.value }))}
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none"
                   placeholder="e.g. 20 years" />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Target Sum Assured (₹)</label>
+                <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Target Sum Assured (₹)</label>
                 <input value={needs.sum_assured_goal}
                   onChange={e => setNeeds(prev => ({ ...prev, sum_assured_goal: e.target.value }))}
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none"
                   placeholder="e.g. 5000000" />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Riders Needed</label>
+                <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Riders Needed</label>
                 <input value={needs.riders_needed}
                   onChange={e => setNeeds(prev => ({ ...prev, riders_needed: e.target.value }))}
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none"
                   placeholder="Critical illness, accidental death (comma separated)" />
               </div>
             </div>
@@ -912,41 +912,41 @@ function QuoteCard({ q, isTop, onShowDetails }) {
   return (
     <Card 
       onClick={() => setExpanded(!expanded)} 
-      className={`relative flex flex-col justify-between cursor-pointer hover:border-[#6366f1] transition-all duration-200 ${isTop ? 'border-[#6366f1]' : ''}`}
+      className={`relative flex flex-col justify-between cursor-pointer hover:border-pwc-primary transition-all duration-200 ${isTop ? 'border-pwc-primary' : ''}`}
     >
       {isTop && (
-        <span className="absolute -top-3 left-4 bg-[#6366f1] text-white text-[10px] px-3 py-0.5 rounded-full font-bold">
+        <span className="absolute -top-3 left-4 bg-pwc-primary text-pwc-white text-[10px] px-3 py-0.5 rounded-full font-bold">
           AI Recommended
         </span>
       )}
       <div>
         <div className="flex justify-between items-start gap-4 mb-4">
           <div>
-            <p className="font-bold text-base text-[#e8eaf0]">{q.insurer_name}</p>
-            <p className="text-xs text-[#6b7280]">{q.product_name}</p>
+            <p className="font-bold text-base text-pwc-text">{q.insurer_name}</p>
+            <p className="text-xs text-pwc-text-muted">{q.product_name}</p>
           </div>
           <div className="text-right min-w-max">
             <p className="font-bold text-[#22c55e] text-base">₹{q.annual_premium?.toLocaleString()}</p>
-            <p className="text-[10px] text-[#6b7280]">per year</p>
+            <p className="text-[10px] text-pwc-text-muted">per year</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">Sum Assured</p>
-            <p className="font-bold text-[#e8eaf0]">₹{q.sum_assured?.toLocaleString()}</p>
+          <div className="bg-pwc-bg border border-pwc-border rounded-lg p-2.5">
+            <p className="text-[10px] text-pwc-text-muted">Sum Assured</p>
+            <p className="font-bold text-pwc-text">₹{q.sum_assured?.toLocaleString()}</p>
           </div>
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">Tenure</p>
-            <p className="font-bold text-[#e8eaf0]">{q.policy_tenure} yrs</p>
+          <div className="bg-pwc-bg border border-pwc-border rounded-lg p-2.5">
+            <p className="text-[10px] text-pwc-text-muted">Tenure</p>
+            <p className="font-bold text-pwc-text">{q.policy_tenure} yrs</p>
           </div>
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">AI Score</p>
+          <div className="bg-pwc-bg border border-pwc-border rounded-lg p-2.5">
+            <p className="text-[10px] text-pwc-text-muted">AI Score</p>
             <p className="font-bold text-[#2dd4bf]">{((q.ai_score || 0) * 100).toFixed(0)}%</p>
           </div>
-          <div className="bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-            <p className="text-[10px] text-[#6b7280]">Rank</p>
-            <p className="font-bold text-[#e8eaf0]">#{q.ai_rank}</p>
+          <div className="bg-pwc-bg border border-pwc-border rounded-lg p-2.5">
+            <p className="text-[10px] text-pwc-text-muted">Rank</p>
+            <p className="font-bold text-pwc-text">#{q.ai_rank}</p>
           </div>
         </div>
 
@@ -957,11 +957,11 @@ function QuoteCard({ q, isTop, onShowDetails }) {
         )}
 
         {expanded && (
-          <div className="space-y-4 pt-3 border-t border-[#2a2f45] text-xs">
+          <div className="space-y-4 pt-3 border-t border-pwc-border text-xs">
             {/* Benefit Coverages */}
             {Object.keys(coverage).length > 0 && (
               <div>
-                <p className="text-[#6b7280] font-semibold mb-2">Benefit Coverages</p>
+                <p className="text-pwc-text-muted font-semibold mb-2">Benefit Coverages</p>
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(coverage).map(([key, val]) => {
                     if (typeof val === 'string') return null; // skip string key features
@@ -978,17 +978,17 @@ function QuoteCard({ q, isTop, onShowDetails }) {
 
             {/* Waiting Period */}
             {q.waiting_period_days !== undefined && q.waiting_period_days !== null && (
-              <div className="flex justify-between items-center bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-                <span className="text-[#6b7280]">Waiting Period</span>
-                <span className="font-semibold text-[#e8eaf0]">{q.waiting_period_days} days</span>
+              <div className="flex justify-between items-center bg-pwc-bg border border-pwc-border rounded-lg p-2.5">
+                <span className="text-pwc-text-muted">Waiting Period</span>
+                <span className="font-semibold text-pwc-text">{q.waiting_period_days} days</span>
               </div>
             )}
 
             {/* Riders */}
             {riders.length > 0 && (
               <div>
-                <p className="text-[#6b7280] font-semibold mb-1.5">Optional Add-ons / Riders</p>
-                <ul className="space-y-1 pl-4 list-disc text-[#e8eaf0]">
+                <p className="text-pwc-text-muted font-semibold mb-1.5">Optional Add-ons / Riders</p>
+                <ul className="space-y-1 pl-4 list-disc text-pwc-text">
                   {riders.map((r, i) => {
                     const rName = r.name || r.rider_name || "";
                     const cost = r.annual_cost || r.annual_premium || r.premium_per_year;
@@ -1006,7 +1006,7 @@ function QuoteCard({ q, isTop, onShowDetails }) {
             {/* Exclusions */}
             {exclusions.length > 0 && (
               <div>
-                <p className="text-[#6b7280] font-semibold mb-1.5">Policy Exclusions</p>
+                <p className="text-pwc-text-muted font-semibold mb-1.5">Policy Exclusions</p>
                 <ul className="space-y-1 pl-4 list-disc text-[#ef4444]">
                   {exclusions.map((exc, i) => (
                     <li key={i}>{exc}</li>
@@ -1020,16 +1020,16 @@ function QuoteCard({ q, isTop, onShowDetails }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 {uwDocs.length > 0 && (
                   <div>
-                    <p className="text-[#6b7280] font-semibold mb-1.5">Required Docs</p>
-                    <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
+                    <p className="text-pwc-text-muted font-semibold mb-1.5">Required Docs</p>
+                    <ul className="space-y-1.5 pl-4 list-disc text-pwc-text">
                       {uwDocs.map((doc, i) => <li key={i}>{doc}</li>)}
                     </ul>
                   </div>
                 )}
                 {medicals.length > 0 && (
                   <div>
-                    <p className="text-[#6b7280] font-semibold mb-1.5">Medical Tests</p>
-                    <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
+                    <p className="text-pwc-text-muted font-semibold mb-1.5">Medical Tests</p>
+                    <ul className="space-y-1.5 pl-4 list-disc text-pwc-text">
                       {medicals.map((test, i) => <li key={i}>{test}</li>)}
                     </ul>
                   </div>
@@ -1047,7 +1047,7 @@ function QuoteCard({ q, isTop, onShowDetails }) {
             if (!expanded && onShowDetails) onShowDetails();
             setExpanded(!expanded);
           }}
-          className="w-full text-center py-2 px-3 rounded-lg border border-[#2a2f45] bg-[#15192a] hover:bg-[#1a1f36] text-xs font-semibold text-[#e8eaf0] transition-colors"
+          className="w-full text-center py-2 px-3 rounded-lg border border-pwc-border bg-[#15192a] hover:bg-pwc-bg text-xs font-semibold text-pwc-text transition-colors"
         >
           {expanded ? 'Hide Details' : 'Show Details'}
         </button>
@@ -1075,22 +1075,22 @@ function PolicyBazaarQuoteCard({ q, isSelected, onSelect, disabled }) {
   ];
 
   return (
-    <div className={`rounded-xl border p-5 mb-4 transition-all duration-200 bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] ${isSelected ? 'border-[#6366f1] ring-1 ring-[#6366f1]/50 shadow-lg' : 'border-[#2a2f45] hover:border-[#4f46e5]'}`}>
+    <div className={`rounded-xl border p-5 mb-4 transition-all duration-200 bg-pwc-bg ${isSelected ? 'border-pwc-primary ring-1 ring-pwc-primary/50 shadow-lg' : 'border-pwc-border hover:border-[#4f46e5]'}`}>
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_2fr_1.5fr] gap-6 items-center">
         {/* Left Column: Insurer Logo and About Insurer link */}
-        <div className="flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-[#2a2f45] pb-4 md:pb-0 pr-0 md:pr-6">
-          <div className="w-20 h-12 rounded-xl bg-white text-[#111827] font-bold flex items-center justify-center text-xs border border-[#2a2f45] px-2 shadow-sm mb-2">
+        <div className="flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-pwc-border pb-4 md:pb-0 pr-0 md:pr-6">
+          <div className="w-20 h-12 rounded-xl bg-white text-[#111827] font-bold flex items-center justify-center text-xs border border-pwc-border px-2 shadow-sm mb-2">
             {q.insurer_name === 'HDFC_Life' || q.insurer_name === 'HDFC' ? 'HDFC Life' : q.insurer_name === 'LIC' ? 'LIC India' : q.insurer_name}
           </div>
-          <button className="text-[10px] text-[#6366f1] hover:underline mt-1 cursor-pointer font-medium">About Insurer &gt;</button>
+          <button className="text-[10px] text-pwc-primary hover:underline mt-1 cursor-pointer font-medium">About Insurer &gt;</button>
         </div>
 
         {/* Middle Column: Product Title & Features */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
-            <h4 className="font-bold text-base text-white">{q.product_name}</h4>
+            <h4 className="font-bold text-base text-pwc-white">{q.product_name}</h4>
             {q.ai_rank === 1 && (
-              <span className="bg-[#6366f1]/20 text-[#7c83ff] text-[10px] px-2.5 py-0.5 rounded-full font-bold">
+              <span className="bg-pwc-primary/20 text-[#7c83ff] text-[10px] px-2.5 py-0.5 rounded-full font-bold">
                 ★ AI Recommended
               </span>
             )}
@@ -1104,28 +1104,28 @@ function PolicyBazaarQuoteCard({ q, isSelected, onSelect, disabled }) {
               </li>
             ))}
           </ul>
-          <button className="text-[10px] text-[#6b7280] hover:text-white hover:underline mt-3 block cursor-pointer">View all features &gt;</button>
+          <button className="text-[10px] text-pwc-text-muted hover:text-pwc-white hover:underline mt-3 block cursor-pointer">View all features &gt;</button>
         </div>
 
         {/* Right Column: Cover Amount, Premium, Select Button */}
-        <div className="flex flex-col items-stretch md:items-end justify-center border-t md:border-t-0 md:border-l border-[#2a2f45] pt-4 md:pt-0 pl-0 md:pl-6 min-w-[170px]">
+        <div className="flex flex-col items-stretch md:items-end justify-center border-t md:border-t-0 md:border-l border-pwc-border pt-4 md:pt-0 pl-0 md:pl-6 min-w-[170px]">
           <div className="mb-3.5 w-full md:w-auto">
-            <span className="text-[10px] text-[#6b7280] block md:text-right">Cover amount</span>
-            <select disabled className="bg-[#0f1117] border border-[#2a2f45] rounded px-2.5 py-1 text-xs text-white font-semibold outline-none w-full md:w-auto mt-1 cursor-not-allowed">
+            <span className="text-[10px] text-pwc-text-muted block md:text-right">Cover amount</span>
+            <select disabled className="bg-pwc-bg border border-pwc-border rounded px-2.5 py-1 text-xs text-pwc-white font-semibold outline-none w-full md:w-auto mt-1 cursor-not-allowed">
               <option>₹{q.sum_assured?.toLocaleString()}</option>
             </select>
           </div>
           
           <div className="mb-4 text-left md:text-right w-full">
-            <span className="text-[10px] text-[#6b7280] block">Premium (1 year)</span>
+            <span className="text-[10px] text-pwc-text-muted block">Premium (1 year)</span>
             <p className="font-bold text-xl text-[#22c55e] leading-tight">₹{q.annual_premium?.toLocaleString()}</p>
-            <p className="text-[9px] text-[#6b7280]">₹{(q.annual_premium * 1.18).toLocaleString(undefined, {maximumFractionDigits: 0})} incl. GST</p>
+            <p className="text-[9px] text-pwc-text-muted">₹{(q.annual_premium * 1.18).toLocaleString(undefined, {maximumFractionDigits: 0})} incl. GST</p>
           </div>
 
           <button
             onClick={onSelect}
             disabled={disabled}
-            className={`w-full py-2 px-4 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer shadow-md text-center text-white
+            className={`w-full py-2 px-4 rounded-lg font-bold text-sm transition-all duration-200 cursor-pointer shadow-md text-center text-pwc-white
               ${isSelected 
                 ? 'bg-[#22c55e] hover:bg-[#1ebd52] border border-[#22c55e]' 
                 : 'bg-[#ff5a22] hover:bg-[#ff6f3d] border border-[#ff5a22] active:scale-[0.98]'
@@ -1285,8 +1285,8 @@ function CustomerQuotes() {
       {error && <Alert type="warning" message={error} />}
       
       <Card className="mb-5">
-        <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
-        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]">
+        <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
+        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary">
           <option value="">Choose a case…</option>
           {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — Stage: {c.current_stage.replace(/_/g, ' ')}</option>)}
         </select>
@@ -1295,10 +1295,10 @@ function CustomerQuotes() {
       {quoteLoading ? (
         <Spinner />
       ) : quotes.length === 0 ? (
-        !error && <Card className="text-center py-12 text-[#6b7280]">Currently no quotes available for this case.</Card>
+        !error && <Card className="text-center py-12 text-pwc-text-muted">Currently no quotes available for this case.</Card>
       ) : (
         <div className="space-y-4">
-          <p className="text-xs font-semibold text-[#6b7280] uppercase tracking-wider mb-2">Available Quotations (Aggregated from brochures)</p>
+          <p className="text-xs font-semibold text-pwc-text-muted uppercase tracking-wider mb-2">Available Quotations (Aggregated from brochures)</p>
           
           {quotes.map((quote) => (
             <PolicyBazaarQuoteCard
@@ -1312,8 +1312,8 @@ function CustomerQuotes() {
 
           {/* OTP Consent Section */}
           {selectedQuoteId && (
-            <Card className="border border-[#2a2f45] bg-[#0b0d14] p-5 mt-6">
-              <h3 className="font-bold text-sm text-white mb-2 flex items-center gap-2">
+            <Card className="border border-pwc-border bg-[#0b0d14] p-5 mt-6">
+              <h3 className="font-bold text-sm text-pwc-white mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#ff5a22]"></span>
                 OTP Verification & Consent
               </h3>
@@ -1326,7 +1326,7 @@ function CustomerQuotes() {
               {otpStatus === 'success' ? (
                 <div className="p-4 bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-xl text-center">
                   <p className="text-sm text-[#22c55e] font-bold">🎉 Consent Confirmed Successfully!</p>
-                  <p className="text-xs text-[#6b7280] mt-1.5">
+                  <p className="text-xs text-pwc-text-muted mt-1.5">
                     Your choice has been recorded. The case stage is now <strong>OTP CONSENT</strong>. Underwriter has been notified to request your documents.
                   </p>
                 </div>
@@ -1335,14 +1335,14 @@ function CustomerQuotes() {
                   <Btn 
                     onClick={handleSendOTP} 
                     disabled={otpStatus === 'sending'} 
-                    className="w-full bg-[#ff5a22] hover:bg-[#ff6f3d] text-white border-0"
+                    className="w-full bg-[#ff5a22] hover:bg-[#ff6f3d] text-pwc-white border-0"
                   >
                     {otpStatus === 'sending' ? 'Sending OTP…' : 'Send OTP Consent to Email'}
                   </Btn>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-xs text-[#6b7280] text-center">
+                  <p className="text-xs text-pwc-text-muted text-center">
                     Enter the 6-digit verification code sent to your registered email. (Use <strong>123456</strong> for testing)
                   </p>
                   <div className="flex gap-2 justify-center my-4">
@@ -1354,7 +1354,7 @@ function CustomerQuotes() {
                         value={d}
                         onChange={e => handleOtpDigit(i, e.target.value)}
                         onKeyDown={e => e.key === 'Backspace' && !d && i > 0 && document.getElementById(`quotes-otp-${i - 1}`)?.focus()}
-                        className="w-10 h-12 text-center text-lg font-bold rounded-lg border outline-none bg-[#0f1117] text-white border-[#2a2f45] focus:border-[#6366f1]"
+                        className="w-10 h-12 text-center text-lg font-bold rounded-lg border outline-none bg-pwc-bg text-pwc-white border-pwc-border focus:border-pwc-primary"
                       />
                     ))}
                   </div>
@@ -1453,48 +1453,48 @@ function CustomerRecommendation() {
       <SectionHeader title="My Recommendation" subtitle="Review and accept the recommended product before OTP consent" />
       {error && <Alert type="error" message={error} />}
       <Card className="mb-5">
-        <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
-        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+        <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
+        <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
           <option value="">Choose a case…</option>
           {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>)}
         </select>
       </Card>
 
       {quoteLoading ? <Spinner /> : !selectedCaseId ? (
-        <Card className="text-center py-12 text-[#6b7280]">Choose a case to view your recommendation.</Card>
+        <Card className="text-center py-12 text-pwc-text-muted">Choose a case to view your recommendation.</Card>
       ) : !recommendedQuote ? (
-        <Card className="text-center py-12 text-[#6b7280]">No recommended quote available yet. Please ask your banker to complete recommendation generation.</Card>
+        <Card className="text-center py-12 text-pwc-text-muted">No recommended quote available yet. Please ask your banker to complete recommendation generation.</Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-5">
           <Card className="space-y-5">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6b7280]">Recommended Product</p>
-              <h2 className="text-2xl font-bold text-[#e8eaf0]">{recommendedQuote.product_name}</h2>
-              <p className="text-sm text-[#6b7280]">{recommendedQuote.insurer_name}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pwc-text-muted">Recommended Product</p>
+              <h2 className="text-2xl font-bold text-pwc-text">{recommendedQuote.product_name}</h2>
+              <p className="text-sm text-pwc-text-muted">{recommendedQuote.insurer_name}</p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-[#0f1117] border border-[#2a2f45] p-4">
-                <p className="text-[11px] text-[#6b7280]">Premium</p>
+              <div className="rounded-2xl bg-pwc-bg border border-pwc-border p-4">
+                <p className="text-[11px] text-pwc-text-muted">Premium</p>
                 <p className="font-semibold text-[#22c55e]">₹{recommendedQuote.annual_premium?.toLocaleString()}</p>
               </div>
-              <div className="rounded-2xl bg-[#0f1117] border border-[#2a2f45] p-4">
-                <p className="text-[11px] text-[#6b7280]">Sum Assured</p>
-                <p className="font-semibold text-[#e8eaf0]">₹{recommendedQuote.sum_assured?.toLocaleString()}</p>
+              <div className="rounded-2xl bg-pwc-bg border border-pwc-border p-4">
+                <p className="text-[11px] text-pwc-text-muted">Sum Assured</p>
+                <p className="font-semibold text-pwc-text">₹{recommendedQuote.sum_assured?.toLocaleString()}</p>
               </div>
             </div>
-            <div className="rounded-3xl border border-[#2a2f45] bg-[#101423] p-5">
-              <p className="text-sm font-semibold text-[#e8eaf0] mb-3">Why this recommendation?</p>
+            <div className="rounded-3xl border border-pwc-border bg-[#101423] p-5">
+              <p className="text-sm font-semibold text-pwc-text mb-3">Why this recommendation?</p>
               <p className="text-sm text-[#d1d5db] whitespace-pre-wrap">{recommendedQuote.ai_recommendation_text || 'No recommendation details available.'}</p>
             </div>
           </Card>
 
           <Card className="space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#6b7280]">Next Step</p>
-            <p className="text-sm text-[#e8eaf0]">Accept this recommendation to confirm the selected quote before moving to OTP consent.</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-pwc-text-muted">Next Step</p>
+            <p className="text-sm text-pwc-text">Accept this recommendation to confirm the selected quote before moving to OTP consent.</p>
             <Btn onClick={acceptRecommendation} className="w-full">
               Accept Recommendation
             </Btn>
-            <div className="rounded-2xl border border-[#2a2f45] bg-[#0f1117] p-4 text-sm text-[#9ca3af]">
+            <div className="rounded-2xl border border-pwc-border bg-pwc-bg p-4 text-sm text-[#9ca3af]">
               After acceptance, you will be taken to OTP consent where the selected quote is pre-chosen for policy issuance.
             </div>
           </Card>
@@ -1503,14 +1503,14 @@ function CustomerRecommendation() {
 
       {alternatives.length > 0 && (
         <Card className="mt-5">
-          <p className="text-sm font-semibold text-[#e8eaf0] mb-4">Alternative Products</p>
+          <p className="text-sm font-semibold text-pwc-text mb-4">Alternative Products</p>
           <div className="space-y-4">
             {alternatives.slice(0, 3).map((quote) => (
-              <div key={quote.id} className="rounded-2xl border border-[#2a2f45] bg-[#101423] p-4">
+              <div key={quote.id} className="rounded-2xl border border-pwc-border bg-[#101423] p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-[#e8eaf0]">{quote.insurer_name}</p>
-                    <p className="text-xs text-[#6b7280]">{quote.product_name}</p>
+                    <p className="font-semibold text-pwc-text">{quote.insurer_name}</p>
+                    <p className="text-xs text-pwc-text-muted">{quote.product_name}</p>
                   </div>
                   <span className="rounded-full bg-[#fbbf24]/10 px-3 py-1 text-xs font-semibold text-[#fbbf24]">
                     {quote.ai_score != null ? `${Math.round(quote.ai_score * 100)}%` : 'N/A'}
@@ -1561,7 +1561,7 @@ function CustomerMedical() {
           emptyText="No medical requests yet."
         />
       </Card>
-      <Card className="mt-5 text-sm text-[#6b7280]">
+      <Card className="mt-5 text-sm text-pwc-text-muted">
         If a request is marked pending, complete the required uploads from the Documents page and wait for the ops team to confirm the schedule.
       </Card>
     </div>
@@ -1654,11 +1654,11 @@ function OTPConsentPage() {
           <div className="text-center py-8">
             <div className="text-5xl mb-4">🎉</div>
             <h3 className="text-lg font-bold text-[#22c55e] mb-2">Consent Verified!</h3>
-            <p className="text-sm text-[#6b7280]">Your policy is being processed.</p>
+            <p className="text-sm text-pwc-text-muted">Your policy is being processed.</p>
           </div>
         ) : cases.length === 0 ? (
-          <div className="text-center py-12 text-[#6b7280]">
-            <p className="text-base font-semibold text-[#e8eaf0] mb-2">No Cases Pending Consent</p>
+          <div className="text-center py-12 text-pwc-text-muted">
+            <p className="text-base font-semibold text-pwc-text mb-2">No Cases Pending Consent</p>
             <p className="text-sm max-w-md mx-auto">There are currently no cases waiting for your OTP consent. Please wait for your banker to approve the quote recommendation from their dashboard first.</p>
           </div>
         ) : (
@@ -1667,9 +1667,9 @@ function OTPConsentPage() {
               <div>
                 {cases.length > 0 && (
                   <div className="mb-5">
-                    <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
+                    <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
                     <select value={caseId} onChange={e => { setCaseId(e.target.value); loadQuotes(e.target.value); }}
-                      className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+                      className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                       {cases.map(c => <option key={c.id} value={c.id}>{c.case_number}</option>)}
                     </select>
                   </div>
@@ -1679,14 +1679,14 @@ function OTPConsentPage() {
 
                 {status === 'idle' && (
                   <div className="text-center py-4">
-                    <p className="text-sm text-[#6b7280] mb-5">Click below to receive an OTP on your registered email.</p>
+                    <p className="text-sm text-pwc-text-muted mb-5">Click below to receive an OTP on your registered email.</p>
                     <Btn onClick={sendOTP} className="w-full">Send OTP to Email</Btn>
                   </div>
                 )}
 
                 {(status === 'sent' || status === 'verifying') && (
                   <div className="py-2">
-                    <p className="text-sm text-[#6b7280] mb-4 text-center">Enter the 6-digit OTP sent to your email.</p>
+                    <p className="text-sm text-pwc-text-muted mb-4 text-center">Enter the 6-digit OTP sent to your email.</p>
                     <div className="flex gap-2 justify-center mb-5">
                       {otp.map((d, i) => (
                         <input key={i} id={`otp-${i}`} maxLength={1} value={d}
@@ -1695,7 +1695,7 @@ function OTPConsentPage() {
                           className="w-11 h-13 text-center text-xl font-bold rounded-lg border outline-none transition-colors"
                           style={{
                             background: '#0f1117', height: 52,
-                            borderColor: d ? '#6366f1' : '#2a2f45',
+                            borderColor: d ? 'rgb(var(--color-primary))' : '#2a2f45',
                             color: '#e8eaf0',
                           }} />
                       ))}
@@ -1703,9 +1703,9 @@ function OTPConsentPage() {
                     <Btn onClick={verify} disabled={otp.join('').length < 6 || status === 'verifying'} className="w-full">
                       {status === 'verifying' ? 'Verifying…' : 'Verify & Give Consent'}
                     </Btn>
-                    <p className="text-center text-xs text-[#6b7280] mt-3">
+                    <p className="text-center text-xs text-pwc-text-muted mt-3">
                       Didn't receive?{' '}
-                      <span className="text-[#6366f1] cursor-pointer" onClick={() => { setStatus('idle'); setOtp(Array(6).fill('')) }}>Resend</span>
+                      <span className="text-pwc-primary cursor-pointer" onClick={() => { setStatus('idle'); setOtp(Array(6).fill('')) }}>Resend</span>
                     </p>
                   </div>
                 )}
@@ -1714,7 +1714,7 @@ function OTPConsentPage() {
               <div>
                 {quotes.length > 0 && (
                   <div className="mb-4">
-                    <label className="text-xs font-semibold text-[#6b7280] block mb-3">Choose Quotation to Issue</label>
+                    <label className="text-xs font-semibold text-pwc-text-muted block mb-3">Choose Quotation to Issue</label>
                     {loadingQuotes ? <Spinner /> : (
                       <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-1">
                         {quotes.map(q => {
@@ -1723,37 +1723,37 @@ function OTPConsentPage() {
                             <div
                               key={q.id}
                               onClick={() => setSelectedQuoteId(q.id)}
-                              className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] flex items-start gap-3 ${isSelected ? 'border-[#6366f1] ring-1 ring-[#6366f1]' : 'border-[#2a2f45] hover:border-[#4f46e5]'}`}
+                              className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 bg-pwc-bg flex items-start gap-3 ${isSelected ? 'border-pwc-primary ring-1 ring-pwc-primary' : 'border-pwc-border hover:border-[#4f46e5]'}`}
                             >
                               <input
                                 type="radio"
                                 name="selected_quote"
                                 checked={isSelected}
                                 onChange={() => setSelectedQuoteId(q.id)}
-                                className="mt-1 accent-[#6366f1] cursor-pointer"
+                                className="mt-1 accent-pwc-primary cursor-pointer"
                               />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                                  <p className="font-semibold text-sm text-[#e8eaf0]">{q.insurer_name}</p>
+                                  <p className="font-semibold text-sm text-pwc-text">{q.insurer_name}</p>
                                   {q.ai_rank === 1 && (
-                                    <span className="bg-[#6366f1]/25 text-[#7c83ff] text-[9px] px-2 py-0.5 rounded-full font-bold">
+                                    <span className="bg-pwc-primary/25 text-[#7c83ff] text-[9px] px-2 py-0.5 rounded-full font-bold">
                                       AI Recommended
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-[#6b7280] mt-0.5">{q.product_name}</p>
+                                <p className="text-xs text-pwc-text-muted mt-0.5">{q.product_name}</p>
 
-                                <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] bg-[#0f1117] border border-[#2a2f45]/50 rounded-lg p-2">
+                                <div className="grid grid-cols-3 gap-2 mt-3 text-[11px] bg-pwc-bg border border-pwc-border/50 rounded-lg p-2">
                                   <div>
-                                    <p className="text-[9px] text-[#6b7280]">Premium</p>
+                                    <p className="text-[9px] text-pwc-text-muted">Premium</p>
                                     <p className="font-bold text-[#22c55e]">₹{q.annual_premium?.toLocaleString()}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[9px] text-[#6b7280]">Sum Assured</p>
-                                    <p className="font-semibold text-[#e8eaf0]">₹{q.sum_assured?.toLocaleString()}</p>
+                                    <p className="text-[9px] text-pwc-text-muted">Sum Assured</p>
+                                    <p className="font-semibold text-pwc-text">₹{q.sum_assured?.toLocaleString()}</p>
                                   </div>
                                   <div>
-                                    <p className="text-[9px] text-[#6b7280]">AI Score</p>
+                                    <p className="text-[9px] text-pwc-text-muted">AI Score</p>
                                     <p className="font-semibold text-[#2dd4bf]">{((q.ai_score || 0) * 100).toFixed(0)}%</p>
                                   </div>
                                 </div>
@@ -1917,9 +1917,9 @@ function CustomerDocuments() {
       <Card className="mb-5">
         <div className="flex flex-col gap-4">
           <div>
-            <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
+            <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
             <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)}
-              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+              className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
               <option value="">Choose a case…</option>
               {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>)}
             </select>
@@ -1930,7 +1930,7 @@ function CustomerDocuments() {
             </Btn>
             <Btn variant="secondary" onClick={loadData} disabled={loading}>Refresh</Btn>
           </div>
-          <p className="text-xs text-[#6b7280]">Create a request once per case. Then upload the required KYC documents below.</p>
+          <p className="text-xs text-pwc-text-muted">Create a request once per case. Then upload the required KYC documents below.</p>
         </div>
       </Card>
 
@@ -1941,17 +1941,17 @@ function CustomerDocuments() {
             {CUSTOMER_DOC_TYPES.map(docType => {
               const uploaded = docs.find(d => d.document_type === docType.key)
               return (
-                <div key={docType.key} className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
+                <div key={docType.key} className="rounded-lg border border-pwc-border bg-pwc-bg p-4">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div>
                       <p className="font-semibold text-sm">{docType.label}</p>
-                      <p className="text-xs text-[#6b7280]">{uploaded ? `Uploaded: ${uploaded.file_name}` : 'Pending upload'}</p>
+                      <p className="text-xs text-pwc-text-muted">{uploaded ? `Uploaded: ${uploaded.file_name}` : 'Pending upload'}</p>
                     </div>
                     <Badge label={uploaded ? 'Uploaded' : 'Pending'} />
                   </div>
                   <input
                     type="file"
-                    className="block w-full text-sm text-[#6b7280] file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-[#6366f1] file:text-white file:text-xs file:font-semibold cursor-pointer"
+                    className="block w-full text-sm text-pwc-text-muted file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-pwc-primary file:text-pwc-white file:text-xs file:font-semibold cursor-pointer"
                     onChange={(e) => uploadDoc(docType.key, e.target.files?.[0])}
                     disabled={!activeRequest || submitting[docType.key]}
                   />
@@ -1964,45 +1964,45 @@ function CustomerDocuments() {
         <Card>
           <p className="font-semibold mb-3">Review & Consent Prep</p>
           <div className="space-y-3 text-sm">
-            <div className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
-              <p className="text-xs font-semibold text-[#6b7280] mb-2">Current Request</p>
+            <div className="rounded-lg border border-pwc-border bg-pwc-bg p-4">
+              <p className="text-xs font-semibold text-pwc-text-muted mb-2">Current Request</p>
               {activeRequest ? (
                 <>
                   <p className="font-semibold">Request ID: {activeRequest.id}</p>
-                  <p className="text-[#6b7280]">Status: {activeRequest.status}</p>
-                  <p className="text-[#6b7280]">Requirements: {(activeRequest.requirements || []).join(', ')}</p>
+                  <p className="text-pwc-text-muted">Status: {activeRequest.status}</p>
+                  <p className="text-pwc-text-muted">Requirements: {(activeRequest.requirements || []).join(', ')}</p>
                 </>
               ) : (
-                <p className="text-[#6b7280]">No request created yet for this case.</p>
+                <p className="text-pwc-text-muted">No request created yet for this case.</p>
               )}
             </div>
-            <div className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
-              <p className="text-xs font-semibold text-[#6b7280] mb-2">Request Profile Update</p>
+            <div className="rounded-lg border border-pwc-border bg-pwc-bg p-4">
+              <p className="text-xs font-semibold text-pwc-text-muted mb-2">Request Profile Update</p>
               <textarea
                 value={profileUpdateText}
                 onChange={(e) => setProfileUpdateText(e.target.value)}
                 rows={4}
-                className="w-full bg-[#111827] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none mb-3"
+                className="w-full bg-[#111827] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none resize-none mb-3"
                 placeholder="Describe what needs to be corrected in the pre-filled profile..."
               />
               <Btn size="sm" variant="secondary" onClick={submitProfileUpdate} disabled={!profileUpdateText.trim()}>Request Update</Btn>
             </div>
-            <div className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
-              <p className="text-xs font-semibold text-[#6b7280] mb-2">Uploaded Documents</p>
+            <div className="rounded-lg border border-pwc-border bg-pwc-bg p-4">
+              <p className="text-xs font-semibold text-pwc-text-muted mb-2">Uploaded Documents</p>
               {docs.length ? (
                 <ul className="space-y-2">
                   {docs.map(doc => (
                     <li key={doc.id} className="flex justify-between gap-3 text-sm">
                       <span>{doc.document_type}</span>
-                      <span className="text-[#6b7280]">{doc.file_name}</span>
+                      <span className="text-pwc-text-muted">{doc.file_name}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-[#6b7280]">No documents uploaded yet.</p>
+                <p className="text-pwc-text-muted">No documents uploaded yet.</p>
               )}
             </div>
-            <div className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
+            <div className="rounded-lg border border-pwc-border bg-pwc-bg p-4">
               <label className="flex items-start gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} className="mt-1" />
                 <span>I confirm that the above documents are true and I accept the Terms & Conditions for KYC and policy processing.</span>
@@ -2063,7 +2063,7 @@ function CustomerPolicies() {
           <Btn size="sm" variant="secondary" onClick={() => downloadPolicy(r.id)}>Download PDF</Btn>
         </div>
       ) : (
-        <span className="text-xs text-[#6b7280]">Draft / Processing</span>
+        <span className="text-xs text-pwc-text-muted">Draft / Processing</span>
       )
     }
   ]
@@ -2104,21 +2104,21 @@ export function UnifiedNotificationFeed({ title = "Notifications", subtitle = "M
         )}
       </div>
       {loading ? <Spinner /> : notifs.length === 0 ? (
-        <Card className="text-center py-12 text-[#6b7280]">No notifications yet.</Card>
+        <Card className="text-center py-12 text-pwc-text-muted">No notifications yet.</Card>
       ) : (
         <div className="flex flex-col gap-3">
           {notifs.map(n => (
-            <Card key={n.id} className={n.status === 'PENDING' ? 'border-[#6366f1]/40' : ''}>
+            <Card key={n.id} className={n.status === 'PENDING' ? 'border-pwc-primary/40' : ''}>
               <div className="flex items-start gap-3">
-                {n.status === 'PENDING' && <div className="w-2 h-2 rounded-full bg-[#6366f1] mt-1.5 flex-shrink-0" />}
+                {n.status === 'PENDING' && <div className="w-2 h-2 rounded-full bg-pwc-primary mt-1.5 flex-shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <p className="font-semibold text-sm">{n.subject}</p>
-                    <p className="text-xs text-[#6b7280]">{n.created_at ? new Date(n.created_at).toLocaleString() : ''}</p>
+                    <p className="text-xs text-pwc-text-muted">{n.created_at ? new Date(n.created_at).toLocaleString() : ''}</p>
                   </div>
                   <p className="text-sm text-[#9ca3af] mt-1">{stripHtml(n.body)}</p>
                   {n.reference_id && (
-                    <p className="text-xs text-[#6b7280] mt-1">Case ref: {n.reference_id.slice(0, 8)}…</p>
+                    <p className="text-xs text-pwc-text-muted mt-1">Case ref: {n.reference_id.slice(0, 8)}…</p>
                   )}
                 </div>
               </div>
@@ -2284,15 +2284,15 @@ function UWKYCDocs() {
           <Card>
             <p className="font-semibold mb-3 text-sm">Cases Pending Review</p>
             {loading ? <Spinner /> : cases.length === 0 ? (
-              <p className="text-xs text-[#6b7280] text-center py-6">No cases pending.</p>
+              <p className="text-xs text-pwc-text-muted text-center py-6">No cases pending.</p>
             ) : cases.map(c => (
               <div key={c.id}
                 onClick={() => selectCase(c)}
                 className={`cursor-pointer rounded-lg border p-3 mb-2 transition-all ${
-                  selectedCase?.id === c.id ? 'border-[#6366f1] bg-[#6366f1]/10' : 'border-[#2a2f45] hover:border-[#4f46e5] bg-[#0f1117]'
+                  selectedCase?.id === c.id ? 'border-pwc-primary bg-pwc-primary/10' : 'border-pwc-border hover:border-[#4f46e5] bg-pwc-bg'
                 }`}>
                 <p className="text-xs font-bold">{c.case_number}</p>
-                <p className="text-xs text-[#6b7280] mt-0.5">{c.current_stage}</p>
+                <p className="text-xs text-pwc-text-muted mt-0.5">{c.current_stage}</p>
                 <div className="flex gap-2 mt-1 flex-wrap">
                   <Badge label={c.kyc_status || 'PENDING_KYC'} />
                 </div>
@@ -2304,7 +2304,7 @@ function UWKYCDocs() {
         {/* Docs + Send Notification */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           {!selectedCase ? (
-            <Card className="text-center py-16 text-[#6b7280]">Select a case to review documents</Card>
+            <Card className="text-center py-16 text-pwc-text-muted">Select a case to review documents</Card>
           ) : (
             <>
               {(!selectedCase.medical_requests || selectedCase.medical_requests.length === 0) && (
@@ -2324,14 +2324,14 @@ function UWKYCDocs() {
               <Card>
                 <p className="font-semibold mb-3 text-sm">Documents — {selectedCase.case_number}</p>
                 {docsLoading ? <Spinner /> : docs.length === 0 ? (
-                  <p className="text-xs text-[#6b7280]">No documents uploaded yet by the customer.</p>
+                  <p className="text-xs text-pwc-text-muted">No documents uploaded yet by the customer.</p>
                 ) : (
                   <div className="space-y-2">
                     {docs.map(d => (
-                      <div key={d.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#2a2f45] bg-[#0f1117] px-3 py-3">
+                      <div key={d.id} className="flex items-center justify-between gap-3 rounded-lg border border-pwc-border bg-pwc-bg px-3 py-3">
                         <div className="min-w-0">
                           <p className="text-xs font-semibold truncate">{d.document_type}</p>
-                          <p className="text-xs text-[#6b7280] truncate">{d.file_name}</p>
+                          <p className="text-xs text-pwc-text-muted truncate">{d.file_name}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge label={d.verified ? 'Verified' : 'Pending'} />
@@ -2352,15 +2352,15 @@ function UWKYCDocs() {
                 <p className="font-semibold mb-3 text-sm">Send Notification to Customer</p>
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Subject</label>
+                    <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Subject</label>
                     <input value={notifSubject} onChange={e => setNotifSubject(e.target.value)}
-                      className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
+                      className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none"
                       placeholder="e.g. Additional documents required" />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Message</label>
+                    <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Message</label>
                     <textarea value={notifMsg} onChange={e => setNotifMsg(e.target.value)} rows={3}
-                      className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none"
+                      className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none resize-none"
                       placeholder="Write your message here…" />
                   </div>
                   <Btn onClick={sendNotif} disabled={sending}>
@@ -2432,10 +2432,10 @@ function UWMedical() {
           <p className="font-semibold mb-3 text-sm">Create Medical Request</p>
           <div className="flex flex-col gap-3">
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
               <select value={selectedCase?.id || ''}
                 onChange={e => setSelectedCase(cases.find(c => c.id === e.target.value) || null)}
-                className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+                className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                 <option value="">Choose a case…</option>
                 {cases.filter(c => c.current_stage === 'PROPOSAL_GENERATION').map(c => (
                   <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>
@@ -2443,9 +2443,9 @@ function UWMedical() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Requirements (comma separated)</label>
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Requirements (comma separated)</label>
               <input value={requirements} onChange={e => setReq(e.target.value)}
-                className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none"
+                className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none"
                 placeholder="e.g. Blood test, ECG, Chest X-Ray" />
             </div>
             <Btn onClick={createReq} disabled={!selectedCase || creating}>
@@ -2463,12 +2463,12 @@ function UWMedical() {
           {loading ? <Spinner /> : (
             <div className="space-y-3">
               {cases.flatMap(c => (c.medical_requests || []).filter(mr => mr.status === 'PENDING').map(mr => (
-                <div key={mr.id} className="rounded-lg border border-[#2a2f45] bg-[#0f1117] p-3">
+                <div key={mr.id} className="rounded-lg border border-pwc-border bg-pwc-bg p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs font-bold">{c.case_number}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5">{(mr.requirements || []).join(', ')}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5">{mr.created_at ? new Date(mr.created_at).toLocaleDateString() : ''}</p>
+                      <p className="text-xs text-pwc-text-muted mt-0.5">{(mr.requirements || []).join(', ')}</p>
+                      <p className="text-xs text-pwc-text-muted mt-0.5">{mr.created_at ? new Date(mr.created_at).toLocaleDateString() : ''}</p>
                     </div>
                     <div className="flex-shrink-0">
                       <Btn size="sm" onClick={() => completeReq(mr.id)} disabled={completing[mr.id]}>
@@ -2479,7 +2479,7 @@ function UWMedical() {
                 </div>
               )))}
               {cases.flatMap(c => (c.medical_requests || []).filter(mr => mr.status === 'PENDING')).length === 0 && (
-                <p className="text-xs text-[#6b7280] text-center py-4">No pending medical requests.</p>
+                <p className="text-xs text-pwc-text-muted text-center py-4">No pending medical requests.</p>
               )}
             </div>
           )}
@@ -2588,20 +2588,20 @@ function UWQueue() {
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
-              <p className="font-semibold text-sm text-[#e8eaf0]">Queue Directory</p>
+              <p className="font-semibold text-sm text-pwc-text">Queue Directory</p>
               <div className="w-64">
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search by Case #..."
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs outline-none text-[#e8eaf0] focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-1.5 text-xs outline-none text-pwc-text focus:border-pwc-primary transition-colors"
                 />
               </div>
             </div>
             <DataTable columns={cols} rows={paginatedQueue} emptyText="No cases in UW queue." />
             {totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
-                <p className="text-xs text-[#6b7280]">
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-pwc-border">
+                <p className="text-xs text-pwc-text-muted">
                   Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, sortedQueue.length)} of {sortedQueue.length} cases
                 </p>
                 <div className="flex items-center gap-1.5">
@@ -2609,7 +2609,7 @@ function UWQueue() {
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                     title="Previous Page"
                   >
                     ◀
@@ -2622,7 +2622,7 @@ function UWQueue() {
                         key={pageNum}
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-pwc-primary text-pwc-white shadow-md' : 'border border-pwc-border text-pwc-placeholder hover:bg-pwc-input hover:text-pwc-text bg-transparent'}`}
                       >
                         {pageNum}
                       </button>
@@ -2632,7 +2632,7 @@ function UWQueue() {
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                     title="Next Page"
                   >
                     ▶
@@ -2646,14 +2646,14 @@ function UWQueue() {
 
       {modal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[#161b2e] border border-[#2a2f45] rounded-xl p-6 w-full max-w-md">
+          <div className="bg-pwc-white border border-pwc-border rounded-xl p-6 w-full max-w-md">
             <h3 className="font-bold font-display text-lg mb-4">UW Decision — {modal.case_number}</h3>
             {err && <Alert type="error" message={err} />}
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Decision</label>
+                <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Decision</label>
                 <select value={decision} onChange={e => setD(e.target.value)}
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                   <option value="APPROVED">Approve</option>
                   <option value="REJECTED">Reject</option>
                   <option value="QUERY">Raise Query</option>
@@ -2661,9 +2661,9 @@ function UWQueue() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Remarks / Query</label>
+                <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Remarks / Query</label>
                 <textarea value={remarks} onChange={e => setR(e.target.value)} rows={3}
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none resize-none"
                   placeholder={decision === 'QUERY' ? 'e.g. Need Income Proof or Need Medical Report' : 'UW remarks…'} />
               </div>
             </div>
@@ -2758,38 +2758,38 @@ function UWCaseReview() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.6fr] gap-5">
         <div className="space-y-4">
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Summary</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Customer Summary</p>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs text-[#6b7280]">Name</p>
+                <p className="text-xs text-pwc-text-muted">Name</p>
                 <p>{data?.customer_profile?.name || 'Unknown'}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280]">Age</p>
+                <p className="text-xs text-pwc-text-muted">Age</p>
                 <p>{data?.customer_profile?.age || data?.customer_profile?.dob || 'Unknown'}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280]">Occupation</p>
+                <p className="text-xs text-pwc-text-muted">Occupation</p>
                 <p>{data?.customer_profile?.occupation || 'Unknown'}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280]">Annual Income</p>
+                <p className="text-xs text-pwc-text-muted">Annual Income</p>
                 <p>{data?.customer_profile?.annual_income ? `₹${Number(data.customer_profile.annual_income).toLocaleString()}` : 'Unknown'}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280]">Risk Profile</p>
+                <p className="text-xs text-pwc-text-muted">Risk Profile</p>
                 <p>{data?.customer_profile?.risk_appetite || 'Unknown'}</p>
               </div>
             </div>
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Accepted Recommendation</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Accepted Recommendation</p>
             {selectedQuote ? (
               <div className="border border-[#22c55e] bg-[#22c55e]/5 rounded-lg p-4 transition-all">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-semibold text-base text-white">{selectedQuote.insurer_name}</p>
+                    <p className="font-semibold text-base text-pwc-white">{selectedQuote.insurer_name}</p>
                     <p className="text-xs text-[#9ca3af]">{selectedQuote.product_name}</p>
                   </div>
                   <span className="bg-[#22c55e]/20 text-[#22c55e] text-xs px-2.5 py-0.5 rounded-full font-bold">
@@ -2798,25 +2798,25 @@ function UWCaseReview() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
                   <div>
-                    <p className="text-xs text-[#6b7280]">Annual Premium</p>
-                    <p className="font-medium text-white">₹{selectedQuote.annual_premium?.toLocaleString() || '—'}</p>
+                    <p className="text-xs text-pwc-text-muted">Annual Premium</p>
+                    <p className="font-medium text-pwc-white">₹{selectedQuote.annual_premium?.toLocaleString() || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#6b7280]">Sum Assured</p>
-                    <p className="font-medium text-white">₹{selectedQuote.sum_assured?.toLocaleString() || '—'}</p>
+                    <p className="text-xs text-pwc-text-muted">Sum Assured</p>
+                    <p className="font-medium text-pwc-white">₹{selectedQuote.sum_assured?.toLocaleString() || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#6b7280]">Tenure</p>
-                    <p className="font-medium text-white">{selectedQuote.policy_tenure || '—'} years</p>
+                    <p className="text-xs text-pwc-text-muted">Tenure</p>
+                    <p className="font-medium text-pwc-white">{selectedQuote.policy_tenure || '—'} years</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#6b7280]">Premium Frequency</p>
-                    <p className="font-medium text-white">Annual</p>
+                    <p className="text-xs text-pwc-text-muted">Premium Frequency</p>
+                    <p className="font-medium text-pwc-white">Annual</p>
                   </div>
                 </div>
                 {selectedQuote.ai_recommendation_text && (
-                  <div className="mt-4 pt-3 border-t border-[#2a2f45] text-xs text-[#9ca3af]">
-                    <p className="font-semibold text-white mb-1">AI Recommendation Summary</p>
+                  <div className="mt-4 pt-3 border-t border-pwc-border text-xs text-[#9ca3af]">
+                    <p className="font-semibold text-pwc-white mb-1">AI Recommendation Summary</p>
                     <p className="whitespace-pre-line leading-relaxed">{selectedQuote.ai_recommendation_text}</p>
                   </div>
                 )}
@@ -2829,11 +2829,11 @@ function UWCaseReview() {
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Approval & Consent Details</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Approval & Consent Details</p>
             <div className="space-y-4">
-              <div className="border border-[#2a2f45] rounded-lg p-3">
+              <div className="border border-pwc-border rounded-lg p-3">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold text-sm text-white">Banker Approval</span>
+                  <span className="font-semibold text-sm text-pwc-white">Banker Approval</span>
                   {data?.banker_approved ? (
                     <span className="bg-[#22c55e]/20 text-[#22c55e] text-[10px] px-2 py-0.5 rounded font-bold uppercase">
                       Approved
@@ -2845,14 +2845,14 @@ function UWCaseReview() {
                   )}
                 </div>
                 <div className="text-xs space-y-1 text-[#9ca3af]">
-                  <p><span className="text-[#6b7280]">Approved At:</span> {formatDateTime(data?.banker_approved_at)}</p>
-                  <p><span className="text-[#6b7280]">Remarks:</span> {data?.banker_remarks || 'No remarks provided.'}</p>
+                  <p><span className="text-pwc-text-muted">Approved At:</span> {formatDateTime(data?.banker_approved_at)}</p>
+                  <p><span className="text-pwc-text-muted">Remarks:</span> {data?.banker_remarks || 'No remarks provided.'}</p>
                 </div>
               </div>
 
-              <div className="border border-[#2a2f45] rounded-lg p-3">
+              <div className="border border-pwc-border rounded-lg p-3">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-semibold text-sm text-white">OTP Verification (Consent)</span>
+                  <span className="font-semibold text-sm text-pwc-white">OTP Verification (Consent)</span>
                   {data?.consent_given ? (
                     <span className="bg-[#22c55e]/20 text-[#22c55e] text-[10px] px-2 py-0.5 rounded font-bold uppercase">
                       Verified
@@ -2864,21 +2864,21 @@ function UWCaseReview() {
                   )}
                 </div>
                 <div className="text-xs space-y-1 text-[#9ca3af]">
-                  <p><span className="text-[#6b7280]">Verified At:</span> {formatDateTime(data?.consent_given_at)}</p>
+                  <p><span className="text-pwc-text-muted">Verified At:</span> {formatDateTime(data?.consent_given_at)}</p>
                 </div>
               </div>
             </div>
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Uploaded Documents</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Uploaded Documents</p>
             <div className="space-y-2">
               {docs.length === 0 && <p className="text-sm text-[#9ca3af]">No documents uploaded for this case.</p>}
               {docs.map(d => (
                 <div key={d.id} className="flex items-center justify-between">
                   <div className="text-sm">
-                    <p className="font-medium text-white">{d.file_name}</p>
-                    <p className="text-xs text-[#6b7280]">{d.document_type.replace(/_/g, ' ')}</p>
+                    <p className="font-medium text-pwc-white">{d.file_name}</p>
+                    <p className="text-xs text-pwc-text-muted">{d.document_type.replace(/_/g, ' ')}</p>
                   </div>
                   <div>
                     <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View</Btn>
@@ -2891,8 +2891,8 @@ function UWCaseReview() {
 
         <div className="space-y-4">
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Decision Notes</p>
-            <textarea rows={6} value={decisionNotes} onChange={e => setDecisionNotes(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none" placeholder="e.g. Income verified, medical acceptable" />
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Decision Notes</p>
+            <textarea rows={6} value={decisionNotes} onChange={e => setDecisionNotes(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none" placeholder="e.g. Income verified, medical acceptable" />
           </Card>
 
           <Card>
@@ -3009,20 +3009,20 @@ function PolicyIssuanceQueue() {
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
-              <p className="font-semibold text-sm text-[#e8eaf0]">Policies Directory</p>
+              <p className="font-semibold text-sm text-pwc-text">Policies Directory</p>
               <div className="w-64">
                 <input
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search by Case #..."
-                  className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs outline-none text-[#e8eaf0] focus:border-[#6366f1] transition-colors"
+                  className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-1.5 text-xs outline-none text-pwc-text focus:border-pwc-primary transition-colors"
                 />
               </div>
             </div>
             <DataTable columns={cols} rows={paginatedQueue} emptyText="No policies awaiting issuance." />
             {totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
-                <p className="text-xs text-[#6b7280]">
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-pwc-border">
+                <p className="text-xs text-pwc-text-muted">
                   Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, sortedQueue.length)} of {sortedQueue.length} cases
                 </p>
                 <div className="flex items-center gap-1.5">
@@ -3030,7 +3030,7 @@ function PolicyIssuanceQueue() {
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                     title="Previous Page"
                   >
                     ◀
@@ -3043,7 +3043,7 @@ function PolicyIssuanceQueue() {
                         key={pageNum}
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-pwc-primary text-pwc-white shadow-md' : 'border border-pwc-border text-pwc-placeholder hover:bg-pwc-input hover:text-pwc-text bg-transparent'}`}
                       >
                         {pageNum}
                       </button>
@@ -3053,7 +3053,7 @@ function PolicyIssuanceQueue() {
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                     title="Next Page"
                   >
                     ▶
@@ -3220,91 +3220,91 @@ function PolicyIssuanceDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_0.6fr] gap-5">
         <div className="space-y-4">
           <Card>
-            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Customer Information</h3>
+            <h3 className="text-sm font-semibold text-pwc-text-muted mb-4">Customer Information</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 text-sm">
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Name</p>
-                <p className="font-semibold text-white">{customerName}</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Name</p>
+                <p className="font-semibold text-pwc-white">{customerName}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Email</p>
-                <p className="font-medium text-white truncate" title={customerEmail}>{customerEmail}</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Email</p>
+                <p className="font-medium text-pwc-white truncate" title={customerEmail}>{customerEmail}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Phone</p>
-                <p className="font-medium text-white">{customerPhone}</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Phone</p>
+                <p className="font-medium text-pwc-white">{customerPhone}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">DOB / Age</p>
-                <p className="font-medium text-white">
+                <p className="text-xs text-pwc-text-muted mb-1">DOB / Age</p>
+                <p className="font-medium text-pwc-white">
                   {customerDob !== '—' ? customerDob : ''} {customerAge !== '—' ? `(${customerAge} yrs)` : ''}
                   {customerDob === '—' && customerAge === '—' ? '—' : ''}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Occupation</p>
-                <p className="font-medium text-white">{customerOccupation}</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Occupation</p>
+                <p className="font-medium text-pwc-white">{customerOccupation}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Annual Income</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Annual Income</p>
                 <p className="font-semibold text-[#22c55e]">{formattedIncome}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Risk Profile</p>
-                <p className="font-medium text-white">{customerRisk}</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Risk Profile</p>
+                <p className="font-medium text-pwc-white">{customerRisk}</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Customer ID</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Customer ID</p>
                 <p className="font-mono text-xs text-[#9ca3af] truncate" title={caseItem.customer_id}>{caseItem.customer_id.slice(0, 8)}...</p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Banker ID</p>
+                <p className="text-xs text-pwc-text-muted mb-1">Banker ID</p>
                 <p className="font-mono text-xs text-[#9ca3af] truncate" title={caseItem.banker_id}>{caseItem.banker_id ? `${caseItem.banker_id.slice(0, 8)}...` : '—'}</p>
               </div>
             </div>
           </Card>
 
           <Card>
-            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Selected Insurance Plan Details</h3>
+            <h3 className="text-sm font-semibold text-pwc-text-muted mb-4">Selected Insurance Plan Details</h3>
             {policy || selectedQuote ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 text-sm">
-                <div className="col-span-2 sm:col-span-3 border-b border-[#2a2f45] pb-3 mb-1">
-                  <p className="text-xs text-[#6b7280] mb-1">Product Name</p>
-                  <p className="font-bold text-base text-white">
+                <div className="col-span-2 sm:col-span-3 border-b border-pwc-border pb-3 mb-1">
+                  <p className="text-xs text-pwc-text-muted mb-1">Product Name</p>
+                  <p className="font-bold text-base text-pwc-white">
                     {policy?.product_name || selectedQuote?.product_name || '—'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280] mb-1">Insurer</p>
-                  <p className="font-semibold text-white">
+                  <p className="text-xs text-pwc-text-muted mb-1">Insurer</p>
+                  <p className="font-semibold text-pwc-white">
                     {policy?.insurer_name || selectedQuote?.insurer_name || '—'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280] mb-1">Policy Status</p>
+                  <p className="text-xs text-pwc-text-muted mb-1">Policy Status</p>
                   <div className="mt-0.5">
                     <Badge label={policy?.status || selectedQuote?.status || 'DRAFT'} />
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280] mb-1">Policy Number</p>
-                  <p className="font-mono text-white">{policy?.policy_number || 'Draft (Pending Issuance)'}</p>
+                  <p className="text-xs text-pwc-text-muted mb-1">Policy Number</p>
+                  <p className="font-mono text-pwc-white">{policy?.policy_number || 'Draft (Pending Issuance)'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280] mb-1">Annual Premium</p>
+                  <p className="text-xs text-pwc-text-muted mb-1">Annual Premium</p>
                   <p className="font-bold text-base text-[#22c55e]">
                     ₹{(policy?.annual_premium || selectedQuote?.annual_premium || 0).toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280] mb-1">Policy Tenure</p>
-                  <p className="font-semibold text-white">
+                  <p className="text-xs text-pwc-text-muted mb-1">Policy Tenure</p>
+                  <p className="font-semibold text-pwc-white">
                     {caseItem.policy_tenure || selectedQuote?.policy_tenure || '—'} Years
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280] mb-1">Sum Assured</p>
-                  <p className="font-semibold text-white">
+                  <p className="text-xs text-pwc-text-muted mb-1">Sum Assured</p>
+                  <p className="font-semibold text-pwc-white">
                     ₹{(caseItem.sum_assured || selectedQuote?.sum_assured || 0).toLocaleString()}
                   </p>
                 </div>
@@ -3317,29 +3317,29 @@ function PolicyIssuanceDetails() {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Verification & Consent Status</h3>
+            <h3 className="text-sm font-semibold text-pwc-text-muted mb-4">Verification & Consent Status</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">KYC Status</p>
+                <p className="text-xs text-pwc-text-muted mb-1">KYC Status</p>
                 <div className="mt-0.5">
                   <Badge label={caseItem.kyc_status || 'Pending'} />
                 </div>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">PAN Verification</p>
-                <p className="font-medium text-white">
+                <p className="text-xs text-pwc-text-muted mb-1">PAN Verification</p>
+                <p className="font-medium text-pwc-white">
                   {caseItem?.kyc_status === 'PAN_VERIFIED' || caseItem?.customer_profile?.pan_verified || caseItem?.kyc_status === 'AADHAAR_VERIFIED' ? '✅ Verified' : '⏳ Pending'}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Aadhaar Verification</p>
-                <p className="font-medium text-white">
+                <p className="text-xs text-pwc-text-muted mb-1">Aadhaar Verification</p>
+                <p className="font-medium text-pwc-white">
                   {caseItem?.kyc_status === 'AADHAAR_VERIFIED' || caseItem?.customer_profile?.aadhaar_verified ? '✅ Verified' : '⏳ Pending'}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">OTP Consent Status</p>
-                <p className="font-medium text-white">
+                <p className="text-xs text-pwc-text-muted mb-1">OTP Consent Status</p>
+                <p className="font-medium text-pwc-white">
                   {caseItem.consent_given ? '✅ Verified' : '⏳ Pending'}
                 </p>
               </div>
@@ -3347,27 +3347,27 @@ function PolicyIssuanceDetails() {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Medical Coordination</h3>
+            <h3 className="text-sm font-semibold text-pwc-text-muted mb-4">Medical Coordination</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Medical Required</p>
-                <p className="font-medium text-white">
+                <p className="text-xs text-pwc-text-muted mb-1">Medical Required</p>
+                <p className="font-medium text-pwc-white">
                   {quotes?.some(q => q.medical_requirements) ? 'Yes' : 'No'}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[#6b7280] mb-1">Medical Requests Created</p>
-                <p className="font-medium text-white">
+                <p className="text-xs text-pwc-text-muted mb-1">Medical Requests Created</p>
+                <p className="font-medium text-pwc-white">
                   {caseItem?.medical_requests?.length || docs.some(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name) || /medical/i.test(x.file_name)) ? 'Yes' : 'No'}
                 </p>
               </div>
               {docs.filter(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name)).length > 0 && (
-                <div className="col-span-1 sm:col-span-2 border-t border-[#2a2f45] pt-3 mt-1">
-                  <p className="text-xs text-[#6b7280] mb-2">Medical Reports / Attachments</p>
+                <div className="col-span-1 sm:col-span-2 border-t border-pwc-border pt-3 mt-1">
+                  <p className="text-xs text-pwc-text-muted mb-2">Medical Reports / Attachments</p>
                   <div className="space-y-2">
                     {docs.filter(x => /medical/i.test(x.document_type) || /report/i.test(x.file_name)).map(d => (
-                      <div key={d.id} className="flex items-center justify-between bg-[#0f1117] border border-[#2a2f45] p-2.5 rounded-lg">
-                        <span className="text-xs text-white truncate mr-2">{d.file_name}</span>
+                      <div key={d.id} className="flex items-center justify-between bg-pwc-bg border border-pwc-border p-2.5 rounded-lg">
+                        <span className="text-xs text-pwc-white truncate mr-2">{d.file_name}</span>
                         <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)}>View Report</Btn>
                       </div>
                     ))}
@@ -3378,16 +3378,16 @@ function PolicyIssuanceDetails() {
           </Card>
 
           <Card>
-            <h3 className="text-sm font-semibold text-[#6b7280] mb-4">Uploaded Documents Directory</h3>
+            <h3 className="text-sm font-semibold text-pwc-text-muted mb-4">Uploaded Documents Directory</h3>
             <div className="space-y-2">
               {docs.length === 0 ? (
                 <p className="text-xs text-[#9ca3af]">No documents uploaded for this case.</p>
               ) : (
                 docs.map(d => (
-                  <div key={d.id} className="flex items-center justify-between border border-[#2a2f45] bg-[#0f1117] p-3 rounded-lg">
+                  <div key={d.id} className="flex items-center justify-between border border-pwc-border bg-pwc-bg p-3 rounded-lg">
                     <div className="text-sm min-w-0 flex-1 mr-2">
-                      <p className="font-medium text-white truncate">{d.file_name}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5">{d.document_type.replace(/_/g, ' ')}</p>
+                      <p className="font-medium text-pwc-white truncate">{d.file_name}</p>
+                      <p className="text-xs text-pwc-text-muted mt-0.5">{d.document_type.replace(/_/g, ' ')}</p>
                     </div>
                     <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)} className="flex-shrink-0">View File</Btn>
                   </div>
@@ -3408,7 +3408,7 @@ function PolicyIssuanceDetails() {
                       className={`border rounded-lg p-3 transition-all ${
                         isSelected
                           ? 'border-[#22c55e] bg-[#22c55e]/5'
-                          : 'border-[#2a2f45]'
+                          : 'border-pwc-border'
                       }`}
                     >
                       <div className="flex justify-between items-center mb-1">
@@ -3420,8 +3420,8 @@ function PolicyIssuanceDetails() {
                         )}
                       </div>
                       <div className="text-xs text-[#9ca3af]">{quote.product_name}</div>
-                      <div className="text-xs text-[#6b7280] mt-1.5">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
-                      <div className="text-xs text-[#6b7280]">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
+                      <div className="text-xs text-pwc-text-muted mt-1.5">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
+                      <div className="text-xs text-pwc-text-muted">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
                     </div>
                   )
                 })}
@@ -3434,10 +3434,10 @@ function PolicyIssuanceDetails() {
 
         <div className="space-y-4">
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Raise Query</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Raise Query</p>
             <div className="space-y-3">
               <div>
-                <select value={queryText} onChange={e => setQueryText(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+                <select value={queryText} onChange={e => setQueryText(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                   <option>Need Income Proof</option>
                   <option>Need Medical Report</option>
                   <option>Need Bank Statement</option>
@@ -3446,7 +3446,7 @@ function PolicyIssuanceDetails() {
                 </select>
               </div>
               <div>
-                <textarea rows={4} value={queryText} onChange={e => setQueryText(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none" placeholder="Write Query..." />
+                <textarea rows={4} value={queryText} onChange={e => setQueryText(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none" placeholder="Write Query..." />
               </div>
               <div>
                 <Btn onClick={() => submitDecision('QUERY')} disabled={saving} className="w-full">{saving ? 'Raising…' : 'Raise Query'}</Btn>
@@ -3455,8 +3455,8 @@ function PolicyIssuanceDetails() {
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Decision Notes</p>
-            <textarea rows={6} value={decisionNotes} onChange={e => setDecisionNotes(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none" placeholder="e.g. Notes on issuance..." />
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Decision Notes</p>
+            <textarea rows={6} value={decisionNotes} onChange={e => setDecisionNotes(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none" placeholder="e.g. Notes on issuance..." />
           </Card>
 
           <Card>
@@ -3469,7 +3469,7 @@ function PolicyIssuanceDetails() {
                   <Btn variant="danger" onClick={() => submitDecision('REJECTED')} disabled={saving}>
                     {saving ? 'Rejecting…' : 'Reject Underwriting'}
                   </Btn>
-                  <div className="border-t border-[#2a2f45] my-1"></div>
+                  <div className="border-t border-pwc-border my-1"></div>
                 </>
               )}
               {caseItem?.current_stage === 'POLICY_ISSUANCE' && (
@@ -3484,7 +3484,7 @@ function PolicyIssuanceDetails() {
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Response</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Customer Response</p>
             {medicalRequests.length === 0 ? (
               <p className="text-sm text-[#9ca3af]">No queries raised yet.</p>
             ) : (
@@ -3496,12 +3496,12 @@ function PolicyIssuanceDetails() {
                   return (
                     <div key={mr.id}>
                       <div className="mb-3">
-                        <p className="text-xs font-semibold text-[#6b7280] mb-2">Requested Documents</p>
+                        <p className="text-xs font-semibold text-pwc-text-muted mb-2">Requested Documents</p>
                         <div className="space-y-2">
                           {requirements.map((req, i) => {
                             const isUploaded = reqDocs.some(d => d.document_type === req || d.document_type.includes(req))
                             return (
-                              <div key={i} className="text-xs text-[#e8eaf0]">
+                              <div key={i} className="text-xs text-pwc-text">
                                 <div className="font-medium">{i + 1}. {req}</div>
                                 <div className={isUploaded ? 'text-[#22c55e] mt-0.5' : 'text-[#f59e0b] mt-0.5'}>
                                   Status: {isUploaded ? '✅ Submitted' : '⏳ Pending'}
@@ -3512,25 +3512,25 @@ function PolicyIssuanceDetails() {
                         </div>
                       </div>
 
-                      <div className="border-t border-[#2a2f45] my-3"></div>
+                      <div className="border-t border-pwc-border my-3"></div>
 
                       {reqDocs.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold text-[#6b7280] mb-2">Submitted Documents</p>
+                          <p className="text-xs font-semibold text-pwc-text-muted mb-2">Submitted Documents</p>
                           <div className="space-y-3">
                             {reqDocs.map((d, docIdx) => (
-                              <div key={d.id} className="text-xs text-[#e8eaf0]">
+                              <div key={d.id} className="text-xs text-pwc-text">
                                 <div className="font-medium">{docIdx + 1}. {d.document_type}</div>
                                 <div className="text-[#22c55e] mt-0.5">Status: ✅ Submitted</div>
                                 <div className="text-[#9ca3af] mt-1">Submitted On: {d.created_at ? new Date(d.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '') : '—'}</div>
                                 <div className="mt-2">
-                                  <div className="text-[#6b7280] mb-1">File:</div>
-                                  <div className="flex items-center justify-between bg-[#161b2e] px-2 py-1.5 rounded">
-                                    <span className="text-[#e8eaf0] truncate flex-1">{d.file_name}</span>
+                                  <div className="text-pwc-text-muted mb-1">File:</div>
+                                  <div className="flex items-center justify-between bg-pwc-white px-2 py-1.5 rounded">
+                                    <span className="text-pwc-text truncate flex-1">{d.file_name}</span>
                                     <Btn size="sm" variant="secondary" onClick={() => openDoc(d.id)} className="flex-shrink-0 text-xs px-2 py-0.5 ml-1">[View]</Btn>
                                   </div>
                                 </div>
-                                {docIdx < reqDocs.length - 1 && <div className="border-t border-[#2a2f45] my-2"></div>}
+                                {docIdx < reqDocs.length - 1 && <div className="border-t border-pwc-border my-2"></div>}
                               </div>
                             ))}
                           </div>
@@ -3544,7 +3544,7 @@ function PolicyIssuanceDetails() {
           </Card>
 
           <Card>
-            <p className="text-sm font-semibold text-[#6b7280] mb-3">Pending Queries</p>
+            <p className="text-sm font-semibold text-pwc-text-muted mb-3">Pending Queries</p>
             {medicalRequests.length === 0 ? (
               <p className="text-sm text-[#9ca3af]">No pending queries.</p>
             ) : (
@@ -3557,13 +3557,13 @@ function PolicyIssuanceDetails() {
                   if (!hasPending) return null
                   
                   return (
-                    <div key={mr.id} className="border border-[#2a2f45] rounded-lg p-2 bg-[#0f1117]">
+                    <div key={mr.id} className="border border-pwc-border rounded-lg p-2 bg-pwc-bg">
                       <div className="space-y-1">
                         {requirements.map((req, i) => {
                           const isUploaded = reqDocs.some(d => d.document_type === req || d.document_type.includes(req))
                           return !isUploaded && (
-                            <div key={i} className="flex items-center justify-between text-xs bg-[#161b2e] px-2 py-1.5 rounded">
-                              <span className="text-[#e8eaf0]">{req}</span>
+                            <div key={i} className="flex items-center justify-between text-xs bg-pwc-white px-2 py-1.5 rounded">
+                              <span className="text-pwc-text">{req}</span>
                               <span className="text-[#f59e0b] font-semibold">⊙ Pending</span>
                             </div>
                           )
@@ -3579,7 +3579,7 @@ function PolicyIssuanceDetails() {
       </div>
 
       <Modal open={viewOpen} onClose={() => setViewOpen(false)} title={selectedDocTitle} className="max-w-5xl">
-        <div className="w-full h-[75vh] bg-[#0f1117] rounded-lg overflow-hidden border border-[#2a2f45] relative">
+        <div className="w-full h-[75vh] bg-pwc-bg rounded-lg overflow-hidden border border-pwc-border relative">
           {selectedDocId ? (
             <iframe
               src={`/api/v1/documents/${selectedDocId}/view?token=${encodeURIComponent(localStorage.getItem('access_token'))}`}
@@ -3587,7 +3587,7 @@ function PolicyIssuanceDetails() {
               title={selectedDocTitle}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-sm text-[#6b7280]">Select a document to preview</div>
+            <div className="flex items-center justify-center h-full text-sm text-pwc-text-muted">Select a document to preview</div>
           )}
         </div>
       </Modal>
@@ -3605,7 +3605,7 @@ function ComplianceOverview() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <StatCard title="Compliance Score" value={`${stats.compliance_score}%`} color="#22c55e" icon={ShieldCheck} />
         <StatCard title="Total Policies" value={stats.total_policies} icon={FileText} />
-        <StatCard title="Checked" value={stats.checked} color="#6366f1" icon={ShieldCheck} />
+        <StatCard title="Checked" value={stats.checked} color="rgb(var(--color-primary))" icon={ShieldCheck} />
         <StatCard title="Exceptions" value={stats.exceptions} color="#f59e0b" icon={Bell} />
       </div>
     </div>
@@ -3644,7 +3644,7 @@ export function ComplianceDashboard() {
       <Route index element={<ComplianceOverview />} />
       <Route path="exceptions" element={<ComplianceExceptions />} />
       <Route path="consents" element={<ComplianceConsents />} />
-      <Route path="audit" element={<Card className="text-center py-10 text-[#6b7280]">See Admin → Audit Logs for full trail.</Card>} />
+      <Route path="audit" element={<Card className="text-center py-10 text-pwc-text-muted">See Admin → Audit Logs for full trail.</Card>} />
       <Route path="kb" element={<KnowledgeBase />} />
       <Route path="rag-chat" element={<RAGChat title="Compliance RAG Auditor" placeholder="Ask about IRDAI regulations, KYC compliance checklist..." />} />
     </Routes>

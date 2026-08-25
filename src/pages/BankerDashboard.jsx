@@ -33,7 +33,7 @@ function CaseList() {
         <StatCard title="Total Cases" value={cases.length} icon={Briefcase} />
         <StatCard title="Active" value={active} color="#22c55e" icon={Clock} />
         <StatCard title="Pending" value={pending} color="#f59e0b" icon={FileText} />
-        <StatCard title="Completed" value={completed} color="#6366f1" icon={CheckCircle} />
+        <StatCard title="Completed" value={completed} color="rgb(var(--color-primary))" icon={CheckCircle} />
       </div>
       <Card>
         {loading ? <Spinner /> : <DataTable columns={cols} rows={cases} emptyText="No cases yet. Create your first case." />}

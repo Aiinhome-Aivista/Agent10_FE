@@ -2,22 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg:          #0f1117;
-  --surface:     #161b2e;
-  --surface-alt: #1e2235;
-  --border:      #2a2f45;
-  --accent:      #6366f1;
-  --teal:        #2dd4bf;
-  --text:        #e8eaf0;
-  --muted:       #6b7280;
+@layer base {
+  :root {
+    --color-primary: 255, 90, 20; /* #FF5A14 */
+    --color-btn-orange: 255, 122, 69; /* #FF7A45 */
+    --color-hover-orange: 245, 107, 47; /* #F56B2F */
+    --color-sidebar: 74, 74, 74; /* #4A4A4A */
+    --color-bg: 249, 250, 251; /* #F9FAFB */
+    --color-input: 255, 247, 242; /* #FFF7F2 */
+    --color-border: 216, 216, 216; /* #D8D8D8 */
+    --color-border-orange: 255, 138, 85; /* #FF8A55 */
+    --color-text: 74, 74, 74; /* #4A4A4A */
+    --color-text-muted: 136, 136, 136; /* #888888 */
+    --color-placeholder: 176, 176, 176; /* #B0B0B0 */
+    --color-white: 255, 255, 255; /* #FFFFFF */
+    
+    /* Legacy aliases for LoginPage.jsx */
+    --bg: rgb(var(--color-bg));
+    --surface: rgb(var(--color-white));
+    --surface-alt: rgb(var(--color-input));
+    --border: rgb(var(--color-border));
+    --text: rgb(var(--color-text));
+    --text-muted: rgb(var(--color-text-muted));
+    --accent: rgb(var(--color-primary));
+  }
+
+  .dark {
+    --color-primary: 255, 90, 20; /* #FF5A14 */
+    --color-btn-orange: 255, 122, 69; /* #FF7A45 */
+    --color-hover-orange: 245, 107, 47; /* #F56B2F */
+    --color-sidebar: 22, 27, 46; /* #161b2e */
+    --color-bg: 15, 17, 23; /* #0f1117 */
+    --color-input: 30, 34, 53; /* #1e2235 */
+    --color-border: 42, 47, 69; /* #2a2f45 */
+    --color-border-orange: 255, 138, 85; /* #FF8A55 */
+    --color-text: 232, 234, 240; /* #e8eaf0 */
+    --color-text-muted: 107, 114, 128; /* #6b7280 */
+    --color-placeholder: 107, 114, 128;
+    --color-white: 22, 27, 46; /* In dark mode, card surface is 22 27 46 (#161b2e) */
+  }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -25,8 +55,8 @@ body {
 h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track  { background: var(--bg); }
-::-webkit-scrollbar-thumb  { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-track  { background: rgb(var(--color-bg)); }
+::-webkit-scrollbar-thumb  { background: rgb(var(--color-border)); border-radius: 3px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }

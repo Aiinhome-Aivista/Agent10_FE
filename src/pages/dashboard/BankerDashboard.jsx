@@ -42,7 +42,7 @@ function CsvDropzone({ file, onFileChange, onClear, description, label = 'CSV Up
       }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
-      className={`group rounded-2xl border border-dashed bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] p-4 transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-[#6366f1] hover:bg-[#15192f]'}`}
+      className={`group rounded-2xl border border-dashed bg-pwc-bg p-4 transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-pwc-primary hover:bg-[#15192f]'}`}
     >
       <input
         ref={inputRef}
@@ -52,18 +52,18 @@ function CsvDropzone({ file, onFileChange, onClear, description, label = 'CSV Up
         onChange={(event) => onFileChange(event.target.files?.[0] || null)}
       />
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#6366f1]/15 text-[#7c83ff]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pwc-primary/15 text-[#7c83ff]">
           <Upload size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-[#e8eaf0]">{label}</p>
-          <p className="mt-1 text-sm text-[#6b7280]">{description}</p>
-          <p className="mt-2 text-xs text-[#93a1c6]">Drop a CSV file here or click to browse.</p>
+          <p className="font-semibold text-pwc-text">{label}</p>
+          <p className="mt-1 text-sm text-pwc-text-muted">{description}</p>
+          <p className="mt-2 text-xs text-pwc-placeholder">Drop a CSV file here or click to browse.</p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#2a2f45] bg-[#0f1117] px-3 py-2 text-sm">
-        <span className="text-[#6b7280]">Selected file:</span>
-        <span className="truncate font-medium text-[#e8eaf0]">{file?.name || 'No file selected'}</span>
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-pwc-border bg-pwc-bg px-3 py-2 text-sm">
+        <span className="text-pwc-text-muted">Selected file:</span>
+        <span className="truncate font-medium text-pwc-text">{file?.name || 'No file selected'}</span>
         {file && onClear && (
           <button
             type="button"
@@ -71,7 +71,7 @@ function CsvDropzone({ file, onFileChange, onClear, description, label = 'CSV Up
               event.stopPropagation()
               onClear()
             }}
-            className="ml-auto rounded-lg border border-[#2a2f45] px-3 py-1 text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235]"
+            className="ml-auto rounded-lg border border-pwc-border px-3 py-1 text-xs font-semibold text-pwc-text hover:bg-pwc-input"
           >
             Remove
           </button>
@@ -172,34 +172,34 @@ function CaseList() {
         <StatCard title="Total Cases" value={cases.length} icon={Briefcase} />
         <StatCard title="Active" value={active} color="#22c55e" icon={Clock} />
         <StatCard title="Pending" value={pending} color="#f59e0b" icon={FileText} />
-        <StatCard title="Completed" value={completed} color="#6366f1" icon={CheckCircle} />
+        <StatCard title="Completed" value={completed} color="rgb(var(--color-primary))" icon={CheckCircle} />
       </div>
       
       <Card>
         <div className="flex justify-between items-center mb-4">
-          <p className="font-semibold text-sm text-[#e8eaf0]">Case Directory</p>
+          <p className="font-semibold text-sm text-pwc-text">Case Directory</p>
           <Btn size="sm" variant="secondary" onClick={() => setShowFilters(!showFilters)}>
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </Btn>
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl border border-[#2a2f45] bg-[#0f1117]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 p-4 rounded-xl border border-pwc-border bg-pwc-bg">
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Search Case #</label>
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Search Case #</label>
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search case number..."
-                className="w-full bg-[#15192a] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]"
+                className="w-full bg-[#15192a] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Filter by Stage</label>
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Filter by Stage</label>
               <select
                 value={filterStage}
                 onChange={e => setFilterStage(e.target.value)}
-                className="w-full bg-[#15192a] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]"
+                className="w-full bg-[#15192a] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
               >
                 <option value="ALL">All Stages</option>
                 {STAGES.map(s => (
@@ -208,11 +208,11 @@ function CaseList() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Filter by Status</label>
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Filter by Status</label>
               <select
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value)}
-                className="w-full bg-[#15192a] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]"
+                className="w-full bg-[#15192a] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
@@ -234,8 +234,8 @@ function CaseList() {
             
             {/* Rounded Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
-                <p className="text-xs text-[#6b7280]">
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-pwc-border">
+                <p className="text-xs text-pwc-text-muted">
                   Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredCases.length)} of {filteredCases.length} cases
                 </p>
                 <div className="flex items-center gap-1.5">
@@ -243,7 +243,7 @@ function CaseList() {
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                     title="Previous Page"
                   >
                     ◀
@@ -256,7 +256,7 @@ function CaseList() {
                         key={pageNum}
                         type="button"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-pwc-primary text-pwc-white shadow-md' : 'border border-pwc-border text-pwc-placeholder hover:bg-pwc-input hover:text-pwc-text bg-transparent'}`}
                       >
                         {pageNum}
                       </button>
@@ -266,7 +266,7 @@ function CaseList() {
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                    className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                    className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                     title="Next Page"
                   >
                     ▶
@@ -284,14 +284,14 @@ function CaseList() {
           <div>
             {/* Stage Progress */}
             <div className="mb-5">
-              <p className="text-xs font-semibold text-[#6b7280] mb-2">Workflow Progress</p>
+              <p className="text-xs font-semibold text-pwc-text-muted mb-2">Workflow Progress</p>
               <div className="flex flex-wrap gap-1">
                 {STAGES.map((s, i) => (
                   <span key={s} className="text-xs px-2 py-0.5 rounded"
                     style={{
-                      background: i < stageIdx ? '#22c55e22' : i === stageIdx ? '#6366f122' : '#1e2235',
-                      color: i < stageIdx ? '#22c55e' : i === stageIdx ? '#6366f1' : '#6b7280',
-                      border: `1px solid ${i <= stageIdx ? (i < stageIdx ? '#22c55e44' : '#6366f144') : '#2a2f45'}`
+                      background: i < stageIdx ? '#22c55e22' : i === stageIdx ? 'rgba(var(--color-primary), 0.13)' : 'rgb(var(--color-input))',
+                      color: i < stageIdx ? '#22c55e' : i === stageIdx ? 'rgb(var(--color-primary))' : 'rgb(var(--color-text-muted))',
+                      border: `1px solid ${i <= stageIdx ? (i < stageIdx ? '#22c55e44' : 'rgba(var(--color-primary), 0.27)') : 'rgb(var(--color-border))'}`
                     }}>
                     {i + 1}. {s.replace(/_/g, ' ')}
                   </span>
@@ -310,10 +310,10 @@ function CaseList() {
             {qLoading ? <Spinner /> : quotes.length > 0 && (
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-xs font-semibold text-[#6b7280]">Quotes ({quotes.length})</p>
+                  <p className="text-xs font-semibold text-pwc-text-muted">Quotes ({quotes.length})</p>
                   <button 
                     onClick={() => fetchQuotes(activeCase.id)} 
-                    className="text-xs font-semibold text-[#6366f1] hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
+                    className="text-xs font-semibold text-pwc-primary hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
                   >
                     🔄 Refresh Quotes
                   </button>
@@ -534,7 +534,7 @@ function NewCaseForm() {
     <Card className="text-center py-12">
       <div className="text-5xl mb-4">✅</div>
       <h3 className="text-lg font-bold mb-2">Case Created!</h3>
-      <p className="text-sm text-[#6b7280] mb-6">AI workflow has been triggered.</p>
+      <p className="text-sm text-pwc-text-muted mb-6">AI workflow has been triggered.</p>
       <Btn onClick={() => setOk(false)}>Create Another</Btn>
     </Card>
   )
@@ -568,7 +568,7 @@ function NewCaseForm() {
       label: 'Cases',
       render: (row) => {
         const count = getCustomerCaseCount(row.user_id)
-        return <span className="font-semibold text-[#6366f1]">{count} Case{count !== 1 ? 's' : ''}</span>
+        return <span className="font-semibold text-pwc-primary">{count} Case{count !== 1 ? 's' : ''}</span>
       }
     },
     { key: 'created_at', label: 'Added', render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '—' },
@@ -596,7 +596,7 @@ function NewCaseForm() {
             <Upload size={16} />
             <p className="font-semibold">CSV Customer Upload</p>
           </div>
-          <p className="text-sm text-[#6b7280] mb-4">Upload customer rows to create logins automatically. Each imported customer receives the default password 852456 and will be required to change it on first login.</p>
+          <p className="text-sm text-pwc-text-muted mb-4">Upload customer rows to create logins automatically. Each imported customer receives the default password 852456 and will be required to change it on first login.</p>
           {err && <Alert type="error" message={err} />}
           {ok && <Alert type="success" message={ok} />}
           <CsvDropzone
@@ -617,28 +617,28 @@ function NewCaseForm() {
             <Briefcase size={16} />
             <p className="font-semibold">Case Details</p>
           </div>
-          <div className="mb-4 rounded-lg border border-[#2a2f45] bg-[#0f1117] p-4">
-            <p className="text-xs font-semibold text-[#6b7280] mb-2">Selected customer</p>
+          <div className="mb-4 rounded-lg border border-pwc-border bg-pwc-bg p-4">
+            <p className="text-xs font-semibold text-pwc-text-muted mb-2">Selected customer</p>
             {selectedCustomer ? (
               <div className="space-y-1 text-sm">
-                <p className="font-semibold text-[#e8eaf0]">{selectedCustomer.name}</p>
-                <p className="text-[#6b7280]">{selectedCustomer.email}</p>
-                <p className="text-[#6b7280]">{selectedCustomer.phone || '—'}</p>
-                <p className="text-xs text-[#6b7280]">User ID: {selectedCustomer.user_id}</p>
-                <div className="mt-2 pt-2 border-t border-[#2a2f45] flex items-center justify-between">
-                  <span className="text-xs text-[#6b7280]">Cases Generated So Far:</span>
+                <p className="font-semibold text-pwc-text">{selectedCustomer.name}</p>
+                <p className="text-pwc-text-muted">{selectedCustomer.email}</p>
+                <p className="text-pwc-text-muted">{selectedCustomer.phone || '—'}</p>
+                <p className="text-xs text-pwc-text-muted">User ID: {selectedCustomer.user_id}</p>
+                <div className="mt-2 pt-2 border-t border-pwc-border flex items-center justify-between">
+                  <span className="text-xs text-pwc-text-muted">Cases Generated So Far:</span>
                   <Badge label={`${getCustomerCaseCount(selectedCustomer.user_id)} Case(s)`} />
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-[#6b7280]">Pick a customer from the list below to continue.</p>
+              <p className="text-sm text-pwc-text-muted">Pick a customer from the list below to continue.</p>
             )}
           </div>
           {selectedCustomer && (
-            <div className="mb-4 rounded-lg border border-[#6366f1]/20 bg-[#6366f1]/5 p-4 text-xs leading-relaxed text-[#7c83ff]">
+            <div className="mb-4 rounded-lg border border-pwc-primary/20 bg-pwc-primary/5 p-4 text-xs leading-relaxed text-[#7c83ff]">
               {suggestLoading ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full border border-transparent border-t-[#6366f1] animate-spin" style={{ borderTopColor: '#7c83ff' }} />
+                  <div className="w-3 h-3 rounded-full border border-transparent border-t-pwc-primary animate-spin" style={{ borderTopColor: '#7c83ff' }} />
                   <span>AI generating cover recommendation...</span>
                 </div>
               ) : (
@@ -677,18 +677,18 @@ function NewCaseForm() {
         <div className="flex flex-col gap-4">
           <SectionHeader title="Customers" subtitle="Search by name, email, or phone" />
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-pwc-text-muted" />
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search customers by name, email, or phone"
-              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-[#6366f1]"
+              className="w-full bg-pwc-bg border border-pwc-border rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-pwc-primary"
             />
           </div>
           {loadingCustomers ? (
             <Spinner />
           ) : filteredCustomers.length === 0 ? (
-            <p className="text-center py-10 text-[#6b7280]">No customers match your search.</p>
+            <p className="text-center py-10 text-pwc-text-muted">No customers match your search.</p>
           ) : (() => {
             const totalPages = Math.ceil(filteredCustomers.length / rowsPerPage)
             const paginatedCustomers = filteredCustomers.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
@@ -699,13 +699,13 @@ function NewCaseForm() {
                   <table className="w-full text-sm border-collapse">
                     <thead>
                       <tr>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Name</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Email</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Phone</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Source</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Cases</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap">Added</th>
-                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-[#6b7280] border-b border-[#2a2f45] whitespace-nowrap"></th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap">Name</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap">Email</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap">Phone</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap">Source</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap">Cases</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap">Added</th>
+                        <th className="text-left px-3 py-2.5 text-xs font-semibold text-pwc-text-muted border-b border-pwc-border whitespace-nowrap"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -718,10 +718,10 @@ function NewCaseForm() {
                         return (
                           <Fragment key={cust.user_id}>
                             {/* Main Customer Row */}
-                            <tr className="border-b border-[#2a2f45] hover:bg-[#1e2235]">
-                              <td className="px-3 py-2.5 text-[#e8eaf0] font-medium">{cust.name}</td>
-                              <td className="px-3 py-2.5 text-[#93a1c6]">{cust.email}</td>
-                              <td className="px-3 py-2.5 text-[#93a1c6]">{cust.phone || '—'}</td>
+                            <tr className="border-b border-pwc-border hover:bg-pwc-input">
+                              <td className="px-3 py-2.5 text-pwc-text font-medium">{cust.name}</td>
+                              <td className="px-3 py-2.5 text-pwc-placeholder">{cust.email}</td>
+                              <td className="px-3 py-2.5 text-pwc-placeholder">{cust.phone || '—'}</td>
                               <td className="px-3 py-2.5">
                                 <Badge label={cust.source_type} />
                               </td>
@@ -733,7 +733,7 @@ function NewCaseForm() {
                                       e.stopPropagation()
                                       toggleCustomerExpand(cust.user_id)
                                     }}
-                                    className="inline-flex items-center gap-1 font-semibold text-[#6366f1] hover:text-[#7c83ff] hover:underline bg-transparent border-none cursor-pointer"
+                                    className="inline-flex items-center gap-1 font-semibold text-pwc-primary hover:text-[#7c83ff] hover:underline bg-transparent border-none cursor-pointer"
                                   >
                                     <span>{count} Case{count !== 1 ? 's' : ''}</span>
                                     <span className="text-[9px] transition-transform duration-200" style={{ display: 'inline-block', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
@@ -741,10 +741,10 @@ function NewCaseForm() {
                                     </span>
                                   </button>
                                 ) : (
-                                  <span className="text-[#6b7280]">0 Cases</span>
+                                  <span className="text-pwc-text-muted">0 Cases</span>
                                 )}
                               </td>
-                              <td className="px-3 py-2.5 text-[#6b7280]">
+                              <td className="px-3 py-2.5 text-pwc-text-muted">
                                 {cust.created_at ? new Date(cust.created_at).toLocaleDateString() : '—'}
                               </td>
                               <td className="px-3 py-2.5 text-right">
@@ -760,34 +760,34 @@ function NewCaseForm() {
 
                             {/* Collapsible Cases Row */}
                             {isExpanded && count > 0 && (
-                              <tr className="bg-[#0c0e18] border-b border-[#2a2f45]">
+                              <tr className="bg-[#0c0e18] border-b border-pwc-border">
                                 <td colSpan={7} className="px-5 py-4">
-                                  <div className="rounded-xl border border-[#2a2f45] bg-[#101424] p-4">
-                                    <p className="text-xs font-bold uppercase tracking-wider text-[#6b7280] mb-3">
+                                  <div className="rounded-xl border border-pwc-border bg-[#101424] p-4">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-pwc-text-muted mb-3">
                                       Existing Cases for {cust.name}
                                     </p>
                                     <div className="space-y-2">
                                       {custCases.map((c) => (
                                         <div 
                                           key={c.id} 
-                                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#2a2f45] bg-[#0c0e18] px-4 py-3 hover:border-[#6366f1]/50 transition-colors"
+                                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-pwc-border bg-[#0c0e18] px-4 py-3 hover:border-pwc-primary/50 transition-colors"
                                         >
                                           <div className="flex flex-wrap items-center gap-4 text-xs">
                                             <div>
-                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Case #</span>
-                                              <span className="font-bold text-[#e8eaf0]">{c.case_number}</span>
+                                              <span className="text-pwc-text-muted block text-[10px] uppercase font-semibold">Case #</span>
+                                              <span className="font-bold text-pwc-text">{c.case_number}</span>
                                             </div>
                                             <div>
-                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Stage</span>
+                                              <span className="text-pwc-text-muted block text-[10px] uppercase font-semibold">Stage</span>
                                               <Badge label={c.current_stage} />
                                             </div>
                                             <div>
-                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Status</span>
+                                              <span className="text-pwc-text-muted block text-[10px] uppercase font-semibold">Status</span>
                                               <Badge label={c.status} />
                                             </div>
                                             <div>
-                                              <span className="text-[#6b7280] block text-[10px] uppercase font-semibold">Sum Assured</span>
-                                              <span className="font-semibold text-[#e8eaf0]">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : '—'}</span>
+                                              <span className="text-pwc-text-muted block text-[10px] uppercase font-semibold">Sum Assured</span>
+                                              <span className="font-semibold text-pwc-text">{c.sum_assured ? `₹${c.sum_assured.toLocaleString()}` : '—'}</span>
                                             </div>
                                           </div>
                                           <Btn 
@@ -813,8 +813,8 @@ function NewCaseForm() {
 
                 {/* Rounded Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#2a2f45]">
-                    <p className="text-xs text-[#6b7280]">
+                  <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-pwc-border">
+                    <p className="text-xs text-pwc-text-muted">
                       Showing {(currentPage - 1) * rowsPerPage + 1} to {Math.min(currentPage * rowsPerPage, filteredCustomers.length)} of {filteredCustomers.length} customers
                     </p>
                     <div className="flex items-center gap-1.5">
@@ -822,7 +822,7 @@ function NewCaseForm() {
                         type="button"
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                        className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                        className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                         title="Previous Page"
                       >
                         ◀
@@ -835,7 +835,7 @@ function NewCaseForm() {
                             key={pageNum}
                             type="button"
                             onClick={() => setCurrentPage(pageNum)}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-[#6366f1] text-white shadow-md' : 'border border-[#2a2f45] text-[#93a1c6] hover:bg-[#1e2235] hover:text-[#e8eaf0] bg-transparent'}`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all cursor-pointer ${isCurrent ? 'bg-pwc-primary text-pwc-white shadow-md' : 'border border-pwc-border text-pwc-placeholder hover:bg-pwc-input hover:text-pwc-text bg-transparent'}`}
                           >
                             {pageNum}
                           </button>
@@ -845,7 +845,7 @@ function NewCaseForm() {
                         type="button"
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                        className="w-8 h-8 rounded-full border border-[#2a2f45] flex items-center justify-center text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
+                        className="w-8 h-8 rounded-full border border-pwc-border flex items-center justify-center text-xs font-semibold text-pwc-text hover:bg-pwc-input disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer bg-transparent transition-colors"
                         title="Next Page"
                       >
                         ▶
@@ -865,7 +865,7 @@ function NewCaseForm() {
           <div>
             {/* Stage Progress */}
             <div className="mb-5">
-              <p className="text-xs font-semibold text-[#6b7280] mb-2">Workflow Progress</p>
+              <p className="text-xs font-semibold text-pwc-text-muted mb-2">Workflow Progress</p>
               <div className="flex flex-wrap gap-1">
                 {STAGES.map((s, i) => {
                   const activeCaseInList = cases.find(c => c.id === selectedCase.id) || selectedCase
@@ -875,9 +875,9 @@ function NewCaseForm() {
                   return (
                     <span key={s} className="text-xs px-2 py-0.5 rounded"
                       style={{
-                        background: i < stageIdx ? '#22c55e22' : i === stageIdx ? '#6366f122' : '#1e2235',
-                        color: i < stageIdx ? '#22c55e' : i === stageIdx ? '#6366f1' : '#6b7280',
-                        border: `1px solid ${i <= stageIdx ? (i < stageIdx ? '#22c55e44' : '#6366f144') : '#2a2f45'}`
+                        background: i < stageIdx ? '#22c55e22' : i === stageIdx ? 'rgba(var(--color-primary), 0.13)' : 'rgb(var(--color-input))',
+                        color: i < stageIdx ? '#22c55e' : i === stageIdx ? 'rgb(var(--color-primary))' : 'rgb(var(--color-text-muted))',
+                        border: `1px solid ${i <= stageIdx ? (i < stageIdx ? '#22c55e44' : 'rgba(var(--color-primary), 0.27)') : 'rgb(var(--color-border))'}`
                       }}>
                       {i + 1}. {s.replace(/_/g, ' ')}
                     </span>
@@ -898,10 +898,10 @@ function NewCaseForm() {
             {qLoading ? <Spinner /> : quotes.length > 0 ? (
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-xs font-semibold text-[#6b7280]">Quotes ({quotes.length})</p>
+                  <p className="text-xs font-semibold text-pwc-text-muted">Quotes ({quotes.length})</p>
                   <button 
                     onClick={() => fetchCaseQuotes(selectedCase.id)} 
-                    className="text-xs font-semibold text-[#6366f1] hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
+                    className="text-xs font-semibold text-pwc-primary hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer"
                   >
                     🔄 Refresh Quotes
                   </button>
@@ -913,7 +913,7 @@ function NewCaseForm() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-[#6b7280]">No quotes fetched yet. Run the AI workflow or click "Fetch Quotes" above.</p>
+              <p className="text-sm text-pwc-text-muted">No quotes fetched yet. Run the AI workflow or click "Fetch Quotes" above.</p>
             )}
           </div>
         )}
@@ -1041,10 +1041,10 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
 
   return (
     <Card 
-      className={`relative flex flex-col gap-4 hover:border-[#6366f1] transition-all duration-200 ${isTop ? 'border-[#6366f1]' : ''}`}
+      className={`relative flex flex-col gap-4 hover:border-pwc-primary transition-all duration-200 ${isTop ? 'border-pwc-primary' : ''}`}
     >
       {isTop && (
-        <span className="absolute -top-3 left-4 bg-[#6366f1] text-white text-[10px] px-3 py-0.5 rounded-full font-bold">
+        <span className="absolute -top-3 left-4 bg-pwc-primary text-pwc-white text-[10px] px-3 py-0.5 rounded-full font-bold">
           AI Recommended
         </span>
       )}
@@ -1053,19 +1053,19 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
       <div className="grid grid-cols-1 lg:grid-cols-[160px_1fr_180px_180px] gap-6 items-center">
         
         {/* Col 1: Insurer Logo Emblem & Name */}
-        <div className="flex flex-col items-center text-center lg:border-r lg:border-[#2a2f45] lg:pr-4">
+        <div className="flex flex-col items-center text-center lg:border-r lg:border-pwc-border lg:pr-4">
           <div 
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-extrabold text-sm tracking-wide shadow-md ${theme.bgClass ? 'bg-gradient-to-br ' + theme.bgClass : ''}`}
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-pwc-white font-extrabold text-sm tracking-wide shadow-md ${theme.bgClass ? 'bg-gradient-to-br ' + theme.bgClass : ''}`}
             style={theme.style}
           >
             {theme.logoInitials}
           </div>
-          <p className="font-bold text-sm text-[#e8eaf0] mt-2.5">{theme.name}</p>
-          <span className="text-[10px] text-[#6b7280] mt-0.5">IRDAI Reg No. {Math.floor(100 + Math.random() * 900)}</span>
+          <p className="font-bold text-sm text-pwc-text mt-2.5">{theme.name}</p>
+          <span className="text-[10px] text-pwc-text-muted mt-0.5">IRDAI Reg No. {Math.floor(100 + Math.random() * 900)}</span>
           <button 
             type="button" 
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            className="text-[11px] text-[#6366f1] hover:underline hover:text-[#7c83ff] mt-2 font-medium bg-transparent border-none cursor-pointer"
+            className="text-[11px] text-pwc-primary hover:underline hover:text-[#7c83ff] mt-2 font-medium bg-transparent border-none cursor-pointer"
           >
             About Insurer
           </button>
@@ -1075,7 +1075,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
         <div className="flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <h3 className="font-bold text-base text-[#e8eaf0]">{q.product_name}</h3>
+              <h3 className="font-bold text-base text-pwc-text">{q.product_name}</h3>
               {isTop && <span className="bg-[#2dd4bf]/10 text-[#2dd4bf] text-[9px] px-2 py-0.5 rounded-md font-semibold">Best Choice</span>}
             </div>
             
@@ -1103,20 +1103,20 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-            className="text-[11px] font-semibold text-[#6366f1] hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer text-left self-start mt-2"
+            className="text-[11px] font-semibold text-pwc-primary hover:underline flex items-center gap-1 bg-transparent border-none cursor-pointer text-left self-start mt-2"
           >
             {expanded ? 'Hide plan details ▲' : 'View all features ▼'}
           </button>
         </div>
 
         {/* Col 3: Cover Amount Dropdown */}
-        <div className="flex flex-col gap-1.5 lg:border-l lg:border-[#2a2f45] lg:pl-6">
-          <label className="text-[10px] font-semibold text-[#6b7280] uppercase tracking-[0.15em]">Cover Amount</label>
+        <div className="flex flex-col gap-1.5 lg:border-l lg:border-pwc-border lg:pl-6">
+          <label className="text-[10px] font-semibold text-pwc-text-muted uppercase tracking-[0.15em]">Cover Amount</label>
           <select 
             value={selectedSA} 
             onChange={(e) => setSelectedSA(Number(e.target.value))}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm text-[#e8eaf0] outline-none focus:border-[#6366f1] transition-colors cursor-pointer w-full"
+            className="bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm text-pwc-text outline-none focus:border-pwc-primary transition-colors cursor-pointer w-full"
           >
             <option value={500000}>₹5 Lakh</option>
             <option value={1000000}>₹10 Lakh</option>
@@ -1126,18 +1126,18 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
             <option value={7500000}>₹75 Lakh</option>
             <option value={10000000}>₹1 Crore</option>
           </select>
-          <span className="text-[10px] text-[#6b7280] mt-0.5">Most customers select ₹15L Cover</span>
+          <span className="text-[10px] text-pwc-text-muted mt-0.5">Most customers select ₹15L Cover</span>
         </div>
 
         {/* Col 4: Tenure, Premium & Orange Button */}
-        <div className="flex flex-col gap-2 lg:border-l lg:border-[#2a2f45] lg:pl-6">
+        <div className="flex flex-col gap-2 lg:border-l lg:border-pwc-border lg:pl-6">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold text-[#6b7280] uppercase tracking-[0.15em]">Policy Tenure</label>
+            <label className="text-[10px] font-semibold text-pwc-text-muted uppercase tracking-[0.15em]">Policy Tenure</label>
             <select 
               value={selectedTenure} 
               onChange={(e) => setSelectedTenure(Number(e.target.value))}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-1.5 text-xs text-[#e8eaf0] outline-none focus:border-[#6366f1] transition-colors cursor-pointer w-full"
+              className="bg-pwc-bg border border-pwc-border rounded-lg px-3 py-1.5 text-xs text-pwc-text outline-none focus:border-pwc-primary transition-colors cursor-pointer w-full"
             >
               <option value={1}>1 Year</option>
               <option value={2}>2 Years (5% Off)</option>
@@ -1150,9 +1150,9 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
           <div className="mt-1 flex flex-col justify-center min-h-[44px]">
             <div className="flex items-baseline gap-1">
               <span className="font-extrabold text-[#22c55e] text-lg">₹{Math.round(finalTotalPremium).toLocaleString()}</span>
-              {selectedTenure > 1 && <span className="text-[10px] text-[#6b7280]">for {selectedTenure} yrs</span>}
+              {selectedTenure > 1 && <span className="text-[10px] text-pwc-text-muted">for {selectedTenure} yrs</span>}
             </div>
-            <p className="text-[10px] text-[#6b7280] font-medium">₹{Math.round(finalGstPremium).toLocaleString()} Incl. 18% GST</p>
+            <p className="text-[10px] text-pwc-text-muted font-medium">₹{Math.round(finalGstPremium).toLocaleString()} Incl. 18% GST</p>
           </div>
 
           {caseId && onCustomize && (
@@ -1160,7 +1160,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
               type="button"
               disabled={customizing || (selectedSA === q.sum_assured && selectedTenure === q.policy_tenure)}
               onClick={handleCustomize}
-              className="bg-[#ff5a00] hover:bg-[#e04f00] text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors w-full flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
+              className="bg-[#ff5a00] hover:bg-[#e04f00] text-pwc-white text-xs font-bold py-2 px-3 rounded-lg transition-colors w-full flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-sans"
             >
               {customizing ? (
                 <>
@@ -1181,7 +1181,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
 
       {/* Expanded details containing more benefit coverage info, exclusions, riders etc. */}
       {expanded && (
-        <div className="space-y-4 pt-4 border-t border-[#2a2f45] text-xs">
+        <div className="space-y-4 pt-4 border-t border-pwc-border text-xs">
           
           {q.ai_recommendation_text && (
             <div className="text-xs text-[#2dd4bf] bg-[#2dd4bf]/10 border border-[#2dd4bf]/20 rounded-lg p-3 leading-relaxed whitespace-pre-wrap">
@@ -1192,7 +1192,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
           {/* Benefit Coverages */}
           {Object.keys(coverage).length > 0 && (
             <div>
-              <p className="text-[#6b7280] font-semibold mb-2 uppercase tracking-wider text-[10px]">Benefit Coverages</p>
+              <p className="text-pwc-text-muted font-semibold mb-2 uppercase tracking-wider text-[10px]">Benefit Coverages</p>
               <div className="flex flex-wrap gap-1.5">
                 {Object.entries(coverage).map(([key, val]) => {
                   if (typeof val === 'string') return null; // skip string properties
@@ -1209,17 +1209,17 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
 
           {/* Waiting Period */}
           {q.waiting_period_days !== undefined && q.waiting_period_days !== null && (
-            <div className="flex justify-between items-center bg-[#0f1117] border border-[#2a2f45] rounded-lg p-2.5">
-              <span className="text-[#6b7280] font-medium">Waiting Period for Pre-Existing Diseases</span>
-              <span className="font-semibold text-[#e8eaf0]">{q.waiting_period_days} days ({Math.round(q.waiting_period_days / 365)} years)</span>
+            <div className="flex justify-between items-center bg-pwc-bg border border-pwc-border rounded-lg p-2.5">
+              <span className="text-pwc-text-muted font-medium">Waiting Period for Pre-Existing Diseases</span>
+              <span className="font-semibold text-pwc-text">{q.waiting_period_days} days ({Math.round(q.waiting_period_days / 365)} years)</span>
             </div>
           )}
 
           {/* Riders */}
           {riders.length > 0 && (
             <div>
-              <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Optional Add-ons / Riders</p>
-              <ul className="space-y-1 pl-4 list-disc text-[#e8eaf0]">
+              <p className="text-pwc-text-muted font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Optional Add-ons / Riders</p>
+              <ul className="space-y-1 pl-4 list-disc text-pwc-text">
                 {riders.map((r, i) => {
                   const rName = r.name || r.rider_name || "";
                   const cost = r.annual_cost || r.annual_premium || r.premium_per_year;
@@ -1237,7 +1237,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
           {/* Exclusions */}
           {exclusions.length > 0 && (
             <div>
-              <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Policy Exclusions</p>
+              <p className="text-pwc-text-muted font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Policy Exclusions</p>
               <ul className="space-y-1 pl-4 list-disc text-[#ef4444]">
                 {exclusions.map((exc, i) => (
                   <li key={i}>{exc}</li>
@@ -1251,16 +1251,16 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               {uwDocs.length > 0 && (
                 <div>
-                  <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Required Docs</p>
-                  <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
+                  <p className="text-pwc-text-muted font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Required Docs</p>
+                  <ul className="space-y-1.5 pl-4 list-disc text-pwc-text">
                     {uwDocs.map((doc, i) => <li key={i}>{doc}</li>)}
                   </ul>
                 </div>
               )}
               {medicals.length > 0 && (
                 <div>
-                  <p className="text-[#6b7280] font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Medical Tests</p>
-                  <ul className="space-y-1.5 pl-4 list-disc text-[#e8eaf0]">
+                  <p className="text-pwc-text-muted font-semibold mb-1.5 uppercase tracking-wider text-[10px]">Medical Tests</p>
+                  <ul className="space-y-1.5 pl-4 list-disc text-pwc-text">
                     {medicals.map((test, i) => <li key={i}>{test}</li>)}
                   </ul>
                 </div>
@@ -1290,7 +1290,7 @@ function QuoteComparison() {
       <SectionHeader title="Quote Comparison" />
       <div className="flex gap-3 mb-5 flex-wrap">
         <select value={caseId} onChange={e => setCaseId(e.target.value)}
-          className="bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none flex-1 min-w-48">
+          className="bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none flex-1 min-w-48">
           <option value="">Select a case…</option>
           {cases.map(c => <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>)}
         </select>
@@ -1305,7 +1305,7 @@ function QuoteComparison() {
             <QuoteCard key={q.id} q={q} isTop={i === 0} caseId={caseId} onCustomize={() => load(caseId)} />
           ))}
           {!loading && quotes.length === 0 && caseId && (
-            <p className="text-[#6b7280] text-sm col-span-3 text-center py-10">Currently no quotes available.</p>
+            <p className="text-pwc-text-muted text-sm col-span-3 text-center py-10">Currently no quotes available.</p>
           )}
         </div>
       )}
@@ -1357,11 +1357,11 @@ function BankerRecommendations() {
         <Card>
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] uppercase tracking-[0.2em]">Select Case</label>
+              <label className="text-xs font-semibold text-pwc-text-muted uppercase tracking-[0.2em]">Select Case</label>
               <select
                 value={caseId}
                 onChange={e => { setCaseId(e.target.value); setQuotes([]); }}
-                className="mt-2 w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0]"
+                className="mt-2 w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text"
               >
                 <option value="">Choose a case…</option>
                 {cases.map(c => (
@@ -1372,7 +1372,7 @@ function BankerRecommendations() {
             <Btn onClick={() => load(caseId)} disabled={!caseId || loading} className="w-full">
               {loading ? 'Loading…' : 'Load Recommendation'}
             </Btn>
-            <div className="rounded-2xl border border-[#2a2f45] bg-[#101423] p-4 text-sm text-[#9ca3af]">
+            <div className="rounded-2xl border border-pwc-border bg-[#101423] p-4 text-sm text-[#9ca3af]">
               Choose a case and load quotes to see the recommended plan, score, and alternative products.
             </div>
             {error && <Alert type="error" message={error} />}
@@ -1381,17 +1381,17 @@ function BankerRecommendations() {
 
         <div className="space-y-4">
           <Card className="p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#6b7280] mb-3">Recommended Product</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-pwc-text-muted mb-3">Recommended Product</p>
             {!loading && !recommendedQuote && (
-              <div className="text-sm text-[#6b7280]">Select a case and load quotes to view the recommendation.</div>
+              <div className="text-sm text-pwc-text-muted">Select a case and load quotes to view the recommendation.</div>
             )}
             {recommendedQuote && (
               <div className="space-y-4">
-                <div className="rounded-3xl border border-[#2a2f45] bg-[#0f1117] p-5">
+                <div className="rounded-3xl border border-pwc-border bg-pwc-bg p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm text-[#6b7280]">{recommendedQuote.insurer_name}</p>
-                      <h2 className="text-2xl font-bold text-[#e8eaf0]">{recommendedQuote.product_name}</h2>
+                      <p className="text-sm text-pwc-text-muted">{recommendedQuote.insurer_name}</p>
+                      <h2 className="text-2xl font-bold text-pwc-text">{recommendedQuote.product_name}</h2>
                     </div>
                     <div className="rounded-2xl bg-[#111827] px-4 py-2 text-sm font-semibold text-[#22c55e]">
                       Score: {formatScore(recommendedQuote.ai_score)}
@@ -1402,16 +1402,16 @@ function BankerRecommendations() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-[#2a2f45] bg-[#0f1117] p-5">
-                  <p className="text-sm font-semibold text-[#e8eaf0] mb-3">Alternative Products</p>
-                  {alternatives.length === 0 && <p className="text-sm text-[#6b7280]">No alternative products available.</p>}
+                <div className="rounded-3xl border border-pwc-border bg-pwc-bg p-5">
+                  <p className="text-sm font-semibold text-pwc-text mb-3">Alternative Products</p>
+                  {alternatives.length === 0 && <p className="text-sm text-pwc-text-muted">No alternative products available.</p>}
                   <div className="space-y-3">
                     {alternatives.slice(0, 3).map((quote) => (
-                      <div key={quote.id} className="rounded-2xl border border-[#2a2f45] bg-[#111827] p-4">
+                      <div key={quote.id} className="rounded-2xl border border-pwc-border bg-[#111827] p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-sm font-semibold text-[#e8eaf0]">{quote.insurer_name}</p>
-                            <p className="text-xs text-[#6b7280]">{quote.product_name}</p>
+                            <p className="text-sm font-semibold text-pwc-text">{quote.insurer_name}</p>
+                            <p className="text-xs text-pwc-text-muted">{quote.product_name}</p>
                           </div>
                           <span className="rounded-full bg-[#fbbf24]/10 px-3 py-1 text-xs font-semibold text-[#fbbf24]">
                             {formatScore(quote.ai_score)}
@@ -1457,7 +1457,7 @@ function BankerApprovals() {
     <div>
       <SectionHeader title="Pending Approvals" subtitle="Cases awaiting your approval before OTP consent" />
       {loading ? <Spinner /> : pending.length === 0
-        ? <Card className="text-center py-12 text-[#6b7280]">No cases pending approval 🎉</Card>
+        ? <Card className="text-center py-12 text-pwc-text-muted">No cases pending approval 🎉</Card>
         : pending.map(c => (
           <Card key={c.id} className="mb-4">
             <div className="flex justify-between items-start mb-3">
@@ -1579,7 +1579,7 @@ function CustomerIntake() {
       label: 'Cases',
       render: (row) => {
         const count = cases.filter(c => c.customer_id === row.user_id).length
-        return <span className="font-semibold text-[#6366f1]">{count} Case{count !== 1 ? 's' : ''}</span>
+        return <span className="font-semibold text-pwc-primary">{count} Case{count !== 1 ? 's' : ''}</span>
       }
     },
     { key: 'status', label: 'Status', render: (row) => <Badge label={row.status} /> },
@@ -1595,7 +1595,7 @@ function CustomerIntake() {
             <Upload size={16} />
             <p className="font-semibold">CSV Import</p>
           </div>
-          <p className="text-sm text-[#6b7280] mb-4">Drop a CSV file to import customers. Required columns are name and email; aliases like customer_name, customer_email, and phone_number are accepted.</p>
+          <p className="text-sm text-pwc-text-muted mb-4">Drop a CSV file to import customers. Required columns are name and email; aliases like customer_name, customer_email, and phone_number are accepted.</p>
           {err && <Alert type="error" message={err} />}
           {ok && <Alert type="success" message={ok} />}
           <CsvDropzone
@@ -1624,16 +1624,16 @@ function CustomerIntake() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Risk Appetite</label>
-              <select value={form.risk_appetite} onChange={(e) => update('risk_appetite')(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Risk Appetite</label>
+              <select value={form.risk_appetite} onChange={(e) => update('risk_appetite')(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                 <option value="LOW">LOW</option>
                 <option value="MEDIUM">MEDIUM</option>
                 <option value="HIGH">HIGH</option>
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">KYC Status</label>
-              <select value={form.kyc_status} onChange={(e) => update('kyc_status')(e.target.value)} className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+              <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">KYC Status</label>
+              <select value={form.kyc_status} onChange={(e) => update('kyc_status')(e.target.value)} className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
                 <option value="PENDING">PENDING</option>
                 <option value="VERIFIED">VERIFIED</option>
                 <option value="REVIEW">REVIEW</option>
@@ -1641,16 +1641,16 @@ function CustomerIntake() {
             </div>
           </div>
           <div className="mt-3">
-            <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Financial Goals</label>
+            <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Financial Goals</label>
             <textarea value={form.financial_goals} onChange={(e) => update('financial_goals')(e.target.value)} rows={3}
               placeholder="Family protection, retirement, tax savings"
-              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none" />
+              className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none resize-none" />
           </div>
           <div className="mt-3">
-            <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Notes</label>
+            <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Notes</label>
             <textarea value={form.notes} onChange={(e) => update('notes')(e.target.value)} rows={3}
               placeholder="KYC notes or special requirements"
-              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none resize-none" />
+              className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none resize-none" />
           </div>
           <Btn onClick={submitManual} disabled={saving} className="mt-4 w-full">
             {saving ? 'Saving…' : 'Save Customer'}
@@ -1749,9 +1749,9 @@ function ProposalReview() {
       {success && <Alert type="success" message={success} />}
 
       <Card className="mb-5">
-        <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case for Proposal Review</label>
+        <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case for Proposal Review</label>
         <select value={selectedCaseId} onChange={e => setSelectedCaseId(e.target.value)}
-          className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none">
+          className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none">
           <option value="">Choose a case…</option>
           {cases.map(c => (
             <option key={c.id} value={c.id}>{c.case_number} — {c.current_stage}</option>
@@ -1760,70 +1760,70 @@ function ProposalReview() {
       </Card>
 
       {loading ? <Spinner /> : !selectedCase ? (
-        <Card className="text-center py-12 text-[#6b7280]">No banker-approved cases available for proposal review.</Card>
+        <Card className="text-center py-12 text-pwc-text-muted">No banker-approved cases available for proposal review.</Card>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_0.6fr] gap-5">
           <div className="space-y-5">
             <Card>
-              <p className="text-sm font-semibold text-[#6b7280] mb-3">Customer Details</p>
+              <p className="text-sm font-semibold text-pwc-text-muted mb-3">Customer Details</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#d1d5db]">
                 <div>
-                  <p className="text-xs text-[#6b7280]">Name</p>
+                  <p className="text-xs text-pwc-text-muted">Name</p>
                   <p>{customerProfile.name || 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">Email</p>
+                  <p className="text-xs text-pwc-text-muted">Email</p>
                   <p>{customerProfile.email || 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">Phone</p>
+                  <p className="text-xs text-pwc-text-muted">Phone</p>
                   <p>{customerProfile.phone || 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">Date of Birth</p>
+                  <p className="text-xs text-pwc-text-muted">Date of Birth</p>
                   <p>{customerProfile.dob || customerProfile.date_of_birth || 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">Annual Income</p>
+                  <p className="text-xs text-pwc-text-muted">Annual Income</p>
                   <p>{customerProfile.annual_income ? `₹${Number(customerProfile.annual_income).toLocaleString()}` : 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">Case Stage</p>
+                  <p className="text-xs text-pwc-text-muted">Case Stage</p>
                   <p>{selectedCase.current_stage}</p>
                 </div>
               </div>
             </Card>
 
             <Card>
-              <p className="text-sm font-semibold text-[#6b7280] mb-3">Nominee</p>
+              <p className="text-sm font-semibold text-pwc-text-muted mb-3">Nominee</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#d1d5db]">
                 <div>
-                  <p className="text-xs text-[#6b7280]">Name</p>
+                  <p className="text-xs text-pwc-text-muted">Name</p>
                   <p>{nomineeName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">Relationship</p>
+                  <p className="text-xs text-pwc-text-muted">Relationship</p>
                   <p>{nomineeRelation || 'Not provided'}</p>
                 </div>
               </div>
             </Card>
 
             <Card>
-              <p className="text-sm font-semibold text-[#6b7280] mb-3">Coverage</p>
+              <p className="text-sm font-semibold text-pwc-text-muted mb-3">Coverage</p>
               {selectedQuote ? (
                 <div className="space-y-3 text-sm text-[#d1d5db]">
                   <div>
-                    <p className="text-xs text-[#6b7280]">Plan</p>
+                    <p className="text-xs text-pwc-text-muted">Plan</p>
                     <p>{selectedQuote.product_name || selectedQuote.insurer_name || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#6b7280]">Coverage Details</p>
+                    <p className="text-xs text-pwc-text-muted">Coverage Details</p>
                     {coverageDetails && typeof coverageDetails === 'object' ? (
                       <div className="space-y-2">
                         {Object.entries(coverageDetails).map(([key, value]) => (
-                          <div key={key} className="rounded-xl border border-[#2a2f45] bg-[#0f1117] p-3">
-                            <p className="text-[10px] text-[#6b7280] uppercase tracking-[0.18em] mb-1">{key.replace(/_/g, ' ')}</p>
-                            <p className="text-sm text-[#e8eaf0]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</p>
+                          <div key={key} className="rounded-xl border border-pwc-border bg-pwc-bg p-3">
+                            <p className="text-[10px] text-pwc-text-muted uppercase tracking-[0.18em] mb-1">{key.replace(/_/g, ' ')}</p>
+                            <p className="text-sm text-pwc-text">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</p>
                           </div>
                         ))}
                       </div>
@@ -1838,14 +1838,14 @@ function ProposalReview() {
             </Card>
 
             <Card>
-              <p className="text-sm font-semibold text-[#6b7280] mb-3">KYC</p>
+              <p className="text-sm font-semibold text-pwc-text-muted mb-3">KYC</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-[#d1d5db]">
                 <div>
-                  <p className="text-xs text-[#6b7280]">KYC Status</p>
+                  <p className="text-xs text-pwc-text-muted">KYC Status</p>
                   <p>{selectedCase.kyc_status || 'PENDING'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[#6b7280]">eSign Status</p>
+                  <p className="text-xs text-pwc-text-muted">eSign Status</p>
                   <p>{selectedCase.esign_status || 'NOT_STARTED'}</p>
                 </div>
               </div>
@@ -1855,24 +1855,24 @@ function ProposalReview() {
           <div className="space-y-5">
             <Card className="space-y-4">
               <div>
-                <p className="text-sm font-semibold text-[#6b7280] mb-2">Selected Quote</p>
-                <p className="text-lg font-bold text-[#e8eaf0]">{selectedQuote?.product_name || 'No quote selected'}</p>
-                <p className="text-sm text-[#6b7280]">{selectedQuote?.insurer_name || ''}</p>
+                <p className="text-sm font-semibold text-pwc-text-muted mb-2">Selected Quote</p>
+                <p className="text-lg font-bold text-pwc-text">{selectedQuote?.product_name || 'No quote selected'}</p>
+                <p className="text-sm text-pwc-text-muted">{selectedQuote?.insurer_name || ''}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm text-[#d1d5db]">
-                <div className="rounded-2xl border border-[#2a2f45] bg-[#0f1117] p-4">
-                  <p className="text-[11px] text-[#6b7280]">Premium</p>
+                <div className="rounded-2xl border border-pwc-border bg-pwc-bg p-4">
+                  <p className="text-[11px] text-pwc-text-muted">Premium</p>
                   <p className="font-semibold text-[#22c55e]">{selectedQuote?.annual_premium ? `₹${selectedQuote.annual_premium.toLocaleString()}` : '—'}</p>
                 </div>
-                <div className="rounded-2xl border border-[#2a2f45] bg-[#0f1117] p-4">
-                  <p className="text-[11px] text-[#6b7280]">Sum Assured</p>
-                  <p className="font-semibold text-[#e8eaf0]">{selectedQuote?.sum_assured ? `₹${selectedQuote.sum_assured.toLocaleString()}` : '—'}</p>
+                <div className="rounded-2xl border border-pwc-border bg-pwc-bg p-4">
+                  <p className="text-[11px] text-pwc-text-muted">Sum Assured</p>
+                  <p className="font-semibold text-pwc-text">{selectedQuote?.sum_assured ? `₹${selectedQuote.sum_assured.toLocaleString()}` : '—'}</p>
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#2a2f45] bg-[#101423] p-5">
-                <p className="text-sm text-[#6b7280] mb-3">Review Notes</p>
+              <div className="rounded-3xl border border-pwc-border bg-[#101423] p-5">
+                <p className="text-sm text-pwc-text-muted mb-3">Review Notes</p>
                 <p className="text-sm text-[#d1d5db]">Submit the reviewed proposal to underwriting once customer details and KYC status are correct. This does not replace insurer underwriting review.</p>
               </div>
 
@@ -1882,22 +1882,22 @@ function ProposalReview() {
             </Card>
 
             <Card>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6b7280] mb-3">Proposal Summary</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pwc-text-muted mb-3">Proposal Summary</p>
               <div className="space-y-3 text-sm text-[#d1d5db]">
                 <div>
-                  <p className="text-[#6b7280]">Case Number</p>
+                  <p className="text-pwc-text-muted">Case Number</p>
                   <p>{selectedCase.case_number}</p>
                 </div>
                 <div>
-                  <p className="text-[#6b7280]">Banker Approved</p>
+                  <p className="text-pwc-text-muted">Banker Approved</p>
                   <p>{selectedCase.banker_approved ? 'Yes' : 'No'}</p>
                 </div>
                 <div>
-                  <p className="text-[#6b7280]">Current Stage</p>
+                  <p className="text-pwc-text-muted">Current Stage</p>
                   <p>{selectedCase.current_stage}</p>
                 </div>
                 <div>
-                  <p className="text-[#6b7280]">OTP Verified</p>
+                  <p className="text-pwc-text-muted">OTP Verified</p>
                   <p>{selectedCase.consent_given ? 'Yes' : 'Pending'}</p>
                 </div>
               </div>

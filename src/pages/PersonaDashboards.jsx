@@ -232,15 +232,15 @@ function PolicyIssuanceDetails() {
         <h3 className="text-lg font-semibold mb-4">Customer & Case Details</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
           <div>
-            <div className="text-sm text-[#6b7280] mb-2">Customer ID</div>
+            <div className="text-sm text-pwc-text-muted mb-2">Customer ID</div>
             <div>{caseItem.customer_id}</div>
-            <div className="text-sm text-[#6b7280] mt-4 mb-2">Banker ID</div>
+            <div className="text-sm text-pwc-text-muted mt-4 mb-2">Banker ID</div>
             <div>{caseItem.banker_id || '—'}</div>
-            <div className="text-sm text-[#6b7280] mt-4 mb-2">Premium Budget</div>
+            <div className="text-sm text-pwc-text-muted mt-4 mb-2">Premium Budget</div>
             <div>{caseItem.premium_budget ? `₹${caseItem.premium_budget.toLocaleString()}` : '—'}</div>
           </div>
           <div>
-            <div className="text-sm text-[#6b7280] mb-2">Customer Profile</div>
+            <div className="text-sm text-pwc-text-muted mb-2">Customer Profile</div>
             {profileEntries.length > 0 ? (
               <div className="space-y-2">
                 {profileEntries.map(([key, value]) => (
@@ -261,23 +261,23 @@ function PolicyIssuanceDetails() {
         {policy ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
             <div>
-              <div className="text-sm text-[#6b7280] mb-2">Insurer</div>
+              <div className="text-sm text-pwc-text-muted mb-2">Insurer</div>
               <div>{policy.insurer_name}</div>
             </div>
             <div>
-              <div className="text-sm text-[#6b7280] mb-2">Product</div>
+              <div className="text-sm text-pwc-text-muted mb-2">Product</div>
               <div>{policy.product_name || '—'}</div>
             </div>
             <div>
-              <div className="text-sm text-[#6b7280] mb-2">Policy Number</div>
+              <div className="text-sm text-pwc-text-muted mb-2">Policy Number</div>
               <div>{policy.policy_number || 'Draft'}</div>
             </div>
             <div>
-              <div className="text-sm text-[#6b7280] mb-2">Status</div>
+              <div className="text-sm text-pwc-text-muted mb-2">Status</div>
               <div>{policy.status || 'DRAFT'}</div>
             </div>
             <div>
-              <div className="text-sm text-[#6b7280] mb-2">Annual Premium</div>
+              <div className="text-sm text-pwc-text-muted mb-2">Annual Premium</div>
               <div>{policy.annual_premium ? `₹${policy.annual_premium.toLocaleString()}` : '—'}</div>
             </div>
           </div>
@@ -293,17 +293,17 @@ function PolicyIssuanceDetails() {
             {docs.map((doc) => (
               <div
                 key={doc.id}
-                className="border border-[#2a2f45] rounded-lg p-3 hover:bg-[#1e2235] cursor-pointer"
+                className="border border-pwc-border rounded-lg p-3 hover:bg-pwc-input cursor-pointer"
                 onClick={() => {
                   setSelectedDocId(doc.id)
                   setSelectedDocTitle(doc.file_name)
                   setViewOpen(true)
                 }}
               >
-                <div className="text-sm text-[#6b7280]">{doc.document_type}</div>
+                <div className="text-sm text-pwc-text-muted">{doc.document_type}</div>
                 <div>{doc.file_name}</div>
-                <div className="text-xs text-[#6b7280] mt-1">Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}</div>
-                <div className="text-xs text-[#6b7280]">Verified: {doc.verified ? 'Yes' : 'No'}</div>
+                <div className="text-xs text-pwc-text-muted mt-1">Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}</div>
+                <div className="text-xs text-pwc-text-muted">Verified: {doc.verified ? 'Yes' : 'No'}</div>
               </div>
             ))}
           </div>
@@ -313,13 +313,13 @@ function PolicyIssuanceDetails() {
       </Card>
 
       <Modal open={viewOpen} onClose={() => setViewOpen(false)} title={selectedDocTitle} className="max-w-5xl">
-        <div className="w-full h-[75vh] bg-[#0f1117] rounded-lg overflow-hidden border border-[#2a2f45] relative">
+        <div className="w-full h-[75vh] bg-pwc-bg rounded-lg overflow-hidden border border-pwc-border relative">
           {selectedDocId ? (
             isImage ? (
               <img
                 src={previewUrl}
                 alt={selectedDocTitle}
-                className="w-full h-full object-contain bg-[#0f1117]"
+                className="w-full h-full object-contain bg-pwc-bg"
               />
             ) : isPdf ? (
               <iframe
@@ -328,20 +328,20 @@ function PolicyIssuanceDetails() {
                 title={selectedDocTitle}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-sm text-[#6b7280] px-4 text-center">
+              <div className="flex flex-col items-center justify-center h-full text-sm text-pwc-text-muted px-4 text-center">
                 <p>Preview not available for this file type.</p>
                 <a
                   href={previewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 px-4 py-2 rounded-lg bg-[#6366f1] text-white"
+                  className="mt-3 px-4 py-2 rounded-lg bg-pwc-primary text-pwc-white"
                 >
                   Open file in new tab
                 </a>
               </div>
             )
           ) : (
-            <div className="flex items-center justify-center h-full text-sm text-[#6b7280]">Select a document to preview</div>
+            <div className="flex items-center justify-center h-full text-sm text-pwc-text-muted">Select a document to preview</div>
           )}
         </div>
       </Modal>
@@ -351,11 +351,11 @@ function PolicyIssuanceDetails() {
         {quotes.length > 0 ? (
           <div className="space-y-3">
             {quotes.map((quote) => (
-              <div key={quote.id} className="border border-[#2a2f45] rounded-lg p-3">
+              <div key={quote.id} className="border border-pwc-border rounded-lg p-3">
                 <div className="font-semibold">{quote.insurer_name}</div>
                 <div>{quote.product_name}</div>
-                <div className="text-sm text-[#6b7280]">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
-                <div className="text-sm text-[#6b7280]">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
+                <div className="text-sm text-pwc-text-muted">Premium: ₹{quote.annual_premium?.toLocaleString() || '—'}</div>
+                <div className="text-sm text-pwc-text-muted">Sum Assured: ₹{quote.sum_assured?.toLocaleString() || '—'}</div>
               </div>
             ))}
           </div>
@@ -404,7 +404,7 @@ function ComplianceOverview() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 16, marginBottom: 24 }}>
         <StatCard title="Compliance Score" value={`${stats?.compliance_score || 0}%`} color="#22c55e" icon={ShieldCheck} />
         <StatCard title="Total Policies" value={stats?.total_policies || 0} icon={ClipboardList} />
-        <StatCard title="Checked" value={stats?.checked_policies || 0} color="#6366f1" icon={ShieldCheck} />
+        <StatCard title="Checked" value={stats?.checked_policies || 0} color="rgb(var(--color-primary))" icon={ShieldCheck} />
         <StatCard title="Exceptions" value={stats?.exception_count || 0} color="#f59e0b" icon={Clock} />
       </div>
     </div>

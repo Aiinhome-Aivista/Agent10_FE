@@ -43,8 +43,8 @@ function Dropzone({ docType, onUpload, uploading, isEsignCompleted }) {
       onDrop={handleDrop}
       className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200
         ${isDragActive 
-          ? 'border-[#6366f1] bg-[#6366f1]/5 scale-[1.01]' 
-          : 'border-[#2a2f45] hover:border-[#4f46e5] bg-[#0b0d14]'
+          ? 'border-pwc-primary bg-pwc-primary/5 scale-[1.01]' 
+          : 'border-pwc-border hover:border-[#4f46e5] bg-[#0b0d14]'
         }`}
       onClick={() => document.getElementById(`file-input-${docType}`).click()}
     >
@@ -58,12 +58,12 @@ function Dropzone({ docType, onUpload, uploading, isEsignCompleted }) {
         disabled={uploading}
       />
       <div className="flex flex-col items-center justify-center gap-2">
-        <span className="text-2xl text-[#6366f1]">☁️</span>
-        <p className="text-xs font-semibold text-[#e8eaf0]">
-          Drag & drop files here, or <span className="text-[#6366f1] hover:underline">browse</span>
+        <span className="text-2xl text-pwc-primary">☁️</span>
+        <p className="text-xs font-semibold text-pwc-text">
+          Drag & drop files here, or <span className="text-pwc-primary hover:underline">browse</span>
         </p>
-        <p className="text-[10px] text-[#6b7280]">Supports multiple PDF, JPG, PNG, or ZIP files</p>
-        {uploading && <span className="text-xs text-[#6366f1] mt-1 font-semibold animate-pulse">Uploading files…</span>}
+        <p className="text-[10px] text-pwc-text-muted">Supports multiple PDF, JPG, PNG, or ZIP files</p>
+        {uploading && <span className="text-xs text-pwc-primary mt-1 font-semibold animate-pulse">Uploading files…</span>}
       </div>
     </div>
   )
@@ -234,11 +234,11 @@ export default function CustomerDocumentsPage() {
       <Card>
         <div className="flex flex-wrap gap-4 items-end justify-between">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-xs font-semibold text-[#6b7280] block mb-1.5">Select Case</label>
+            <label className="text-xs font-semibold text-pwc-text-muted block mb-1.5">Select Case</label>
             <select
               value={selectedCaseId}
               onChange={e => setSelectedCaseId(e.target.value)}
-              className="w-full bg-[#0f1117] border border-[#2a2f45] rounded-lg px-3 py-2 text-sm outline-none text-[#e8eaf0] focus:border-[#6366f1]"
+              className="w-full bg-pwc-bg border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
             >
               <option value="">Choose a case…</option>
               {cases.map(c => (
@@ -258,19 +258,19 @@ export default function CustomerDocumentsPage() {
       {loadingDetails ? (
         <Spinner />
       ) : !activeCase ? (
-        <Card className="text-center py-12 text-[#6b7280]">Select a case above to manage your documents.</Card>
+        <Card className="text-center py-12 text-pwc-text-muted">Select a case above to manage your documents.</Card>
       ) : activeCase.current_stage !== 'MEDICAL_COORDINATION' && activeCase.current_stage !== 'UNDERWRITING' && activeCase.current_stage !== 'POLICY_ISSUANCE' && activeCase.current_stage !== 'COMPLETED' ? (
-        <Card className="text-center py-12 bg-[#0b0d14] border border-dashed border-[#2a2f45] rounded-xl">
+        <Card className="text-center py-12 bg-[#0b0d14] border border-dashed border-pwc-border rounded-xl">
           <p className="text-sm text-yellow-500 font-semibold mb-1">Document Upload Not Active</p>
-          <p className="text-xs text-[#6b7280]">
+          <p className="text-xs text-pwc-text-muted">
             Document upload is only available when the case is in the <strong>MEDICAL COORDINATION</strong> stage.
           </p>
           <p className="text-[11px] text-[#525876] mt-2">Current stage: {activeCase.current_stage.replace(/_/g, ' ')}</p>
         </Card>
       ) : !activeRequest ? (
-        <Card className="text-center py-12 bg-[#0b0d14] border border-dashed border-[#2a2f45] rounded-xl">
+        <Card className="text-center py-12 bg-[#0b0d14] border border-dashed border-pwc-border rounded-xl">
           <p className="text-sm text-yellow-500 font-semibold mb-1">Waiting for Underwriter Request</p>
-          <p className="text-xs text-[#6b7280]">
+          <p className="text-xs text-pwc-text-muted">
             Underwriter has not initiated a document request for this case yet. Please wait for the underwriter to request KYC and Medical documents.
           </p>
         </Card>
@@ -286,11 +286,11 @@ export default function CustomerDocumentsPage() {
                   <span className="text-lg">⚠️</span>
                   <h4 className="text-sm font-semibold text-yellow-500">Underwriter Query Notes</h4>
                 </div>
-                <p className="text-xs text-white bg-[#0f1117] border border-[#2a2f45] p-3 rounded-lg leading-relaxed whitespace-pre-wrap">
+                <p className="text-xs text-pwc-white bg-pwc-bg border border-pwc-border p-3 rounded-lg leading-relaxed whitespace-pre-wrap">
                   {activeRequest.requirements.join('\n')}
                 </p>
                 {activeRequest.ops_remarks && activeRequest.ops_remarks !== 'Underwriter raised query' && (
-                  <p className="text-[11px] text-[#6b7280] mt-2 italic">
+                  <p className="text-[11px] text-pwc-text-muted mt-2 italic">
                     Status: {activeRequest.ops_remarks}
                   </p>
                 )}
@@ -298,13 +298,13 @@ export default function CustomerDocumentsPage() {
             )}
 
             {/* KYC Documents Section */}
-            <Card className={`border ${hasKyc ? 'border-[#22c55e]/30 bg-[#22c55e]/5' : 'border-[#2a2f45] bg-[#0f1117]'}`}>
-              <div className="flex items-start justify-between gap-4 mb-3 border-b border-[#2a2f45]/50 pb-3">
+            <Card className={`border ${hasKyc ? 'border-[#22c55e]/30 bg-[#22c55e]/5' : 'border-pwc-border bg-pwc-bg'}`}>
+              <div className="flex items-start justify-between gap-4 mb-3 border-b border-pwc-border/50 pb-3">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🪪</span>
                   <div>
-                    <h4 className="text-sm font-semibold text-white">KYC Documents</h4>
-                    <p className="text-[10px] text-[#6b7280]">Upload your identity and address proof documents individually.</p>
+                    <h4 className="text-sm font-semibold text-pwc-white">KYC Documents</h4>
+                    <p className="text-[10px] text-pwc-text-muted">Upload your identity and address proof documents individually.</p>
                   </div>
                 </div>
                 <Badge label={hasKyc ? `${kycDocs.length} Uploaded` : 'Pending'} />
@@ -312,7 +312,7 @@ export default function CustomerDocumentsPage() {
               
               {/* List of uploaded KYC files */}
               {hasKyc && (
-                <div className="space-y-2 mb-4 bg-[#0f1117]/80 rounded-lg p-2.5 border border-[#2a2f45]/40">
+                <div className="space-y-2 mb-4 bg-pwc-bg/80 rounded-lg p-2.5 border border-pwc-border/40">
                   {kycDocs.map(d => (
                     <div key={d.id} className="flex items-center justify-between gap-3 text-xs">
                       <span className="text-[#22c55e] truncate flex-1">📄 {d.file_name}</span>
@@ -328,8 +328,8 @@ export default function CustomerDocumentsPage() {
               )}
 
               {/* Mandatory requirements checklist */}
-              <div className="p-3 bg-[#1e2235]/40 rounded-lg text-xs text-[#9ca3af] border border-[#2a2f45]/40 mb-4">
-                <span className="font-bold text-white block mb-1">⚠️ KYC Documents to Upload:</span>
+              <div className="p-3 bg-pwc-input/40 rounded-lg text-xs text-[#9ca3af] border border-pwc-border/40 mb-4">
+                <span className="font-bold text-pwc-white block mb-1">⚠️ KYC Documents to Upload:</span>
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
                   <li>PAN Card (Mandatory Identity Proof)</li>
                   <li>Aadhaar Card / Voter ID / Passport (Address Proof)</li>
@@ -351,13 +351,13 @@ export default function CustomerDocumentsPage() {
             </Card>
 
             {/* Medical Documents Section */}
-            <Card className={`border ${hasMed ? 'border-[#22c55e]/30 bg-[#22c55e]/5' : 'border-[#2a2f45] bg-[#0f1117]'}`}>
-              <div className="flex items-start justify-between gap-4 mb-3 border-b border-[#2a2f45]/50 pb-3">
+            <Card className={`border ${hasMed ? 'border-[#22c55e]/30 bg-[#22c55e]/5' : 'border-pwc-border bg-pwc-bg'}`}>
+              <div className="flex items-start justify-between gap-4 mb-3 border-b border-pwc-border/50 pb-3">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🩺</span>
                   <div>
-                    <h4 className="text-sm font-semibold text-white">Medical Documents</h4>
-                    <p className="text-[10px] text-[#6b7280]">Upload your diagnostic medical reports and declarations.</p>
+                    <h4 className="text-sm font-semibold text-pwc-white">Medical Documents</h4>
+                    <p className="text-[10px] text-pwc-text-muted">Upload your diagnostic medical reports and declarations.</p>
                   </div>
                 </div>
                 <Badge label={hasMed ? `${medDocs.length} Uploaded` : 'Pending'} />
@@ -365,7 +365,7 @@ export default function CustomerDocumentsPage() {
 
               {/* List of uploaded Medical files */}
               {hasMed && (
-                <div className="space-y-2 mb-4 bg-[#0f1117]/80 rounded-lg p-2.5 border border-[#2a2f45]/40">
+                <div className="space-y-2 mb-4 bg-pwc-bg/80 rounded-lg p-2.5 border border-pwc-border/40">
                   {medDocs.map(d => (
                     <div key={d.id} className="flex items-center justify-between gap-3 text-xs">
                       <span className="text-[#22c55e] truncate flex-1">📄 {d.file_name}</span>
@@ -381,8 +381,8 @@ export default function CustomerDocumentsPage() {
               )}
 
               {/* Mandatory requirements checklist */}
-              <div className="p-3 bg-[#1e2235]/40 rounded-lg text-xs text-[#9ca3af] border border-[#2a2f45]/40 mb-4">
-                <span className="font-bold text-white block mb-1">⚠️ Medical Documents to Upload:</span>
+              <div className="p-3 bg-pwc-input/40 rounded-lg text-xs text-[#9ca3af] border border-pwc-border/40 mb-4">
+                <span className="font-bold text-pwc-white block mb-1">⚠️ Medical Documents to Upload:</span>
                 <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
                   <li>Latest Blood Test Report (CBC, Blood Sugar, Cholesterol)</li>
                   <li>Urine Analysis Report</li>
@@ -406,39 +406,39 @@ export default function CustomerDocumentsPage() {
           {/* Right Column: eSign & Submission */}
           <div className="lg:col-span-2">
             <Card>
-              <h3 className="font-bold text-sm text-[#e8eaf0] mb-3 flex items-center gap-2">
+              <h3 className="font-bold text-sm text-pwc-text mb-3 flex items-center gap-2">
                 <ShieldCheck size={16} className="text-[#2dd4bf]" />
                 e-Sign & Submit
               </h3>
               
               <div className="space-y-2 mb-4 text-xs text-[#9ca3af]">
-                <div className="flex justify-between border-b border-[#2a2f45] py-1.5">
+                <div className="flex justify-between border-b border-pwc-border py-1.5">
                   <span>KYC Files:</span>
                   <span className={hasKyc ? 'text-[#22c55e] font-semibold' : 'text-[#f59e0b]'}>{hasKyc ? `${kycDocs.length} uploaded` : 'None'}</span>
                 </div>
-                <div className="flex justify-between border-b border-[#2a2f45] py-1.5">
+                <div className="flex justify-between border-b border-pwc-border py-1.5">
                   <span>Medical Files:</span>
                   <span className={hasMed ? 'text-[#22c55e] font-semibold' : 'text-[#f59e0b]'}>{hasMed ? `${medDocs.length} uploaded` : 'None'}</span>
                 </div>
-                <div className="flex justify-between border-b border-[#2a2f45] py-1.5">
+                <div className="flex justify-between border-b border-pwc-border py-1.5">
                   <span>Case Stage:</span>
-                  <span className="font-semibold text-white">{activeCase.current_stage.replace(/_/g, ' ')}</span>
+                  <span className="font-semibold text-pwc-white">{activeCase.current_stage.replace(/_/g, ' ')}</span>
                 </div>
               </div>
 
               {isEsignCompleted ? (
                 <div className="p-4 bg-[#22c55e]/15 border border-[#22c55e]/30 rounded-xl text-center">
                   <p className="text-sm text-[#22c55e] font-bold">Proposal Signed & Submitted</p>
-                  <p className="text-[11px] text-[#6b7280] mt-1">Underwriter has been notified. Review is in progress.</p>
+                  <p className="text-[11px] text-pwc-text-muted mt-1">Underwriter has been notified. Review is in progress.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <label className="flex items-start gap-2.5 text-xs cursor-pointer p-3 rounded-lg border border-[#2a2f45] bg-[#0b0d14]">
+                  <label className="flex items-start gap-2.5 text-xs cursor-pointer p-3 rounded-lg border border-pwc-border bg-[#0b0d14]">
                     <input
                       type="checkbox"
                       checked={esignChecked}
                       onChange={e => setEsignChecked(e.target.checked)}
-                      className="mt-0.5 accent-[#6366f1] cursor-pointer"
+                      className="mt-0.5 accent-pwc-primary cursor-pointer"
                       disabled={!allUploaded}
                     />
                     <span className={`leading-relaxed ${!allUploaded ? 'opacity-50' : 'text-[#9ca3af]'}`}>

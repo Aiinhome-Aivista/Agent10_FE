@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { useTheme } from './hooks/useTheme'
 
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
@@ -35,6 +36,9 @@ function RoleRedirect() {
 }
 
 export default function App() {
+  // Initialize theme at the root level so all pages respect it
+  useTheme()
+
   return (
     <BrowserRouter>
       <Routes>

@@ -17,7 +17,7 @@ function Overview() {
         <StatCard title="Total Users"      value={stats.total_users}      icon={Users} />
         <StatCard title="Total Cases"      value={stats.total_cases}      icon={FileText} />
         <StatCard title="Active Cases"     value={stats.active_cases}     color="#22c55e" icon={FileText} />
-        <StatCard title="Completed"        value={stats.completed_cases}  color="#6366f1" icon={Shield} />
+        <StatCard title="Completed"        value={stats.completed_cases}  color="rgb(var(--color-primary))" icon={Shield} />
         <StatCard title="Open Escalations" value={stats.open_escalations} color="#f59e0b" icon={Bell} />
       </div>
     </div>
@@ -129,7 +129,7 @@ function EscalationsView() {
     { key:'level',            label:'Level',  render: r => <Badge label={r.level} /> },
     { key:'stage',            label:'Stage' },
     { key:'assigned_to_role', label:'Assigned To' },
-    { key:'reason',           label:'Reason', render: r => <span className="text-xs text-[#6b7280]">{r.reason?.slice(0,50)}…</span> },
+    { key:'reason',           label:'Reason', render: r => <span className="text-xs text-pwc-text-muted">{r.reason?.slice(0,50)}…</span> },
     { key:'created_at',       label:'Time',   render: r => r.created_at ? new Date(r.created_at).toLocaleDateString() : '—' },
   ]
   return (

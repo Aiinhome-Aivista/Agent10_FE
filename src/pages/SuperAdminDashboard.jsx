@@ -21,7 +21,7 @@ function Overview() {
         <StatCard title="Total Users" value={stats?.total_users ?? 0} icon={Users} />
         <StatCard title="Total Cases" value={stats?.total_cases ?? 0} icon={FileText} />
         <StatCard title="Active Cases" value={stats?.active_cases ?? 0} color="#22c55e" icon={FileText} />
-        <StatCard title="Completed" value={stats?.completed_cases ?? 0} color="#6366f1" icon={FileText} />
+        <StatCard title="Completed" value={stats?.completed_cases ?? 0} color="rgb(var(--color-primary))" icon={FileText} />
         <StatCard title="Escalations" value={stats?.open_escalations ?? 0} color="#f59e0b" icon={Bell} />
       </div>
     </div>

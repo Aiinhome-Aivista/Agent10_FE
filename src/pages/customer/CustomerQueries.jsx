@@ -35,34 +35,34 @@ export default function CustomerQueries() {
       {queries.map(q => {
         const requirements = q.requirements || []
         return (
-          <Card key={q.id} style={{ marginBottom: 12, backgroundColor: '#0f1117', borderColor: '#2a2f45', border: '1px solid #2a2f45', padding: 16 }}>
+          <Card key={q.id} style={{ marginBottom: 12, backgroundColor: 'rgb(var(--color-bg))', borderColor: 'rgb(var(--color-border))', border: '1px solid rgb(var(--color-border))', padding: 16 }}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#e8eaf0', fontSize: 14 }}>Pending Query</div>
+                  <div style={{ fontWeight: 700, color: 'rgb(var(--color-text))', fontSize: 14 }}>Pending Query</div>
                 </div>
-                <div style={{ color: '#6b7280', fontSize: 12 }}>{q.created_at ? new Date(q.created_at).toLocaleDateString() : ''}</div>
+                <div style={{ color: 'rgb(var(--color-text-muted))', fontSize: 12 }}>{q.created_at ? new Date(q.created_at).toLocaleDateString() : ''}</div>
               </div>
               
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #2a2f45' }}>
-                <div style={{ color: '#9ca3af', fontSize: 12, marginBottom: 4 }}>Requested By: <span style={{ color: '#e8eaf0', fontWeight: 600 }}>Underwriter</span></div>
-                <div style={{ color: '#9ca3af', fontSize: 12, marginBottom: 4 }}>Required Document: <span style={{ color: '#e8eaf0', fontWeight: 600 }}>{(requirements[0]) || q.reason || 'Document'}</span></div>
-                <div style={{ color: '#9ca3af', fontSize: 12 }}>Status: <span style={{ color: '#f59e0b', fontWeight: 600 }}>Pending</span></div>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgb(var(--color-border))' }}>
+                <div style={{ color: 'rgb(var(--color-text-muted))', fontSize: 12, marginBottom: 4 }}>Requested By: <span style={{ color: 'rgb(var(--color-text))', fontWeight: 600 }}>Underwriter</span></div>
+                <div style={{ color: 'rgb(var(--color-text-muted))', fontSize: 12, marginBottom: 4 }}>Required Document: <span style={{ color: 'rgb(var(--color-text))', fontWeight: 600 }}>{(requirements[0]) || q.reason || 'Document'}</span></div>
+                <div style={{ color: 'rgb(var(--color-text-muted))', fontSize: 12 }}>Status: <span style={{ color: '#f59e0b', fontWeight: 600 }}>Pending</span></div>
               </div>
             </div>
 
             <form onSubmit={(e) => handleReply(q.id, e)}>
               <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>Upload Document</label>
-                <input type="file" name="files" required style={{ padding: 8, borderRadius: 6, border: '1px solid #2a2f45', background: '#161b2e', color: '#e8eaf0', width: '100%' }} />
+                <label style={{ display: 'block', color: 'rgb(var(--color-text-muted))', fontSize: 12, marginBottom: 6 }}>Upload Document</label>
+                <input type="file" name="files" required style={{ padding: 8, borderRadius: 6, border: '1px solid rgb(var(--color-border))', background: 'rgb(var(--color-white))', color: 'rgb(var(--color-text))', width: '100%' }} />
               </div>
               
               <div style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>Reply Message (Optional)</label>
-                <input name="message" placeholder="Add a message..." style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #2a2f45', background: '#161b2e', color: '#e8eaf0', fontSize: 12 }} />
+                <label style={{ display: 'block', color: 'rgb(var(--color-text-muted))', fontSize: 12, marginBottom: 6 }}>Reply Message (Optional)</label>
+                <input name="message" placeholder="Add a message..." style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid rgb(var(--color-border))', background: 'rgb(var(--color-white))', color: 'rgb(var(--color-text))', fontSize: 12 }} />
               </div>
 
-              <Btn type="submit" disabled={uploading[q.id]} style={{ backgroundColor: '#4f46e5', color: '#fff', width: '100%' }}>
+              <Btn type="submit" disabled={uploading[q.id]} style={{ backgroundColor: 'rgb(var(--color-hover-orange))', color: "var(--text)", width: '100%' }}>
                 {uploading[q.id] ? 'Uploading...' : 'Upload Document'}
               </Btn>
             </form>

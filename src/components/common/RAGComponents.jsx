@@ -31,7 +31,7 @@ function FileDropzone({ file, onFileChange, onClear, description, label = 'Docum
       }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
-      className={`group rounded-xl border border-dashed border-[#2a2f45] bg-[linear-gradient(180deg,#15192a_0%,#101423_100%)] p-5 transition-colors text-left ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-[#6366f1] hover:bg-[#15192f]'}`}
+      className={`group rounded-xl border border-dashed border-pwc-border bg-pwc-bg p-5 transition-colors text-left ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-pwc-primary hover:bg-[#15192f]'}`}
     >
       <input
         ref={inputRef}
@@ -41,18 +41,18 @@ function FileDropzone({ file, onFileChange, onClear, description, label = 'Docum
         onChange={(event) => onFileChange(event.target.files?.[0] || null)}
       />
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#6366f1]/15 text-[#7c83ff]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pwc-primary/15 text-[#7c83ff]">
           <Upload size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-[#e8eaf0]">{label}</p>
-          <p className="mt-1 text-sm text-[#6b7280]">{description}</p>
-          <p className="mt-2 text-xs text-[#93a1c6]">Drop a PDF, DOCX, or TXT file here or click to browse.</p>
+          <p className="font-semibold text-pwc-text">{label}</p>
+          <p className="mt-1 text-sm text-pwc-text-muted">{description}</p>
+          <p className="mt-2 text-xs text-pwc-placeholder">Drop a PDF, DOCX, or TXT file here or click to browse.</p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#2a2f45] bg-[#0f1117] px-3 py-2 text-sm">
-        <span className="text-[#6b7280]">Selected file:</span>
-        <span className="truncate font-medium text-[#e8eaf0]">{file?.name || 'No file selected'}</span>
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-pwc-border bg-pwc-bg px-3 py-2 text-sm">
+        <span className="text-pwc-text-muted">Selected file:</span>
+        <span className="truncate font-medium text-pwc-text">{file?.name || 'No file selected'}</span>
         {file && onClear && (
           <button
             type="button"
@@ -60,7 +60,7 @@ function FileDropzone({ file, onFileChange, onClear, description, label = 'Docum
               event.stopPropagation()
               onClear()
             }}
-            className="ml-auto rounded-lg border border-[#2a2f45] px-3 py-1 text-xs font-semibold text-[#e8eaf0] hover:bg-[#1e2235]"
+            className="ml-auto rounded-lg border border-pwc-border px-3 py-1 text-xs font-semibold text-pwc-text hover:bg-pwc-input"
           >
             Remove
           </button>
@@ -167,14 +167,14 @@ export function KnowledgeBase() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => handleView(r.id, r.title)}
-          className="p-1.5 rounded-lg border border-[#2a2f45] bg-[#1a1f36] text-[#93a1c6] hover:text-[#6366f1] hover:border-[#6366f1] transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg border border-pwc-border bg-pwc-bg text-pwc-placeholder hover:text-pwc-primary hover:border-pwc-primary transition-colors cursor-pointer"
           title="View Document"
         >
           <Eye size={16} />
         </button>
         <button
           onClick={() => handleDelete(r.id, r.title)}
-          className="p-1.5 rounded-lg border border-[#2a2f45] bg-[#1a1f36] text-[#93a1c6] hover:text-red-400 hover:border-red-400 transition-colors cursor-pointer"
+          className="p-1.5 rounded-lg border border-pwc-border bg-pwc-bg text-pwc-placeholder hover:text-red-400 hover:border-red-400 transition-colors cursor-pointer"
           title="Delete Document"
         >
           <Trash2 size={16} />
@@ -211,7 +211,7 @@ export function KnowledgeBase() {
               disabled={titleLoading || uploading}
               required
             />
-            {titleLoading && <p className="text-xs text-[#6366f1] mt-2 animate-pulse">Reading document & suggesting title via local LLM...</p>}
+            {titleLoading && <p className="text-xs text-pwc-primary mt-2 animate-pulse">Reading document & suggesting title via local LLM...</p>}
           </div>
           <Btn onClick={upload} disabled={uploading || titleLoading || !file || !title} className="mt-5 w-full">
             {uploading ? 'Indexing…' : 'Upload & Index'}
@@ -221,7 +221,7 @@ export function KnowledgeBase() {
       <Card>{loading ? <Spinner /> : <DataTable columns={cols} rows={docs} emptyText="No documents indexed." />}</Card>
 
       <Modal open={viewOpen} onClose={() => setViewOpen(false)} title={selectedDocTitle} className="max-w-4xl">
-        <div className="w-full h-[70vh] bg-[#0f1117] rounded-lg overflow-hidden border border-[#2a2f45] relative">
+        <div className="w-full h-[70vh] bg-pwc-bg rounded-lg overflow-hidden border border-pwc-border relative">
           {selectedDocId ? (
             <iframe
               src={`/api/v1/rag/documents/${selectedDocId}/view?token=${encodeURIComponent(localStorage.getItem('access_token'))}`}
@@ -229,7 +229,7 @@ export function KnowledgeBase() {
               title={selectedDocTitle}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-sm text-[#6b7280]">No document selected</div>
+            <div className="flex items-center justify-center h-full text-sm text-pwc-text-muted">No document selected</div>
           )}
         </div>
       </Modal>
@@ -324,18 +324,18 @@ export function RAGChat({
       </div>
       <Card className="flex-1 p-0 overflow-hidden flex min-h-0">
         {/* Left Sidebar - Recent Chats */}
-        <div className="w-64 border-r border-[#2a2f45] bg-[#0f111a] flex flex-col h-full flex-shrink-0">
-          <div className="p-3 border-b border-[#2a2f45]">
+        <div className="w-64 border-r border-pwc-border bg-[#0f111a] flex flex-col h-full flex-shrink-0">
+          <div className="p-3 border-b border-pwc-border">
             <Btn onClick={startNewChat} className="w-full text-xs py-2" variant="primary">
               + New Chat
             </Btn>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            <p className="text-[10px] uppercase font-bold tracking-wider text-[#6b7280] px-2 mb-2">Recent Chats</p>
+            <p className="text-[10px] uppercase font-bold tracking-wider text-pwc-text-muted px-2 mb-2">Recent Chats</p>
             {sessionsLoading ? (
               <div className="text-center py-4"><Spinner /></div>
             ) : sessions.length === 0 ? (
-              <p className="text-xs text-[#6b7280] px-2 py-3">No recent chats</p>
+              <p className="text-xs text-pwc-text-muted px-2 py-3">No recent chats</p>
             ) : (
               sessions.map(s => {
                 const isActive = sessionId === s.id
@@ -345,8 +345,8 @@ export function RAGChat({
                       onClick={() => loadSessionMessages(s.id)}
                       className={`flex-1 text-left px-3 py-2 pr-8 rounded-lg text-xs truncate transition-colors cursor-pointer ${
                         isActive 
-                          ? 'bg-[#6366f1]/15 text-[#6366f1] font-semibold border border-[#6366f1]/30' 
-                          : 'text-[#94a3b8] hover:bg-[#1e2235] border border-transparent'
+                          ? 'bg-pwc-primary/15 text-pwc-primary font-semibold border border-pwc-primary/30' 
+                          : 'text-[#94a3b8] hover:bg-pwc-input border border-transparent'
                       }`}
                     >
                       {s.title || 'Untitled Session'}
@@ -356,7 +356,7 @@ export function RAGChat({
                         e.stopPropagation()
                         deleteSession(s.id)
                       }}
-                      className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-[#6b7280] transition-opacity cursor-pointer"
+                      className="absolute right-2 opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-pwc-text-muted transition-opacity cursor-pointer"
                       title="Delete Session"
                     >
                       <Trash2 size={12} />
@@ -369,11 +369,11 @@ export function RAGChat({
         </div>
 
         {/* Right Main Chat Feed */}
-        <div className="flex-1 flex flex-col h-full bg-[#161b2e] p-4 min-w-0">
+        <div className="flex-1 flex flex-col h-full bg-pwc-white p-4 min-w-0">
           <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
             {messages.length === 0 && (
-              <div className="text-center text-[#6b7280] text-sm mt-10">
-                <p className="text-base font-semibold text-[#e8eaf0] mb-1">Welcome to RAG Support</p>
+              <div className="text-center text-pwc-text-muted text-sm mt-10">
+                <p className="text-base font-semibold text-pwc-text mb-1">Welcome to RAG Support</p>
                 <p className="text-xs">Ask anything about guidelines, policy terms, coverages or exclusions.</p>
               </div>
             )}
@@ -381,13 +381,13 @@ export function RAGChat({
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
                   m.role === 'user'
-                    ? 'bg-[#6366f1] text-white font-medium'
-                    : 'bg-[#1e2235] text-[#e8eaf0] border border-[#2a2f45]'
+                    ? 'bg-pwc-primary text-pwc-white font-medium'
+                    : 'bg-pwc-input text-pwc-text border border-pwc-border'
                 }`}>
                   <p style={{ whiteSpace: 'pre-wrap' }}>{m.content}</p>
                   {m.sources?.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-[#2a2f45]">
-                      <p className="text-xs text-[#6b7280]">Sources:</p>
+                    <div className="mt-2 pt-2 border-t border-pwc-border">
+                      <p className="text-xs text-pwc-text-muted">Sources:</p>
                       {m.sources.map((s, j) => (
                         <p key={j} className="text-xs text-[#2dd4bf] mt-0.5">{s.title} ({(s.score * 100).toFixed(0)}%)</p>
                       ))}
@@ -398,12 +398,12 @@ export function RAGChat({
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-[#1e2235] border border-[#2a2f45] rounded-xl px-4 py-3 text-sm text-[#6b7280]">
+                <div className="bg-pwc-input border border-pwc-border rounded-xl px-4 py-3 text-sm text-pwc-text-muted">
                   <div className="flex items-center gap-1.5 py-1">
                     {/* <span className="text-xs text-[#94a3b8] mr-1.5">Thinking</span> */}
-                    <div className="h-2 w-2 rounded-full bg-[#6366f1] animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="h-2 w-2 rounded-full bg-[#6366f1] animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="h-2 w-2 rounded-full bg-[#6366f1] animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="h-2 w-2 rounded-full bg-pwc-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="h-2 w-2 rounded-full bg-pwc-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="h-2 w-2 rounded-full bg-pwc-primary animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -415,7 +415,7 @@ export function RAGChat({
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
               placeholder={placeholder}
-              className="flex-1 bg-[#0f1117] border border-[#2a2f45] rounded-lg px-4 py-2.5 text-sm outline-none focus:border-[#6366f1] text-[#e8eaf0]" 
+              className="flex-1 bg-pwc-bg border border-pwc-border rounded-lg px-4 py-2.5 text-sm outline-none focus:border-pwc-primary text-pwc-text" 
             />
             <Btn onClick={send} disabled={loading || !input.trim()}>Send</Btn>
           </div>

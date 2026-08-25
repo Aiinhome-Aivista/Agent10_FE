@@ -300,7 +300,7 @@ export default function LoginPage() {
               <div style={{
                 width: 48, height: 48, borderRadius: 12, background: "var(--accent)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontWeight: 800, fontSize: 16, margin: "0 auto 12px",
+                color: "var(--text)", fontWeight: 800, fontSize: 16, margin: "0 auto 12px",
               }}>Q2P</div>
               <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Welcome back</h1>
               <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "6px 0 0" }}>Sign in to your account</p>
@@ -356,7 +356,7 @@ export default function LoginPage() {
               <button
                 type="submit" disabled={authLoading}
                 style={{
-                  background: "var(--accent)", color: "#fff", border: "none", borderRadius: 8,
+                  background: "var(--accent)", color: "var(--text)", border: "none", borderRadius: 8,
                   padding: "12px", fontWeight: 700, fontSize: 14, cursor: authLoading ? "not-allowed" : "pointer",
                   opacity: authLoading ? 0.7 : 1, marginTop: 4,
                 }}
@@ -486,7 +486,7 @@ export default function LoginPage() {
             {/* Step 1: Gender & Member Selection */}
             {wizardStep === 1 && (
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Gender & Family Members</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Gender & Family Members</h2>
                 <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 24 }}>Select primary gender and choose the family members you wish to include in your policy cover.</p>
 
                 {/* Gender Toggle */}
@@ -499,7 +499,7 @@ export default function LoginPage() {
                         style={{
                           flex: 1, padding: "12px", background: gender === g ? "var(--accent)" : "var(--surface-alt)",
                           border: gender === g ? "1px solid var(--accent)" : "1px solid var(--border)",
-                          color: "#fff", borderRadius: 8, fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
+                          color: "var(--text)", borderRadius: 8, fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
                         }}
                       >
                         {g}
@@ -586,7 +586,7 @@ export default function LoginPage() {
                     type="button" onClick={() => setWizardStep(2)}
                     disabled={selectedMembers.length === 0}
                     style={{
-                      background: "var(--accent)", color: "#fff", border: "none",
+                      background: "var(--accent)", color: "var(--text)", border: "none",
                       borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700,
                       cursor: selectedMembers.length === 0 ? "not-allowed" : "pointer",
                       opacity: selectedMembers.length === 0 ? 0.6 : 1
@@ -601,7 +601,7 @@ export default function LoginPage() {
             {/* Step 2: Age Selection */}
             {wizardStep === 2 && (
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Select Your Age</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Select Your Age</h2>
                 <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 24 }}>Please select your age. Standard pricing calculators require age verification to calculate medical rates.</p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
@@ -636,7 +636,7 @@ export default function LoginPage() {
                     type="button" onClick={() => setWizardStep(3)}
                     disabled={!age}
                     style={{
-                      background: "var(--accent)", color: "#fff", border: "none",
+                      background: "var(--accent)", color: "var(--text)", border: "none",
                       borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700,
                       cursor: !age ? "not-allowed" : "pointer", opacity: !age ? 0.6 : 1
                     }}
@@ -650,7 +650,7 @@ export default function LoginPage() {
             {/* Step 3: City Selection */}
             {wizardStep === 3 && (
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Select Your City</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Select Your City</h2>
                 <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 24 }}>We filter policy results by available cashless hospital networks in your locality.</p>
 
                 {/* Search Box */}
@@ -738,7 +738,7 @@ export default function LoginPage() {
                     type="button" onClick={handleStep3Next}
                     disabled={!city}
                     style={{
-                      background: "var(--accent)", color: "#fff", border: "none",
+                      background: "var(--accent)", color: "var(--text)", border: "none",
                       borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700,
                       cursor: !city ? "not-allowed" : "pointer", opacity: !city ? 0.6 : 1
                     }}
@@ -752,7 +752,7 @@ export default function LoginPage() {
             {/* Step 5: Medical History */}
             {wizardStep === 5 && (
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 6 }}>Medical History</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Medical History</h2>
                 <p style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 20 }}>Do any selected members have existing illnesses or take regular medication?</p>
 
                 {/* Choices Grid */}
@@ -850,7 +850,7 @@ export default function LoginPage() {
                 >
                   <ArrowLeft size={14} /> Back to Edit Details
                 </button>
-                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#fff" }}>Insurance Quotes For You</h1>
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "var(--text)" }}>Insurance Quotes For You</h1>
                 <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: 13 }}>
                   Showing eligible plans for {fullName} ({age} Y, {gender}) • {city}
                 </p>
@@ -861,7 +861,7 @@ export default function LoginPage() {
                   background: "rgba(99, 102, 241, 0.1)", border: "1px solid var(--accent)",
                   borderRadius: 12, padding: "10px 16px", textAlign: "right"
                 }}>
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
                     {comparisonList.length} Plans Selected
                   </p>
                   <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Compare benefits side-by-side</span>
@@ -915,7 +915,7 @@ export default function LoginPage() {
                         {/* Middle panel: Benefits bullets */}
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#fff" }}>
+                            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--text)" }}>
                               {q.product_name || "Standard Protection Plan"}
                             </h3>
                             {q.ai_rank === 1 && (
@@ -992,7 +992,7 @@ export default function LoginPage() {
                           <button
                             type="button"
                             style={{
-                              background: "#ff5a36", color: "#fff", border: "none",
+                              background: "#ff5a36", color: "var(--text)", border: "none",
                               borderRadius: 8, padding: "10px 16px", fontWeight: 700,
                               fontSize: 13, marginTop: 12, cursor: "pointer", width: "100%"
                             }}
@@ -1038,7 +1038,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <h2 style={{ fontSize: 19, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>Unlock Personalized Plans</h2>
+            <h2 style={{ fontSize: 19, fontWeight: 700, color: "var(--text)", margin: "0 0 4px" }}>Unlock Personalized Plans</h2>
             <p style={{ color: "var(--text-muted)", fontSize: 12.5, margin: "0 0 20px", lineHeight: "1.4" }}>
               We use your details only to verify eligibility and query insurance rules.
             </p>
@@ -1126,7 +1126,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   style={{
-                    flex: 1, background: "var(--accent)", color: "#fff", border: "none",
+                    flex: 1, background: "var(--accent)", color: "var(--text)", border: "none",
                     borderRadius: 8, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer"
                   }}
                 >
