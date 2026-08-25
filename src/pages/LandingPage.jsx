@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { Sun, Moon } from 'lucide-react'
+import { useTheme } from '../hooks/useTheme'
 
 const FEATURES = [
   { icon: '🤖', title: 'Multi-Agent AI',         desc: 'LangGraph-powered orchestration with 8 specialized agents handling every workflow stage automatically.' },
@@ -39,11 +41,13 @@ const AGENTS = [
 ]
 
 export default function LandingPage() {
+  const { isDark, toggleTheme } = useTheme()
+
   return (
     <div style={{ background:'rgb(var(--color-bg))', color:'rgb(var(--color-text))', fontFamily:'DM Sans,sans-serif', overflowX:'hidden' }}>
 
       {/* ── Nav ── */}
-      <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(var(--color-bg), 0.9)',
+      <nav style={{ position:'fixed', top:0, width:'100%', zIndex:50, background:'rgba(var(--color-bg), 0.9)',
                     backdropFilter:'blur(12px)', borderBottom:'1px solid rgb(var(--color-border))',
                     display:'flex', alignItems:'center', justifyContent:'space-between',
                     padding:'0 5%', height:64 }}>
@@ -53,7 +57,10 @@ export default function LandingPage() {
                         color: "var(--text)", fontWeight:800, fontSize:13 }}>Q2P</div>
           <span style={{ fontFamily:'Syne,sans-serif', fontWeight:700, fontSize:16 }}>Quote-to-Policy Platform</span>
         </div>
-        <div style={{ display:'flex', gap:12 }}>
+        <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+          <button onClick={toggleTheme} style={{ background:'transparent', border:'none', color:'rgb(var(--color-text-muted))', cursor:'pointer', padding:'4px', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
           <Link to="/login" style={{ padding:'8px 20px', borderRadius:8, border:'1px solid rgb(var(--color-border))',
             color:'rgb(var(--color-text))', textDecoration:'none', fontSize:13, fontWeight:600 }}>Sign In</Link>
           <Link to="/register" style={{ padding:'8px 20px', borderRadius:8,
@@ -63,7 +70,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ── */}
-      <section style={{ textAlign:'center', padding:'100px 5% 80px', position:'relative' }}>
+      <section style={{ textAlign:'center', padding:'164px 5% 80px', position:'relative' }}>
         <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
           <div style={{ position:'absolute', top:'10%', left:'20%', width:400, height:400,
                         borderRadius:'50%', background:'radial-gradient(circle,rgba(var(--color-primary), 0.2),transparent 70%)' }} />

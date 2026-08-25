@@ -42,7 +42,7 @@ function CsvDropzone({ file, onFileChange, onClear, description, label = 'CSV Up
       }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
-      className={`group rounded-2xl border border-dashed bg-pwc-bg p-4 transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-pwc-primary hover:bg-[#15192f]'}`}
+      className={`group rounded-2xl border border-dashed bg-pwc-bg p-4 transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-pwc-primary hover:bg-pwc-input/50'}`}
     >
       <input
         ref={inputRef}
@@ -191,7 +191,7 @@ function CaseList() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search case number..."
-                className="w-full bg-[#15192a] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
+                className="w-full bg-pwc-input border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
               />
             </div>
             <div>
@@ -199,7 +199,7 @@ function CaseList() {
               <select
                 value={filterStage}
                 onChange={e => setFilterStage(e.target.value)}
-                className="w-full bg-[#15192a] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
+                className="w-full bg-pwc-input border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
               >
                 <option value="ALL">All Stages</option>
                 {STAGES.map(s => (
@@ -212,7 +212,7 @@ function CaseList() {
               <select
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value)}
-                className="w-full bg-[#15192a] border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
+                className="w-full bg-pwc-input border border-pwc-border rounded-lg px-3 py-2 text-sm outline-none text-pwc-text focus:border-pwc-primary"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
@@ -760,9 +760,9 @@ function NewCaseForm() {
 
                             {/* Collapsible Cases Row */}
                             {isExpanded && count > 0 && (
-                              <tr className="bg-[#0c0e18] border-b border-pwc-border">
+                              <tr className="bg-pwc-bg border-b border-pwc-border">
                                 <td colSpan={7} className="px-5 py-4">
-                                  <div className="rounded-xl border border-pwc-border bg-[#101424] p-4">
+                                  <div className="rounded-xl border border-pwc-border bg-pwc-input p-4">
                                     <p className="text-xs font-bold uppercase tracking-wider text-pwc-text-muted mb-3">
                                       Existing Cases for {cust.name}
                                     </p>
@@ -770,7 +770,7 @@ function NewCaseForm() {
                                       {custCases.map((c) => (
                                         <div 
                                           key={c.id} 
-                                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-pwc-border bg-[#0c0e18] px-4 py-3 hover:border-pwc-primary/50 transition-colors"
+                                          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-pwc-border bg-pwc-bg px-4 py-3 hover:border-pwc-primary/50 transition-colors"
                                         >
                                           <div className="flex flex-wrap items-center gap-4 text-xs">
                                             <div>
@@ -1080,7 +1080,7 @@ function QuoteCard({ q, isTop, caseId, onCustomize }) {
             </div>
             
             {/* Health insurance key features */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs text-[#9ca3af] mb-4 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs text-pwc-text-muted mb-4 mt-2">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">🏥</span>
                 <span><strong>Cashless Network:</strong> {cashlessText}</span>
@@ -1372,7 +1372,7 @@ function BankerRecommendations() {
             <Btn onClick={() => load(caseId)} disabled={!caseId || loading} className="w-full">
               {loading ? 'Loading…' : 'Load Recommendation'}
             </Btn>
-            <div className="rounded-2xl border border-pwc-border bg-[#101423] p-4 text-sm text-[#9ca3af]">
+            <div className="rounded-2xl border border-pwc-border bg-pwc-input p-4 text-sm text-pwc-text-muted">
               Choose a case and load quotes to see the recommended plan, score, and alternative products.
             </div>
             {error && <Alert type="error" message={error} />}
@@ -1393,7 +1393,7 @@ function BankerRecommendations() {
                       <p className="text-sm text-pwc-text-muted">{recommendedQuote.insurer_name}</p>
                       <h2 className="text-2xl font-bold text-pwc-text">{recommendedQuote.product_name}</h2>
                     </div>
-                    <div className="rounded-2xl bg-[#111827] px-4 py-2 text-sm font-semibold text-[#22c55e]">
+                    <div className="rounded-2xl bg-pwc-input px-4 py-2 text-sm font-semibold text-[#22c55e]">
                       Score: {formatScore(recommendedQuote.ai_score)}
                     </div>
                   </div>
@@ -1407,7 +1407,7 @@ function BankerRecommendations() {
                   {alternatives.length === 0 && <p className="text-sm text-pwc-text-muted">No alternative products available.</p>}
                   <div className="space-y-3">
                     {alternatives.slice(0, 3).map((quote) => (
-                      <div key={quote.id} className="rounded-2xl border border-pwc-border bg-[#111827] p-4">
+                      <div key={quote.id} className="rounded-2xl border border-pwc-border bg-pwc-input p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-pwc-text">{quote.insurer_name}</p>
@@ -1417,7 +1417,7 @@ function BankerRecommendations() {
                             {formatScore(quote.ai_score)}
                           </span>
                         </div>
-                        <p className="mt-3 text-sm text-[#9ca3af] leading-6 whitespace-pre-wrap">
+                        <p className="mt-3 text-sm text-pwc-text-muted leading-6 whitespace-pre-wrap">
                           {quote.ai_recommendation_text || 'Reason not available for this product.'}
                         </p>
                       </div>
@@ -1860,7 +1860,7 @@ function ProposalReview() {
                 <p className="text-sm text-pwc-text-muted">{selectedQuote?.insurer_name || ''}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm text-[#d1d5db]">
+              <div className="grid grid-cols-2 gap-3 text-sm text-pwc-text-muted">
                 <div className="rounded-2xl border border-pwc-border bg-pwc-bg p-4">
                   <p className="text-[11px] text-pwc-text-muted">Premium</p>
                   <p className="font-semibold text-[#22c55e]">{selectedQuote?.annual_premium ? `₹${selectedQuote.annual_premium.toLocaleString()}` : '—'}</p>
@@ -1871,9 +1871,9 @@ function ProposalReview() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-pwc-border bg-[#101423] p-5">
+              <div className="rounded-3xl border border-pwc-border bg-pwc-input p-5">
                 <p className="text-sm text-pwc-text-muted mb-3">Review Notes</p>
-                <p className="text-sm text-[#d1d5db]">Submit the reviewed proposal to underwriting once customer details and KYC status are correct. This does not replace insurer underwriting review.</p>
+                <p className="text-sm text-pwc-text-muted">Submit the reviewed proposal to underwriting once customer details and KYC status are correct. This does not replace insurer underwriting review.</p>
               </div>
 
               <Btn onClick={submitToUnderwriter} disabled={submitting || !selectedCase} className="w-full">
@@ -1883,7 +1883,7 @@ function ProposalReview() {
 
             <Card>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pwc-text-muted mb-3">Proposal Summary</p>
-              <div className="space-y-3 text-sm text-[#d1d5db]">
+              <div className="space-y-3 text-sm text-pwc-text-muted">
                 <div>
                   <p className="text-pwc-text-muted">Case Number</p>
                   <p>{selectedCase.case_number}</p>

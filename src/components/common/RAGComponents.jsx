@@ -31,7 +31,7 @@ function FileDropzone({ file, onFileChange, onClear, description, label = 'Docum
       }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={handleDrop}
-      className={`group rounded-xl border border-dashed border-pwc-border bg-pwc-bg p-5 transition-colors text-left ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-pwc-primary hover:bg-[#15192f]'}`}
+      className={`group rounded-xl border border-dashed border-pwc-border bg-pwc-bg p-5 transition-colors text-left ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-pwc-primary hover:bg-pwc-input/50'}`}
     >
       <input
         ref={inputRef}
@@ -324,7 +324,7 @@ export function RAGChat({
       </div>
       <Card className="flex-1 p-0 overflow-hidden flex min-h-0">
         {/* Left Sidebar - Recent Chats */}
-        <div className="w-64 border-r border-pwc-border bg-[#0f111a] flex flex-col h-full flex-shrink-0">
+        <div className="w-64 border-r border-pwc-border bg-pwc-input/90 flex flex-col h-full flex-shrink-0">
           <div className="p-3 border-b border-pwc-border">
             <Btn onClick={startNewChat} className="w-full text-xs py-2" variant="primary">
               + New Chat
@@ -346,7 +346,7 @@ export function RAGChat({
                       className={`flex-1 text-left px-3 py-2 pr-8 rounded-lg text-xs truncate transition-colors cursor-pointer ${
                         isActive 
                           ? 'bg-pwc-primary/15 text-pwc-primary font-semibold border border-pwc-primary/30' 
-                          : 'text-[#94a3b8] hover:bg-pwc-input border border-transparent'
+                          : 'text-pwc-text-muted hover:bg-pwc-input border border-transparent'
                       }`}
                     >
                       {s.title || 'Untitled Session'}

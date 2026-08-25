@@ -159,7 +159,7 @@ export default function DashboardShell() {
             </div>
           )}
           <button onClick={() => { dispatch(logout()); navigate('/login') }}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs hover:text-red-400 hover:bg-pwc-input/20 transition-colors cursor-pointer">
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs hover:text-red-400 hover:bg-pwc-primary/15 transition-colors cursor-pointer">
             <LogOut size={15} />
             {sidebarOpen && 'Sign out'}
           </button>
